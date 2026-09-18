@@ -22,6 +22,7 @@ class SshClientService implements ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    ISessionRecorder? recorder,
   }) async {
     try {
       List<SSHKeyPair>? identities;
@@ -105,6 +106,7 @@ class SshClientService implements ISshClientService {
         hostId: host.id,
         client: client,
         sshSession: sshSession,
+        recorder: recorder,
       );
 
       AppLogger.i(

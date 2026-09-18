@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ssh_network_core/ssh_network_core.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 import '../di/app_providers.dart';
+import 'log_controllers.dart';
+import 'recording_settings_provider.dart';
 
 final sessionConnectControllerProvider = Provider<SessionConnectController>((
   ref,
@@ -44,6 +47,52 @@ class SessionConnectController {
     }());
   }
 
+  /// Creates and starts an active [SessionRecorder] for a host session.
+  Future<SessionRecorder> createRecorder(HostEntity host) async {
+    final storageService = _ref.read(sessionStorageServiceProvider);
+    await storageService.init();
+
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final safeLabel = host.label.replaceAll(RegExp(r'[^\w\.-]'), '_');
+    final castPath =
+        '${storageService.recordingsDirectoryPath}/rec_${safeLabel}_$timestamp.cast';
+    final logPath =
+        '${storageService.recordingsDirectoryPath}/rec_${safeLabel}_$timestamp.log';
+
+    final meta = SessionRecordingEntity(
+      id: 'rec-$timestamp',
+      hostId: host.id,
+      hostLabel: host.label,
+      username: host.username,
+      startedAt: DateTime.now(),
+      castFilePath: castPath,
+      logFilePath: logPath,
+    );
+
+    final recorder = SessionRecorder(
+      onRecordingFinished: (finalized) async {
+        await storageService.saveRecording(finalized);
+        _ref.read(sessionRecordingsControllerProvider.notifier).refresh();
+      },
+    );
+
+    await recorder.startRecording(meta);
+    return recorder;
+  }
+
+  /// Toggles session recording on or off for an active terminal session.
+  Future<void> toggleRecording(
+    ITerminalSession session,
+    HostEntity host,
+  ) async {
+    if (session.recorder != null && session.recorder!.isRecording) {
+      await session.recorder!.stopRecording();
+    } else {
+      final recorder = await createRecorder(host);
+      session.recorder = recorder;
+    }
+  }
+
   /// Connect and return an interactive terminal session
   Future<ITerminalSession> connectTerminal(HostEntity host) async {
     String? password;
@@ -69,11 +118,31 @@ class SessionConnectController {
       }
     }
 
+    final mode = _ref.read(sessionRecordingModeProvider);
+    final shouldRecord =
+        mode == SessionRecordingMode.all ||
+        (mode == SessionRecordingMode.prodOnly &&
+            host.environment == HostEnvironment.production);
+
+    SessionRecorder? recorder;
+    if (shouldRecord) {
+      try {
+        recorder = await createRecorder(host);
+      } catch (e, stack) {
+        AppLogger.w(
+          'Failed to initialize session recorder: $e',
+          tag: 'SessionConnectController',
+          stackTrace: stack,
+        );
+      }
+    }
+
     final result = await _sshService.createTerminalSession(
       host: host,
       initialDimensions: const TerminalDimensions(cols: 80, rows: 24),
       password: password,
       privateKeyBytes: keyBytes,
+      recorder: recorder,
     );
 
     return result.when(

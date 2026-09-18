@@ -9,6 +9,7 @@ import 'package:xterm/xterm.dart';
 import '../../providers/theme_provider.dart';
 import 'prod_confirmation_dialog.dart';
 import 'prod_guard_border.dart';
+import 'terminal_session_registry.dart';
 
 class TerminalScreen extends ConsumerStatefulWidget {
   final ITerminalSession session;
@@ -16,6 +17,7 @@ class TerminalScreen extends ConsumerStatefulWidget {
   final ValueChanged<String>? onBroadcastOutput;
   final bool autoFocus;
   final VoidCallback? onOpenSftp;
+  final VoidCallback? onToggleRecording;
 
   const TerminalScreen({
     super.key,
@@ -24,6 +26,7 @@ class TerminalScreen extends ConsumerStatefulWidget {
     this.onBroadcastOutput,
     this.autoFocus = true,
     this.onOpenSftp,
+    this.onToggleRecording,
   });
 
   @override
@@ -34,7 +37,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   late final Terminal _terminal;
   late final TerminalController _controller;
   late final FocusNode _focusNode;
-  StreamSubscription<Uint8List>? _outputSub;
   Timer? _blinkTimer;
   bool _cursorVisible = true;
 
@@ -42,13 +44,21 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   bool _isAwaitingConfirmation = false;
   double _fontSize = 13.0;
 
+  Timer? _recordTimer;
+  int _recordDurationSeconds = 0;
+
   @override
   void initState() {
     super.initState();
-    _terminal = Terminal(maxLines: 5000);
-    _controller = TerminalController();
+    final entry = TerminalSessionRegistry.instance.getOrCreate(widget.session);
+    _terminal = entry.terminal;
+    _controller = entry.controller;
     _focusNode = FocusNode();
     _focusNode.addListener(_handleFocusChange);
+
+    if (widget.session.recorder?.isRecording == true) {
+      _syncRecordTimer();
+    }
 
     // Resize listener
     _terminal.onResize = (width, height, pixelWidth, pixelHeight) {
@@ -58,30 +68,49 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // User input listener
     _terminal.onOutput = _handleTerminalOutput;
 
-    // Listen to remote session output
-    _outputSub = widget.session.outputStream.listen(
-      (bytes) {
-        final decoded = utf8.decode(bytes, allowMalformed: true);
-        _terminal.write(decoded);
-      },
-      onError: (err) {
-        _terminal.write('\r\n[Session Error: $err]\r\n');
-      },
-      onDone: () {
-        _terminal.write('\r\n[Session disconnected]\r\n');
-      },
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && widget.autoFocus) {
         _focusNode.requestFocus();
       }
+      // Guarantee immediate terminal resize sync on mount/drop
+      if (mounted && _terminal.viewWidth > 0 && _terminal.viewHeight > 0) {
+        widget.session.resize(
+          TerminalDimensions(
+            cols: _terminal.viewWidth,
+            rows: _terminal.viewHeight,
+          ),
+        );
+      }
     });
+  }
+
+  void _syncRecordTimer() {
+    final isRec = widget.session.recorder?.isRecording ?? false;
+    if (isRec) {
+      _recordTimer ??= Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _recordDurationSeconds++;
+          });
+        }
+      });
+    } else {
+      _recordTimer?.cancel();
+      _recordTimer = null;
+      _recordDurationSeconds = 0;
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
   void didUpdateWidget(TerminalScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _syncRecordTimer();
     if (widget.autoFocus && !oldWidget.autoFocus && !_focusNode.hasFocus) {
       _focusNode.requestFocus();
     }
@@ -89,11 +118,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   @override
   void dispose() {
+    _recordTimer?.cancel();
+    _recordTimer = null;
     _stopCursorBlink();
     _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
-    _outputSub?.cancel();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -317,6 +346,65 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(width: 1, height: 12, color: Colors.white24),
+                      const SizedBox(width: 4),
+                    ],
+                    if (widget.onToggleRecording != null ||
+                        (widget.session.recorder?.isRecording ?? false)) ...[
+                      Tooltip(
+                        message: (widget.session.recorder?.isRecording ?? false)
+                            ? 'Session Recording Active (Click to Stop)'
+                            : 'Start Session Recording',
+                        child: InkWell(
+                          onTap: () async {
+                            widget.onToggleRecording?.call();
+                            await Future<void>.delayed(
+                                const Duration(milliseconds: 100));
+                            if (mounted) {
+                              setState(() {
+                                _syncRecordTimer();
+                              });
+                            }
+                          },
+                          borderRadius: BorderRadius.circular(4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.fiber_manual_record,
+                                  size: 11,
+                                  color:
+                                      (widget.session.recorder?.isRecording ??
+                                              false)
+                                          ? const Color(0xFFFF5252)
+                                          : Colors.white54,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  (widget.session.recorder?.isRecording ??
+                                          false)
+                                      ? 'REC ${_formatDuration(_recordDurationSeconds)}'
+                                      : 'REC',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        (widget.session.recorder?.isRecording ??
+                                                false)
+                                            ? const Color(0xFFFF5252)
+                                            : Colors.white54,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ],
                             ),

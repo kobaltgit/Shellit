@@ -25,6 +25,8 @@ class ShellitAppShell extends ConsumerStatefulWidget {
       sectionBuilder;
   final List<SnippetEntity>? snippets;
   final ValueChanged<SnippetEntity>? onExecuteSnippet;
+  final Future<void> Function(ITerminalSession session, HostEntity host)?
+      onToggleRecording;
 
   const ShellitAppShell({
     super.key,
@@ -34,6 +36,7 @@ class ShellitAppShell extends ConsumerStatefulWidget {
     this.sectionBuilder,
     this.snippets,
     this.onExecuteSnippet,
+    this.onToggleRecording,
   });
 
   @override
@@ -90,6 +93,30 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
         ref.read(sessionManagerProvider.notifier).openTerminalTab(
               host: host,
               session: session,
+            );
+      } catch (err) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to connect: $err')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _handleConnectHostToSplitSlot({
+    required String tabId,
+    required int slotIndex,
+    required HostEntity host,
+  }) async {
+    if (widget.onConnectTerminal != null) {
+      try {
+        final session = await widget.onConnectTerminal!(host);
+        ref.read(sessionManagerProvider.notifier).addSessionToSplit(
+              tabId: tabId,
+              session: session,
+              slotIndex: slotIndex,
+              host: host,
             );
       } catch (err) {
         if (mounted) {
@@ -223,6 +250,22 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                       TopBarTabs(
                         onQuickConnect: _handleQuickConnect,
                         onOmniBarOpen: _openOmniBar,
+                        onDuplicateTab: (tab) async {
+                          if (tab.host != null) {
+                            await _handleConnectHost(tab.host!);
+                          }
+                        },
+                        onOpenSftp: (host) async {
+                          await _handleOpenSftp(host);
+                        },
+                        onReconnectTab: (tab) async {
+                          if (tab.host != null) {
+                            ref
+                                .read(sessionManagerProvider.notifier)
+                                .closeTab(tab.id);
+                            await _handleConnectHost(tab.host!);
+                          }
+                        },
                       ),
 
                       // Workspace Body (Preserved across tabs & catalog)
@@ -285,13 +328,61 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
           host: tab.host,
           onOpenSftp:
               tab.host != null ? () => _handleOpenSftp(tab.host!) : null,
+          onToggleRecording: widget.onToggleRecording != null &&
+                  tab.host != null
+              ? () => widget.onToggleRecording!(tab.terminalSession!, tab.host!)
+              : null,
         );
       case TabType.splitTerminal:
+        final allHosts = ref.watch(hostsProvider);
         return SplitMatrixView(
-          key: ValueKey(tab.id),
+          key: ValueKey('${tab.id}-${tab.splitLayout.name}'),
           sessions: tab.splitSessions,
           host: tab.host,
+          hosts: allHosts,
           initialLayout: tab.splitLayout,
+          onLayoutChanged: (layout) {
+            ref
+                .read(sessionManagerProvider.notifier)
+                .setSplitLayout(tab.id, layout);
+          },
+          onDropTab: (payload) {
+            ref.read(sessionManagerProvider.notifier).moveTabToSplit(
+                  sourceTabId: payload.tabId,
+                  targetTabId: tab.id,
+                );
+          },
+          onUndockPane: (paneIndex) {
+            if (paneIndex < tab.splitSessions.length) {
+              final session = tab.splitSessions[paneIndex];
+              HostEntity? paneHost;
+              for (final h in allHosts) {
+                if (h.id == session.hostId) {
+                  paneHost = h;
+                  break;
+                }
+              }
+              paneHost ??= tab.host;
+              ref.read(sessionManagerProvider.notifier).undockSplitPane(
+                    tabId: tab.id,
+                    paneIndex: paneIndex,
+                    host: paneHost,
+                  );
+            }
+          },
+          onClosePane: (paneIndex) {
+            ref.read(sessionManagerProvider.notifier).closeSplitPane(
+                  tabId: tab.id,
+                  paneIndex: paneIndex,
+                );
+          },
+          onConnectHostToSlot: (slotIndex, host) {
+            _handleConnectHostToSplitSlot(
+              tabId: tab.id,
+              slotIndex: slotIndex,
+              host: host,
+            );
+          },
         );
       case TabType.sftp:
         return SftpTabView(

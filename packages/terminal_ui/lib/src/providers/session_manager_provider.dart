@@ -1,4 +1,5 @@
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Type of session displayed inside a tab.
@@ -20,6 +21,9 @@ enum SplitLayoutType {
 class SessionTab {
   final String id;
   final String title;
+  final String? customTitle;
+  final Color? colorTag;
+  final bool isPinned;
   final TabType type;
   final HostEntity? host;
   final ITerminalSession? terminalSession;
@@ -32,6 +36,9 @@ class SessionTab {
   const SessionTab({
     required this.id,
     required this.title,
+    this.customTitle,
+    this.colorTag,
+    this.isPinned = false,
     required this.type,
     this.host,
     this.terminalSession,
@@ -42,11 +49,18 @@ class SessionTab {
     this.splitLayout = SplitLayoutType.single,
   });
 
+  String get displayTitle => customTitle ?? title;
+
   bool get isProduction => host?.isProduction ?? false;
 
   SessionTab copyWith({
     String? id,
     String? title,
+    String? customTitle,
+    bool clearCustomTitle = false,
+    Color? colorTag,
+    bool clearColorTag = false,
+    bool? isPinned,
     TabType? type,
     HostEntity? host,
     ITerminalSession? terminalSession,
@@ -59,6 +73,9 @@ class SessionTab {
     return SessionTab(
       id: id ?? this.id,
       title: title ?? this.title,
+      customTitle: clearCustomTitle ? null : (customTitle ?? this.customTitle),
+      colorTag: clearColorTag ? null : (colorTag ?? this.colorTag),
+      isPinned: isPinned ?? this.isPinned,
       type: type ?? this.type,
       host: host ?? this.host,
       terminalSession: terminalSession ?? this.terminalSession,
@@ -196,7 +213,15 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
     final tabToClose = state.tabs[tabIndex];
     tabToClose.terminalSession?.terminate();
     for (final s in tabToClose.splitSessions) {
-      s.terminate();
+      if (s != tabToClose.terminalSession) {
+        // Only terminate session if not owned as primary terminalSession by another tab
+        final isOwnedByAnother = state.tabs.any(
+          (other) => other.id != tabId && other.terminalSession == s,
+        );
+        if (!isOwnedByAnother) {
+          s.terminate();
+        }
+      }
     }
     tabToClose.sftpSession?.close();
 
@@ -220,12 +245,96 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
   }
 
   void setSplitLayout(String tabId, SplitLayoutType layout) {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1) return;
+    final currentTab = state.tabs[tabIndex];
+
+    if (layout == SplitLayoutType.single) {
+      state = state.copyWith(
+        tabs: [
+          for (final t in state.tabs)
+            if (t.id == tabId)
+              t.copyWith(
+                type: TabType.terminal,
+                splitLayout: SplitLayoutType.single,
+              )
+            else
+              t,
+        ],
+      );
+      return;
+    }
+
+    // Keep only current tab's existing session(s).
+    // All other split slots remain empty for user drag-and-drop or manual host connection.
+    final sessions = <ITerminalSession>[];
+    if (currentTab.terminalSession != null) {
+      sessions.add(currentTab.terminalSession!);
+    }
+    for (final s in currentTab.splitSessions) {
+      if (!sessions.contains(s)) {
+        sessions.add(s);
+      }
+    }
+
     state = state.copyWith(
       tabs: [
         for (final t in state.tabs)
-          if (t.id == tabId) t.copyWith(splitLayout: layout) else t,
+          if (t.id == tabId)
+            t.copyWith(
+              type: TabType.splitTerminal,
+              splitLayout: layout,
+              splitSessions: sessions,
+            )
+          else
+            t,
       ],
     );
+  }
+
+  void closeSplitPane({
+    required String tabId,
+    required int paneIndex,
+  }) {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1) return;
+    final currentTab = state.tabs[tabIndex];
+    if (paneIndex < 0 || paneIndex >= currentTab.splitSessions.length) return;
+
+    final remainingSessions =
+        List<ITerminalSession>.from(currentTab.splitSessions)
+          ..removeAt(paneIndex);
+
+    if (remainingSessions.length <= 1) {
+      state = state.copyWith(
+        tabs: [
+          for (final t in state.tabs)
+            if (t.id == tabId)
+              t.copyWith(
+                type: TabType.terminal,
+                splitLayout: SplitLayoutType.single,
+                splitSessions: remainingSessions,
+                terminalSession: remainingSessions.isNotEmpty
+                    ? remainingSessions.first
+                    : null,
+              )
+            else
+              t,
+        ],
+      );
+    } else {
+      state = state.copyWith(
+        tabs: [
+          for (final t in state.tabs)
+            if (t.id == tabId)
+              t.copyWith(
+                splitSessions: remainingSessions,
+              )
+            else
+              t,
+        ],
+      );
+    }
   }
 
   void setBroadcast(String tabId, bool enabled) {
@@ -244,6 +353,223 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
           if (t.id == tabId) t.copyWith(activeSplitIndex: index) else t,
       ],
     );
+  }
+
+  void renameTab(String tabId, String? newTitle) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              customTitle:
+                  newTitle?.trim().isEmpty ?? true ? null : newTitle!.trim(),
+              clearCustomTitle: newTitle == null || newTitle.trim().isEmpty,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
+  void setTabColor(String tabId, Color? color) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              colorTag: color,
+              clearColorTag: color == null,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
+  void togglePinTab(String tabId) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId) t.copyWith(isPinned: !t.isPinned) else t,
+      ],
+    );
+  }
+
+  void moveTabToSplit({
+    required String sourceTabId,
+    required String targetTabId,
+    int? targetSlotIndex,
+  }) {
+    if (sourceTabId == targetTabId) return;
+
+    final sourceIndex = state.tabs.indexWhere((t) => t.id == sourceTabId);
+    final targetIndex = state.tabs.indexWhere((t) => t.id == targetTabId);
+    if (sourceIndex == -1 || targetIndex == -1) return;
+
+    final sourceTab = state.tabs[sourceIndex];
+    final targetTab = state.tabs[targetIndex];
+
+    final sourceSessions = sourceTab.splitSessions.isNotEmpty
+        ? sourceTab.splitSessions
+        : (sourceTab.terminalSession != null
+            ? [sourceTab.terminalSession!]
+            : <ITerminalSession>[]);
+    if (sourceSessions.isEmpty) return;
+
+    final targetSessions = targetTab.splitSessions.isNotEmpty
+        ? List<ITerminalSession>.from(targetTab.splitSessions)
+        : (targetTab.terminalSession != null
+            ? [targetTab.terminalSession!]
+            : <ITerminalSession>[]);
+
+    final combinedSessions = [...targetSessions, ...sourceSessions];
+    final layout = targetTab.splitLayout == SplitLayoutType.single
+        ? SplitLayoutType.horizontal
+        : targetTab.splitLayout;
+
+    final updatedTarget = targetTab.copyWith(
+      type: TabType.splitTerminal,
+      splitLayout: layout,
+      splitSessions: combinedSessions,
+    );
+
+    final newTabs = [
+      for (final t in state.tabs)
+        if (t.id == targetTabId) updatedTarget else if (t.id != sourceTabId) t,
+    ];
+
+    state = state.copyWith(
+      tabs: newTabs,
+      activeTabId: () => targetTabId,
+    );
+  }
+
+  void undockSplitPane({
+    required String tabId,
+    required int paneIndex,
+    HostEntity? host,
+  }) {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1) return;
+
+    final currentTab = state.tabs[tabIndex];
+    if (paneIndex < 0 || paneIndex >= currentTab.splitSessions.length) return;
+
+    final sessionToUndock = currentTab.splitSessions[paneIndex];
+    final remainingSessions =
+        List<ITerminalSession>.from(currentTab.splitSessions)
+          ..removeAt(paneIndex);
+
+    final updatedCurrentTab = currentTab.copyWith(
+      type: TabType.splitTerminal,
+      splitSessions: remainingSessions,
+      terminalSession:
+          remainingSessions.isNotEmpty ? remainingSessions.first : null,
+    );
+
+    final seq = ++_tabCounter;
+    final newTabId =
+        'term-${DateTime.now().millisecondsSinceEpoch}-$seq-${sessionToUndock.id}';
+    final undockedTab = SessionTab(
+      id: newTabId,
+      title: host?.label ?? currentTab.title,
+      type: TabType.terminal,
+      host: host ?? currentTab.host,
+      terminalSession: sessionToUndock,
+      splitSessions: [sessionToUndock],
+    );
+
+    final newTabs = [
+      for (final t in state.tabs)
+        if (t.id == tabId) updatedCurrentTab else t,
+      undockedTab,
+    ];
+
+    state = state.copyWith(
+      tabs: newTabs,
+      activeTabId: () => tabId,
+    );
+  }
+
+  void addSessionToSplit({
+    required String tabId,
+    required ITerminalSession session,
+    int? slotIndex,
+    HostEntity? host,
+  }) {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1) return;
+
+    final currentTab = state.tabs[tabIndex];
+    final currentSessions = currentTab.splitSessions.isNotEmpty
+        ? List<ITerminalSession>.from(currentTab.splitSessions)
+        : (currentTab.terminalSession != null
+            ? [currentTab.terminalSession!]
+            : <ITerminalSession>[]);
+
+    if (slotIndex != null && slotIndex <= currentSessions.length) {
+      currentSessions.insert(slotIndex, session);
+    } else {
+      currentSessions.add(session);
+    }
+
+    final updatedTab = currentTab.copyWith(
+      type: TabType.splitTerminal,
+      splitSessions: currentSessions,
+      terminalSession: currentTab.terminalSession ?? session,
+    );
+
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId) updatedTab else t,
+      ],
+      activeTabId: () => tabId,
+    );
+  }
+
+  void closeOtherTabs(String keepTabId) {
+    final tabsToClose = state.tabs
+        .where((t) => t.id != keepTabId && !t.isPinned)
+        .map((t) => t.id)
+        .toList();
+
+    for (final id in tabsToClose) {
+      closeTab(id);
+    }
+  }
+
+  void closeTabsToTheRight(String tabId) {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1 || tabIndex >= state.tabs.length - 1) return;
+
+    final tabsToClose = state.tabs
+        .sublist(tabIndex + 1)
+        .where((t) => !t.isPinned)
+        .map((t) => t.id)
+        .toList();
+
+    for (final id in tabsToClose) {
+      closeTab(id);
+    }
+  }
+
+  void closeDisconnectedTabs() {
+    final tabsToClose = state.tabs
+        .where((t) =>
+            !t.isPinned &&
+            t.terminalSession?.currentState == SessionState.disconnected)
+        .map((t) => t.id)
+        .toList();
+
+    for (final id in tabsToClose) {
+      closeTab(id);
+    }
+  }
+
+  @visibleForTesting
+  void addRawTab(SessionTab tab) {
+    state = state.copyWith(tabs: [...state.tabs, tab]);
   }
 }
 

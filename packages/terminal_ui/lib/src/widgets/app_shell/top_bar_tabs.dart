@@ -1,17 +1,28 @@
+import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/vault_provider.dart';
 import '../../theme/shellit_theme.dart';
+import 'tab_context_menu.dart';
+import 'tab_drag_payload.dart';
+import 'tab_overflow_menu.dart';
 
 class TopBarTabs extends ConsumerStatefulWidget {
   final ValueChanged<String>? onQuickConnect;
   final VoidCallback? onOmniBarOpen;
+  final Future<void> Function(SessionTab)? onDuplicateTab;
+  final Future<void> Function(HostEntity)? onOpenSftp;
+  final Future<void> Function(SessionTab)? onReconnectTab;
 
   const TopBarTabs({
     super.key,
     this.onQuickConnect,
     this.onOmniBarOpen,
+    this.onDuplicateTab,
+    this.onOpenSftp,
+    this.onReconnectTab,
   });
 
   @override
@@ -20,11 +31,45 @@ class TopBarTabs extends ConsumerStatefulWidget {
 
 class _TopBarTabsState extends ConsumerState<TopBarTabs> {
   final TextEditingController _quickConnectController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _canScrollLeft = false;
+  bool _canScrollRight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateScrollIndicators);
+  }
+
+  void _updateScrollIndicators() {
+    if (!_scrollController.hasClients) return;
+    final canLeft = _scrollController.offset > 5;
+    final canRight = _scrollController.offset <
+        _scrollController.position.maxScrollExtent - 5;
+    if (canLeft != _canScrollLeft || canRight != _canScrollRight) {
+      setState(() {
+        _canScrollLeft = canLeft;
+        _canScrollRight = canRight;
+      });
+    }
+  }
 
   @override
   void dispose() {
     _quickConnectController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollBy(double offset) {
+    if (!_scrollController.hasClients) return;
+    final target = (_scrollController.offset + offset)
+        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
   }
 
   void _submitQuickConnect() {
@@ -40,6 +85,10 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
     final vaultState = ref.watch(vaultProvider);
     final sessionState = ref.watch(sessionManagerProvider);
     final sessionNotifier = ref.read(sessionManagerProvider.notifier);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateScrollIndicators();
+    });
 
     return Container(
       height: 50,
@@ -64,30 +113,110 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
 
           const VerticalDivider(width: 1),
 
-          // 2. Open Session Tabs (Scrollable)
+          // Scroll Left Button
+          if (_canScrollLeft)
+            IconButton(
+              icon: const Icon(Icons.chevron_left, size: 16),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 38),
+              color: ShellitColors.textSecondary,
+              onPressed: () => _scrollBy(-160),
+            ),
+
+          // 2. Open Session Tabs (Scrollable via Mouse Wheel & Drag)
           Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-              itemCount: sessionState.tabs.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 4),
-              itemBuilder: (context, index) {
-                if (index == sessionState.tabs.length) {
-                  return _buildNewTabButton(
-                    onTap: () => sessionNotifier.showCatalog(),
-                  );
+            child: Listener(
+              onPointerSignal: (pointerSignal) {
+                if (pointerSignal is PointerScrollEvent) {
+                  if (_scrollController.hasClients) {
+                    final target = (_scrollController.offset +
+                            pointerSignal.scrollDelta.dy)
+                        .clamp(0.0, _scrollController.position.maxScrollExtent);
+                    _scrollController.jumpTo(target);
+                  }
                 }
-                final tab = sessionState.tabs[index];
-                final isActive = tab.id == sessionState.activeTabId;
-                return _buildTabItem(
-                  tab: tab,
-                  isActive: isActive,
-                  onSelect: () => sessionNotifier.setActiveTab(tab.id),
-                  onClose: () => sessionNotifier.closeTab(tab.id),
-                );
               },
+              child: ListView.separated(
+                controller: _scrollController,
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                itemCount: sessionState.tabs.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(width: 4),
+                itemBuilder: (context, index) {
+                  if (index == sessionState.tabs.length) {
+                    return _buildNewTabButton(
+                      onTap: () => sessionNotifier.showCatalog(),
+                    );
+                  }
+                  final tab = sessionState.tabs[index];
+                  final isActive = tab.id == sessionState.activeTabId;
+                  return _buildTabItem(
+                    tab: tab,
+                    isActive: isActive,
+                    onSelect: () => sessionNotifier.setActiveTab(tab.id),
+                    onClose: () => sessionNotifier.closeTab(tab.id),
+                  );
+                },
+              ),
             ),
           ),
+
+          // Scroll Right Button
+          if (_canScrollRight)
+            IconButton(
+              icon: const Icon(Icons.chevron_right, size: 16),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 24, minHeight: 38),
+              color: ShellitColors.textSecondary,
+              onPressed: () => _scrollBy(160),
+            ),
+
+          // Tab Overflow Dropdown Button
+          if (sessionState.tabs.length > 2)
+            Tooltip(
+              message: 'All Open Tabs (${sessionState.tabs.length})',
+              child: InkWell(
+                onTap: () => TabOverflowMenu.show(
+                  context,
+                  onSelectTab: (id) {
+                    sessionNotifier.setActiveTab(id);
+                  },
+                  onCloseTab: (id) {
+                    sessionNotifier.closeTab(id);
+                  },
+                ),
+                borderRadius: BorderRadius.circular(6),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: ShellitColors.obsidianBackground,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: ShellitColors.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.layers_outlined,
+                          size: 14, color: ShellitColors.accentBlue),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${sessionState.tabs.length}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: ShellitColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(Icons.keyboard_arrow_down,
+                          size: 14, color: ShellitColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
 
           const VerticalDivider(width: 1),
 
@@ -434,12 +563,32 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
     }
 
     final isProd = tab.isProduction;
+    final isPinned = tab.isPinned;
+    final minW = isPinned ? 48.0 : 120.0;
+    final maxW = isPinned ? 170.0 : 220.0;
 
-    return InkWell(
+    final tabWidget = InkWell(
       onTap: onSelect,
+      onSecondaryTapUp: (details) {
+        TabContextMenu.show(
+          context: context,
+          position: details.globalPosition,
+          tab: tab,
+          ref: ref,
+          onDuplicate: widget.onDuplicateTab != null
+              ? () => widget.onDuplicateTab!(tab)
+              : null,
+          onOpenSftp: widget.onOpenSftp != null && tab.host != null
+              ? () => widget.onOpenSftp!(tab.host!)
+              : null,
+          onReconnect: widget.onReconnectTab != null
+              ? () => widget.onReconnectTab!(tab)
+              : null,
+        );
+      },
       borderRadius: BorderRadius.circular(6),
       child: Container(
-        constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+        constraints: BoxConstraints(minWidth: minW, maxWidth: maxW),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           color: isActive
@@ -447,15 +596,29 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
               : ShellitColors.obsidianBackground,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isActive
-                ? (isProd ? ShellitColors.statusRed : ShellitColors.accentBlue)
-                : ShellitColors.border,
-            width: isActive ? 1.5 : 1,
+            color: tab.colorTag ??
+                (isActive
+                    ? (isProd
+                        ? ShellitColors.statusRed
+                        : ShellitColors.accentBlue)
+                    : ShellitColors.border),
+            width: tab.colorTag != null ? 1.8 : (isActive ? 1.5 : 1.0),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (tab.colorTag != null) ...[
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: tab.colorTag,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+            ],
             Icon(
               icon,
               size: 14,
@@ -467,6 +630,11 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                           ? ShellitColors.accentBlue
                           : ShellitColors.textSecondary)),
             ),
+            if (isPinned) ...[
+              const SizedBox(width: 4),
+              const Icon(Icons.push_pin,
+                  size: 11, color: ShellitColors.accentBlue),
+            ],
             const SizedBox(width: 6),
             if (tab.type == TabType.sftp)
               Container(
@@ -508,9 +676,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   ),
                 ),
               ),
-            Expanded(
+            Flexible(
               child: Text(
-                tab.title,
+                tab.displayTitle,
                 style: TextStyle(
                   color: isActive
                       ? ShellitColors.textPrimary
@@ -521,19 +689,69 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 4),
-            InkWell(
-              onTap: onClose,
-              borderRadius: BorderRadius.circular(4),
-              child: const Padding(
-                padding: EdgeInsets.all(2),
-                child:
-                    Icon(Icons.close, size: 12, color: ShellitColors.textMuted),
+            if (!isPinned) ...[
+              const SizedBox(width: 4),
+              InkWell(
+                onTap: onClose,
+                borderRadius: BorderRadius.circular(4),
+                child: const Padding(
+                  padding: EdgeInsets.all(2),
+                  child: Icon(Icons.close,
+                      size: 12, color: ShellitColors.textMuted),
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
+    );
+
+    // Wrap in Draggable for Drag & Drop into split pane slots
+    return Draggable<TabDragPayload>(
+      data: TabDragPayload(
+        tabId: tab.id,
+        host: tab.host,
+        title: tab.displayTitle,
+        type: tab.type,
+      ),
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: ShellitColors.obsidianCard.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: ShellitColors.accentBlue, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: ShellitColors.accentBlue),
+              const SizedBox(width: 8),
+              Text(
+                tab.displayTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.25,
+        child: tabWidget,
+      ),
+      child: tabWidget,
     );
   }
 

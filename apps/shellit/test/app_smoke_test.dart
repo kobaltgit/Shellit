@@ -203,5 +203,7 @@ class _SimpleFakeTerminalSession implements ITerminalSession {
   @override
   Future<void> terminate() async {}
   @override
+  ISessionRecorder? recorder;
+  @override
   dynamic get underlyingClient => null;
 }

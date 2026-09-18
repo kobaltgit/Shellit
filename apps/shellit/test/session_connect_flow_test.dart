@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shellit/src/controllers/recording_settings_provider.dart';
 import 'package:shellit/src/controllers/session_connect_controller.dart';
 import 'package:shellit/src/di/app_providers.dart';
 import 'package:terminal_ui/terminal_ui.dart';
@@ -42,6 +43,9 @@ class FakeTerminalSession implements ITerminalSession {
 
   @override
   dynamic get underlyingClient => Object();
+
+  @override
+  ISessionRecorder? recorder;
 }
 
 class FakeSftpSession implements ISftpSession {
@@ -151,6 +155,7 @@ class FakeOsDetector implements IOsDetector {
 class FakeSshClientService implements ISshClientService {
   final fakeTerminal = FakeTerminalSession();
   final fakeSftp = FakeSftpSession();
+  ISessionRecorder? lastCreatedRecorder;
 
   @override
   Future<Result<ITerminalSession, NetworkFailure>> createTerminalSession({
@@ -159,7 +164,10 @@ class FakeSshClientService implements ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    ISessionRecorder? recorder,
   }) async {
+    lastCreatedRecorder = recorder;
+    fakeTerminal.recorder = recorder;
     return Result.success(fakeTerminal);
   }
 
@@ -406,6 +414,137 @@ void main() {
         (h) => h.id == 'h-autodetect',
       );
       expect(updated.osType, equals(OsType.ubuntu));
+    },
+  );
+
+  test(
+    'SessionConnectController automatically attaches recorder for PROD host when policy is prodOnly',
+    () async {
+      final fakeService = FakeSshClientService();
+      final container = ProviderContainer(
+        overrides: [appSshClientServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(sessionConnectControllerProvider);
+      final now = DateTime.now();
+      final prodHost = HostEntity(
+        id: 'h-prod-rec',
+        label: 'Production Web Server',
+        hostname: 'prod.shellit.internal',
+        port: 22,
+        username: 'root',
+        authType: HostAuthType.password,
+        environment: HostEnvironment.production,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final session = await controller.connectTerminal(prodHost);
+      expect(session, isNotNull);
+      expect(fakeService.lastCreatedRecorder, isNotNull);
+      expect(fakeService.lastCreatedRecorder!.isRecording, isTrue);
+    },
+  );
+
+  test(
+    'SessionConnectController does NOT auto-record STAGING host when policy is prodOnly',
+    () async {
+      final fakeService = FakeSshClientService();
+      final container = ProviderContainer(
+        overrides: [appSshClientServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(sessionConnectControllerProvider);
+      final now = DateTime.now();
+      final stageHost = HostEntity(
+        id: 'h-stage-norec',
+        label: 'Staging App Server',
+        hostname: 'stage.shellit.internal',
+        port: 22,
+        username: 'deploy',
+        authType: HostAuthType.password,
+        environment: HostEnvironment.staging,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final session = await controller.connectTerminal(stageHost);
+      expect(session, isNotNull);
+      expect(fakeService.lastCreatedRecorder, isNull);
+      expect(session.recorder, isNull);
+    },
+  );
+
+  test(
+    'SessionConnectController records all sessions when policy is set to all',
+    () async {
+      final fakeService = FakeSshClientService();
+      final container = ProviderContainer(
+        overrides: [appSshClientServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      container
+          .read(sessionRecordingModeProvider.notifier)
+          .setMode(SessionRecordingMode.all);
+
+      final controller = container.read(sessionConnectControllerProvider);
+      final now = DateTime.now();
+      final devHost = HostEntity(
+        id: 'h-dev-rec',
+        label: 'Local Dev Server',
+        hostname: 'localhost',
+        port: 2222,
+        username: 'vagrant',
+        authType: HostAuthType.password,
+        environment: HostEnvironment.development,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final session = await controller.connectTerminal(devHost);
+      expect(session, isNotNull);
+      expect(fakeService.lastCreatedRecorder, isNotNull);
+      expect(fakeService.lastCreatedRecorder!.isRecording, isTrue);
+    },
+  );
+
+  test(
+    'SessionConnectController.toggleRecording starts and stops recording dynamically',
+    () async {
+      final fakeService = FakeSshClientService();
+      final container = ProviderContainer(
+        overrides: [appSshClientServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(sessionConnectControllerProvider);
+      final now = DateTime.now();
+      final devHost = HostEntity(
+        id: 'h-manual-rec',
+        label: 'Manual Host',
+        hostname: 'manual.shellit.io',
+        port: 22,
+        username: 'admin',
+        authType: HostAuthType.password,
+        environment: HostEnvironment.development,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final session = await controller.connectTerminal(devHost);
+      expect(session.recorder, isNull);
+
+      // 1. Toggle ON
+      await controller.toggleRecording(session, devHost);
+      expect(session.recorder, isNotNull);
+      expect(session.recorder!.isRecording, isTrue);
+
+      // 2. Toggle OFF
+      await controller.toggleRecording(session, devHost);
+      expect(session.recorder!.isRecording, isFalse);
     },
   );
 }

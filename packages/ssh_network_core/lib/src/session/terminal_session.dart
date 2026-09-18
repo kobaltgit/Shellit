@@ -14,7 +14,13 @@ class TerminalSession implements ITerminalSession {
 
   final SSHClient _client;
   final SSHSession _sshSession;
-  final ISessionRecorder? recorder;
+  ISessionRecorder? _recorder;
+
+  @override
+  ISessionRecorder? get recorder => _recorder;
+
+  @override
+  set recorder(ISessionRecorder? value) => _recorder = value;
 
   final StreamController<Uint8List> _outputController =
       StreamController<Uint8List>.broadcast();
@@ -34,9 +40,10 @@ class TerminalSession implements ITerminalSession {
     required this.hostId,
     required SSHClient client,
     required SSHSession sshSession,
-    this.recorder,
+    ISessionRecorder? recorder,
   })  : _client = client,
-        _sshSession = sshSession {
+        _sshSession = sshSession,
+        _recorder = recorder {
     _initStreams();
   }
 

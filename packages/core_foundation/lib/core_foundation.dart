@@ -6,6 +6,7 @@ library core_foundation;
 export 'src/common/result.dart';
 export 'src/common/failures.dart';
 export 'src/common/logger.dart';
+export 'src/common/ansi_utils.dart';
 
 // Domain Enums
 export 'src/domain/enums/enums.dart';

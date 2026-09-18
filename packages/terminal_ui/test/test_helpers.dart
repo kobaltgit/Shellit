@@ -58,9 +58,12 @@ class FakeTerminalSession implements ITerminalSession {
 
   @override
   Future<void> terminate() async {
+    if (isTerminated) return;
     isTerminated = true;
     _state = SessionState.disconnected;
-    _stateController.add(_state);
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
     await _outputController.close();
     await _inputController.close();
     await _stateController.close();
@@ -68,4 +71,7 @@ class FakeTerminalSession implements ITerminalSession {
 
   @override
   dynamic get underlyingClient => null;
+
+  @override
+  ISessionRecorder? recorder;
 }

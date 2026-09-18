@@ -79,10 +79,49 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
 
   List<OmniCommandItem> _buildItems(String query) {
     final hosts = ref.read(hostsProvider);
-    final activeTab = ref.read(sessionManagerProvider).activeTab;
+    final sessionState = ref.read(sessionManagerProvider);
+    final activeTab = sessionState.activeTab;
     final items = <OmniCommandItem>[];
 
     final q = query.trim().toLowerCase();
+
+    // 0. Open Tabs
+    for (final tab in sessionState.tabs) {
+      if (q.isEmpty ||
+          tab.displayTitle.toLowerCase().contains(q) ||
+          (tab.host?.hostname.toLowerCase().contains(q) ?? false) ||
+          (tab.host?.label.toLowerCase().contains(q) ?? false)) {
+        final isActive = tab.id == activeTab?.id;
+        IconData tabIcon = Icons.terminal;
+        switch (tab.type) {
+          case TabType.terminal:
+            tabIcon = Icons.terminal;
+            break;
+          case TabType.sftp:
+            tabIcon = Icons.folder_shared_outlined;
+            break;
+          case TabType.splitTerminal:
+            tabIcon = Icons.dashboard_customize_outlined;
+            break;
+        }
+
+        items.add(
+          OmniCommandItem(
+            id: 'tab-${tab.id}',
+            title: tab.displayTitle,
+            subtitle: isActive
+                ? 'Switch Tab (Active)'
+                : 'Switch Tab (${tab.host?.connectionTarget ?? 'Session'})',
+            icon: tabIcon,
+            type: OmniItemType.action,
+            onSelect: () {
+              Navigator.of(context).pop();
+              ref.read(sessionManagerProvider.notifier).setActiveTab(tab.id);
+            },
+          ),
+        );
+      }
+    }
 
     // 1. Hosts
     for (final host in hosts) {

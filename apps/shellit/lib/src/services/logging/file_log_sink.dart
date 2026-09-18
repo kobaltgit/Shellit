@@ -56,11 +56,10 @@ class FileLogSink {
     final filePath = p.join(_logsDirectory!, 'shellit.log');
     _currentFile = File(filePath);
 
-    if (_currentFile!.existsSync()) {
-      _currentFileSize = _currentFile!.lengthSync();
-    } else {
-      _currentFileSize = 0;
+    if (!_currentFile!.existsSync()) {
+      _currentFile!.createSync(recursive: true);
     }
+    _currentFileSize = _currentFile!.lengthSync();
 
     _currentSink = _currentFile!.openWrite(mode: FileMode.append);
   }

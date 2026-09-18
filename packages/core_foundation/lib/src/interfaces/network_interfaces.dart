@@ -3,6 +3,7 @@ import '../common/failures.dart';
 import '../common/result.dart';
 import '../domain/entities/host_entity.dart';
 import '../domain/enums/enums.dart';
+import 'session_recorder_interface.dart';
 
 /// Geometry dimensions of a terminal emulator screen.
 class TerminalDimensions {
@@ -37,6 +38,10 @@ abstract class ITerminalSession {
 
   /// Closes and terminates this SSH session.
   Future<void> terminate();
+
+  /// Optional active session recorder.
+  ISessionRecorder? get recorder => null;
+  set recorder(ISessionRecorder? value) {}
 
   /// Underlying platform or library SSH client instance (e.g. SSHClient).
   dynamic get underlyingClient => null;
@@ -120,6 +125,7 @@ abstract class ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    ISessionRecorder? recorder,
   });
 
   /// Opens a dedicated SFTP session for the given host.

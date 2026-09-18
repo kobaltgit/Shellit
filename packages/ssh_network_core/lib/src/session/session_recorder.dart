@@ -7,6 +7,8 @@ import 'package:core_foundation/core_foundation.dart';
 
 /// Records terminal sessions into asciinema v2 format (.cast) and human-readable text logs (.log).
 class SessionRecorder implements ISessionRecorder {
+  final void Function(SessionRecordingEntity)? onRecordingFinished;
+
   SessionRecordingEntity? _meta;
   IOSink? _castSink;
   IOSink? _textSink;
@@ -14,6 +16,8 @@ class SessionRecorder implements ISessionRecorder {
   bool _isRecording = false;
   int _byteSize = 0;
   int _commandCount = 0;
+
+  SessionRecorder({this.onRecordingFinished});
 
   @override
   bool get isRecording => _isRecording;
@@ -82,7 +86,10 @@ class SessionRecorder implements ISessionRecorder {
 
     // Write clean text log
     if (_textSink != null) {
-      _textSink!.write(text);
+      final clean = AnsiUtils.cleanTerminalOutput(text);
+      if (clean.isNotEmpty) {
+        _textSink!.write(clean);
+      }
     }
   }
 
@@ -137,6 +144,7 @@ class SessionRecorder implements ISessionRecorder {
     );
 
     _meta = null;
+    onRecordingFinished?.call(finalized);
     return finalized;
   }
 }

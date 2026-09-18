@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 import '../../controllers/log_controllers.dart';
+import '../../controllers/recording_settings_provider.dart';
 import '../../di/app_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -14,6 +15,7 @@ class SettingsScreen extends ConsumerWidget {
     final activeSchemeName = ref.watch(terminalSchemeNameProvider);
     final logSettings = ref.watch(logSettingsControllerProvider);
     final logController = ref.read(logSettingsControllerProvider.notifier);
+    final recordingMode = ref.watch(sessionRecordingModeProvider);
 
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
@@ -319,6 +321,57 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (val) {
                       if (val != null) {
                         logController.setMinFileLogLevel(val);
+                      }
+                    },
+                  ),
+                ),
+                const Divider(color: ShellitColors.border, height: 1),
+                ListTile(
+                  leading: const Icon(
+                    Icons.fiber_manual_record,
+                    color: ShellitColors.statusRed,
+                  ),
+                  title: const Text(
+                    'Terminal Session Recording Policy',
+                    style: TextStyle(
+                      color: ShellitColors.textPrimary,
+                      fontSize: 14,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Capture terminal sessions (asciinema .cast and plain text .log)',
+                    style: TextStyle(
+                      color: ShellitColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                  trailing: DropdownButton<SessionRecordingMode>(
+                    value: recordingMode,
+                    dropdownColor: ShellitColors.obsidianCard,
+                    style: const TextStyle(
+                      color: ShellitColors.textPrimary,
+                      fontSize: 13,
+                    ),
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(
+                        value: SessionRecordingMode.prodOnly,
+                        child: Text('PROD Only (Recommended)'),
+                      ),
+                      DropdownMenuItem(
+                        value: SessionRecordingMode.all,
+                        child: Text('All Sessions'),
+                      ),
+                      DropdownMenuItem(
+                        value: SessionRecordingMode.manual,
+                        child: Text('Manual (REC button only)'),
+                      ),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        ref
+                            .read(sessionRecordingModeProvider.notifier)
+                            .setMode(val);
                       }
                     },
                   ),

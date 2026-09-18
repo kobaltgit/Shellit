@@ -25,6 +25,8 @@ class ShellitApp extends ConsumerWidget {
         snippets: snippets,
         onConnectTerminal: (host) => connectController.connectTerminal(host),
         onConnectSftp: (host) => connectController.connectSftp(host),
+        onToggleRecording: (session, host) =>
+            connectController.toggleRecording(session, host),
         sectionBuilder: (context, section) {
           switch (section) {
             case SidebarSection.keychain:

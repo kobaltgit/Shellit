@@ -17,6 +17,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
   late final TabController _tabController;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  bool _cleanLogView = true;
 
   @override
   void initState() {
@@ -891,6 +892,43 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                               ),
                             ),
                             const Spacer(),
+                            // Toggle Clean Text vs Raw VT100
+                            InkWell(
+                              onTap: () => setState(
+                                () => _cleanLogView = !_cleanLogView,
+                              ),
+                              borderRadius: BorderRadius.circular(4),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _cleanLogView
+                                      ? ShellitColors.accentCyan.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: _cleanLogView
+                                        ? ShellitColors.accentCyan
+                                        : ShellitColors.border,
+                                  ),
+                                ),
+                                child: Text(
+                                  _cleanLogView ? 'Clean Text' : 'Raw VT100',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: _cleanLogView
+                                        ? ShellitColors.accentCyan
+                                        : ShellitColors.textMuted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             IconButton(
                               icon: const Icon(
                                 Icons.copy,
@@ -900,10 +938,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                               tooltip: 'Copy preview text',
                               onPressed: () {
                                 if (recState.activePreviewText != null) {
+                                  final textToCopy = _cleanLogView
+                                      ? AnsiUtils.cleanTerminalOutput(
+                                          recState.activePreviewText!,
+                                        )
+                                      : recState.activePreviewText!;
                                   Clipboard.setData(
-                                    ClipboardData(
-                                      text: recState.activePreviewText!,
-                                    ),
+                                    ClipboardData(text: textToCopy),
                                   );
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -942,8 +983,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                             ),
                             child: SingleChildScrollView(
                               child: SelectableText(
-                                recState.activePreviewText ??
-                                    'Loading log content...',
+                                recState.activePreviewText == null
+                                    ? 'Loading log content...'
+                                    : (_cleanLogView
+                                          ? AnsiUtils.cleanTerminalOutput(
+                                              recState.activePreviewText!,
+                                            )
+                                          : recState.activePreviewText!),
                                 style: const TextStyle(
                                   fontFamily: 'monospace',
                                   fontSize: 11,
