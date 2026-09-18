@@ -2224,6 +2224,12 @@ class $VaultSettingsTableTable extends VaultSettingsTable
   late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
       'last_synced_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _encryptedSyncPassphraseMeta =
+      const VerificationMeta('encryptedSyncPassphrase');
+  @override
+  late final GeneratedColumn<Uint8List> encryptedSyncPassphrase =
+      GeneratedColumn<Uint8List>('encrypted_sync_passphrase', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
   static const VerificationMeta _syncPassphraseMeta =
       const VerificationMeta('syncPassphrase');
   @override
@@ -2252,6 +2258,7 @@ class $VaultSettingsTableTable extends VaultSettingsTable
         syncVaultId,
         allowInsecureCertificates,
         lastSyncedAt,
+        encryptedSyncPassphrase,
         syncPassphrase,
         registrationToken
       ];
@@ -2346,6 +2353,13 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           lastSyncedAt.isAcceptableOrUnknown(
               data['last_synced_at']!, _lastSyncedAtMeta));
     }
+    if (data.containsKey('encrypted_sync_passphrase')) {
+      context.handle(
+          _encryptedSyncPassphraseMeta,
+          encryptedSyncPassphrase.isAcceptableOrUnknown(
+              data['encrypted_sync_passphrase']!,
+              _encryptedSyncPassphraseMeta));
+    }
     if (data.containsKey('sync_passphrase')) {
       context.handle(
           _syncPassphraseMeta,
@@ -2398,6 +2412,9 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           data['${effectivePrefix}allow_insecure_certificates'])!,
       lastSyncedAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      encryptedSyncPassphrase: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob,
+          data['${effectivePrefix}encrypted_sync_passphrase']),
       syncPassphrase: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_passphrase']),
       registrationToken: attachedDatabase.typeMapping.read(
@@ -2427,6 +2444,7 @@ class VaultSettingsRecord extends DataClass
   final String? syncVaultId;
   final bool allowInsecureCertificates;
   final DateTime? lastSyncedAt;
+  final Uint8List? encryptedSyncPassphrase;
   final String? syncPassphrase;
   final String? registrationToken;
   const VaultSettingsRecord(
@@ -2444,6 +2462,7 @@ class VaultSettingsRecord extends DataClass
       this.syncVaultId,
       required this.allowInsecureCertificates,
       this.lastSyncedAt,
+      this.encryptedSyncPassphrase,
       this.syncPassphrase,
       this.registrationToken});
   @override
@@ -2469,6 +2488,10 @@ class VaultSettingsRecord extends DataClass
         Variable<bool>(allowInsecureCertificates);
     if (!nullToAbsent || lastSyncedAt != null) {
       map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    if (!nullToAbsent || encryptedSyncPassphrase != null) {
+      map['encrypted_sync_passphrase'] =
+          Variable<Uint8List>(encryptedSyncPassphrase);
     }
     if (!nullToAbsent || syncPassphrase != null) {
       map['sync_passphrase'] = Variable<String>(syncPassphrase);
@@ -2501,6 +2524,9 @@ class VaultSettingsRecord extends DataClass
       lastSyncedAt: lastSyncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastSyncedAt),
+      encryptedSyncPassphrase: encryptedSyncPassphrase == null && nullToAbsent
+          ? const Value.absent()
+          : Value(encryptedSyncPassphrase),
       syncPassphrase: syncPassphrase == null && nullToAbsent
           ? const Value.absent()
           : Value(syncPassphrase),
@@ -2534,6 +2560,8 @@ class VaultSettingsRecord extends DataClass
       allowInsecureCertificates:
           serializer.fromJson<bool>(json['allowInsecureCertificates']),
       lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      encryptedSyncPassphrase:
+          serializer.fromJson<Uint8List?>(json['encryptedSyncPassphrase']),
       syncPassphrase: serializer.fromJson<String?>(json['syncPassphrase']),
       registrationToken:
           serializer.fromJson<String?>(json['registrationToken']),
@@ -2558,6 +2586,8 @@ class VaultSettingsRecord extends DataClass
       'allowInsecureCertificates':
           serializer.toJson<bool>(allowInsecureCertificates),
       'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'encryptedSyncPassphrase':
+          serializer.toJson<Uint8List?>(encryptedSyncPassphrase),
       'syncPassphrase': serializer.toJson<String?>(syncPassphrase),
       'registrationToken': serializer.toJson<String?>(registrationToken),
     };
@@ -2578,6 +2608,7 @@ class VaultSettingsRecord extends DataClass
           Value<String?> syncVaultId = const Value.absent(),
           bool? allowInsecureCertificates,
           Value<DateTime?> lastSyncedAt = const Value.absent(),
+          Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
           Value<String?> syncPassphrase = const Value.absent(),
           Value<String?> registrationToken = const Value.absent()}) =>
       VaultSettingsRecord(
@@ -2600,6 +2631,9 @@ class VaultSettingsRecord extends DataClass
             allowInsecureCertificates ?? this.allowInsecureCertificates,
         lastSyncedAt:
             lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        encryptedSyncPassphrase: encryptedSyncPassphrase.present
+            ? encryptedSyncPassphrase.value
+            : this.encryptedSyncPassphrase,
         syncPassphrase:
             syncPassphrase.present ? syncPassphrase.value : this.syncPassphrase,
         registrationToken: registrationToken.present
@@ -2645,6 +2679,9 @@ class VaultSettingsRecord extends DataClass
       lastSyncedAt: data.lastSyncedAt.present
           ? data.lastSyncedAt.value
           : this.lastSyncedAt,
+      encryptedSyncPassphrase: data.encryptedSyncPassphrase.present
+          ? data.encryptedSyncPassphrase.value
+          : this.encryptedSyncPassphrase,
       syncPassphrase: data.syncPassphrase.present
           ? data.syncPassphrase.value
           : this.syncPassphrase,
@@ -2671,6 +2708,7 @@ class VaultSettingsRecord extends DataClass
           ..write('syncVaultId: $syncVaultId, ')
           ..write('allowInsecureCertificates: $allowInsecureCertificates, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('encryptedSyncPassphrase: $encryptedSyncPassphrase, ')
           ..write('syncPassphrase: $syncPassphrase, ')
           ..write('registrationToken: $registrationToken')
           ..write(')'))
@@ -2693,6 +2731,7 @@ class VaultSettingsRecord extends DataClass
       syncVaultId,
       allowInsecureCertificates,
       lastSyncedAt,
+      $driftBlobEquality.hash(encryptedSyncPassphrase),
       syncPassphrase,
       registrationToken);
   @override
@@ -2713,6 +2752,8 @@ class VaultSettingsRecord extends DataClass
           other.syncVaultId == this.syncVaultId &&
           other.allowInsecureCertificates == this.allowInsecureCertificates &&
           other.lastSyncedAt == this.lastSyncedAt &&
+          $driftBlobEquality.equals(
+              other.encryptedSyncPassphrase, this.encryptedSyncPassphrase) &&
           other.syncPassphrase == this.syncPassphrase &&
           other.registrationToken == this.registrationToken);
 }
@@ -2732,6 +2773,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
   final Value<String?> syncVaultId;
   final Value<bool> allowInsecureCertificates;
   final Value<DateTime?> lastSyncedAt;
+  final Value<Uint8List?> encryptedSyncPassphrase;
   final Value<String?> syncPassphrase;
   final Value<String?> registrationToken;
   const VaultSettingsTableCompanion({
@@ -2749,6 +2791,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.syncVaultId = const Value.absent(),
     this.allowInsecureCertificates = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.encryptedSyncPassphrase = const Value.absent(),
     this.syncPassphrase = const Value.absent(),
     this.registrationToken = const Value.absent(),
   });
@@ -2767,6 +2810,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.syncVaultId = const Value.absent(),
     this.allowInsecureCertificates = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
+    this.encryptedSyncPassphrase = const Value.absent(),
     this.syncPassphrase = const Value.absent(),
     this.registrationToken = const Value.absent(),
   });
@@ -2785,6 +2829,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     Expression<String>? syncVaultId,
     Expression<bool>? allowInsecureCertificates,
     Expression<DateTime>? lastSyncedAt,
+    Expression<Uint8List>? encryptedSyncPassphrase,
     Expression<String>? syncPassphrase,
     Expression<String>? registrationToken,
   }) {
@@ -2809,6 +2854,8 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       if (allowInsecureCertificates != null)
         'allow_insecure_certificates': allowInsecureCertificates,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (encryptedSyncPassphrase != null)
+        'encrypted_sync_passphrase': encryptedSyncPassphrase,
       if (syncPassphrase != null) 'sync_passphrase': syncPassphrase,
       if (registrationToken != null) 'registration_token': registrationToken,
     });
@@ -2829,6 +2876,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       Value<String?>? syncVaultId,
       Value<bool>? allowInsecureCertificates,
       Value<DateTime?>? lastSyncedAt,
+      Value<Uint8List?>? encryptedSyncPassphrase,
       Value<String?>? syncPassphrase,
       Value<String?>? registrationToken}) {
     return VaultSettingsTableCompanion(
@@ -2849,6 +2897,8 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       allowInsecureCertificates:
           allowInsecureCertificates ?? this.allowInsecureCertificates,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      encryptedSyncPassphrase:
+          encryptedSyncPassphrase ?? this.encryptedSyncPassphrase,
       syncPassphrase: syncPassphrase ?? this.syncPassphrase,
       registrationToken: registrationToken ?? this.registrationToken,
     );
@@ -2902,6 +2952,10 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     if (lastSyncedAt.present) {
       map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
     }
+    if (encryptedSyncPassphrase.present) {
+      map['encrypted_sync_passphrase'] =
+          Variable<Uint8List>(encryptedSyncPassphrase.value);
+    }
     if (syncPassphrase.present) {
       map['sync_passphrase'] = Variable<String>(syncPassphrase.value);
     }
@@ -2928,6 +2982,7 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
           ..write('syncVaultId: $syncVaultId, ')
           ..write('allowInsecureCertificates: $allowInsecureCertificates, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('encryptedSyncPassphrase: $encryptedSyncPassphrase, ')
           ..write('syncPassphrase: $syncPassphrase, ')
           ..write('registrationToken: $registrationToken')
           ..write(')'))
@@ -4403,6 +4458,7 @@ typedef $$VaultSettingsTableTableCreateCompanionBuilder
   Value<String?> syncVaultId,
   Value<bool> allowInsecureCertificates,
   Value<DateTime?> lastSyncedAt,
+  Value<Uint8List?> encryptedSyncPassphrase,
   Value<String?> syncPassphrase,
   Value<String?> registrationToken,
 });
@@ -4422,6 +4478,7 @@ typedef $$VaultSettingsTableTableUpdateCompanionBuilder
   Value<String?> syncVaultId,
   Value<bool> allowInsecureCertificates,
   Value<DateTime?> lastSyncedAt,
+  Value<Uint8List?> encryptedSyncPassphrase,
   Value<String?> syncPassphrase,
   Value<String?> registrationToken,
 });
@@ -4483,6 +4540,10 @@ class $$VaultSettingsTableTableFilterComposer
 
   ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
       column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get encryptedSyncPassphrase => $composableBuilder(
+      column: $table.encryptedSyncPassphrase,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get syncPassphrase => $composableBuilder(
       column: $table.syncPassphrase,
@@ -4555,6 +4616,10 @@ class $$VaultSettingsTableTableOrderingComposer
       column: $table.lastSyncedAt,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<Uint8List> get encryptedSyncPassphrase => $composableBuilder(
+      column: $table.encryptedSyncPassphrase,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get syncPassphrase => $composableBuilder(
       column: $table.syncPassphrase,
       builder: (column) => ColumnOrderings(column));
@@ -4615,6 +4680,9 @@ class $$VaultSettingsTableTableAnnotationComposer
   GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
       column: $table.lastSyncedAt, builder: (column) => column);
 
+  GeneratedColumn<Uint8List> get encryptedSyncPassphrase => $composableBuilder(
+      column: $table.encryptedSyncPassphrase, builder: (column) => column);
+
   GeneratedColumn<String> get syncPassphrase => $composableBuilder(
       column: $table.syncPassphrase, builder: (column) => column);
 
@@ -4665,6 +4733,7 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<String?> syncVaultId = const Value.absent(),
             Value<bool> allowInsecureCertificates = const Value.absent(),
             Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
             Value<String?> syncPassphrase = const Value.absent(),
             Value<String?> registrationToken = const Value.absent(),
           }) =>
@@ -4683,6 +4752,7 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             syncVaultId: syncVaultId,
             allowInsecureCertificates: allowInsecureCertificates,
             lastSyncedAt: lastSyncedAt,
+            encryptedSyncPassphrase: encryptedSyncPassphrase,
             syncPassphrase: syncPassphrase,
             registrationToken: registrationToken,
           ),
@@ -4701,6 +4771,7 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<String?> syncVaultId = const Value.absent(),
             Value<bool> allowInsecureCertificates = const Value.absent(),
             Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
             Value<String?> syncPassphrase = const Value.absent(),
             Value<String?> registrationToken = const Value.absent(),
           }) =>
@@ -4719,6 +4790,7 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             syncVaultId: syncVaultId,
             allowInsecureCertificates: allowInsecureCertificates,
             lastSyncedAt: lastSyncedAt,
+            encryptedSyncPassphrase: encryptedSyncPassphrase,
             syncPassphrase: syncPassphrase,
             registrationToken: registrationToken,
           ),

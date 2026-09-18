@@ -111,7 +111,14 @@ final appSyncCryptoProvider = Provider<SyncCrypto>((ref) {
 final appSyncManagerProvider = Provider<SyncManager>((ref) {
   final db = ref.watch(vaultDatabaseProvider);
   final syncCrypto = ref.watch(appSyncCryptoProvider);
-  return SyncManager(db: db, syncCrypto: syncCrypto);
+  final crypto = ref.watch(vaultCryptoServiceProvider);
+  final security = ref.watch(vaultSecurityContextProvider);
+  return SyncManager(
+    db: db,
+    syncCrypto: syncCrypto,
+    cryptoService: crypto,
+    securityContext: security,
+  );
 });
 
 /// Key Generator Service Provider

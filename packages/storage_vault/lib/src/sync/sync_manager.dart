@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
+import '../crypto/crypto_utils.dart';
+import '../crypto/vault_crypto_service.dart';
+import '../security/vault_security_context.dart';
 import '../database/vault_database.dart';
 import 'sync_client.dart';
 import 'sync_crypto.dart';
@@ -26,12 +30,49 @@ class SyncSummary {
 class SyncManager {
   final VaultDatabase _db;
   final SyncCrypto _syncCrypto;
+  final VaultCryptoService _cryptoService;
+  final VaultSecurityContext _securityContext;
 
   SyncManager({
     required VaultDatabase db,
     SyncCrypto? syncCrypto,
+    VaultCryptoService? cryptoService,
+    VaultSecurityContext? securityContext,
   })  : _db = db,
-        _syncCrypto = syncCrypto ?? SyncCrypto();
+        _syncCrypto = syncCrypto ?? SyncCrypto(),
+        _cryptoService = cryptoService ?? VaultCryptoService(),
+        _securityContext = securityContext ?? VaultSecurityContext();
+
+  Future<SecretKey?> _getActiveOrOpenKey() async {
+    if (_securityContext.isUnlocked &&
+        _securityContext.activeMasterKey != null) {
+      return _securityContext.activeMasterKey;
+    }
+    final initializedRecord = await (_db.select(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals('is_initialized')))
+        .getSingleOrNull();
+    final isInitialized = initializedRecord?.metaValue == 'true';
+    if (!isInitialized) {
+      final record = await (_db.select(_db.vaultMetadataTable)
+            ..where((t) => t.metaKey.equals('open_session_key')))
+        .getSingleOrNull();
+      if (record != null && record.metaValue.isNotEmpty) {
+        return SecretKey(CryptoUtils.hexToBytes(record.metaValue));
+      }
+      final keyBytes = _cryptoService.generateRandomBytes(32);
+      await _db.into(_db.vaultMetadataTable).insert(
+            VaultMetadataTableCompanion.insert(
+              metaKey: 'open_session_key',
+              metaValue: CryptoUtils.bytesToHex(keyBytes),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+      final openKey = SecretKey(keyBytes);
+      _securityContext.unlock(openKey);
+      return openKey;
+    }
+    return null;
+  }
 
   /// Performs a complete synchronization roundtrip:
   /// 1. Derives E2EE sync key & auth hash.
@@ -49,6 +90,14 @@ class SyncManager {
     bool allowInsecureCertificates = false,
   }) async {
     try {
+      final initializedRecord = await (_db.select(_db.vaultMetadataTable)
+            ..where((t) => t.metaKey.equals('is_initialized')))
+          .getSingleOrNull();
+      final isInitialized = initializedRecord?.metaValue == 'true';
+      if (isInitialized && !_securityContext.isUnlocked) {
+        return Result.error(VaultFailure.locked());
+      }
+
       final syncClient =
           SyncClient(allowInsecureCertificates: allowInsecureCertificates);
 
@@ -154,7 +203,34 @@ class SyncManager {
 
       // Keys
       final keys = await _db.select(_db.keysTable).get();
+      final activeKey = await _getActiveOrOpenKey();
+
       for (final k in keys) {
+        String? clearPrivateKeyBase64;
+        String? clearPassphrase;
+
+        if (activeKey != null) {
+          try {
+            final decryptedPriv = await _cryptoService.decryptBytes(
+              encryptedData: k.encryptedPrivateKey,
+              secretKey: activeKey,
+            );
+            clearPrivateKeyBase64 = base64Encode(decryptedPriv);
+            VaultCryptoService.zeroize(decryptedPriv);
+
+            if (k.encryptedPassphrase != null) {
+              final decryptedPass = await _cryptoService.decryptBytes(
+                encryptedData: k.encryptedPassphrase!,
+                secretKey: activeKey,
+              );
+              clearPassphrase = utf8.decode(decryptedPass);
+              VaultCryptoService.zeroize(decryptedPass);
+            }
+          } catch (_) {
+            // Non-fatal: ignore key decryption errors during export
+          }
+        }
+
         final payload = {
           'id': k.id,
           'label': k.label,
@@ -164,6 +240,8 @@ class SyncManager {
           'encryptedPassphrase': k.encryptedPassphrase != null
               ? base64Encode(k.encryptedPassphrase!)
               : null,
+          'clearPrivateKey': clearPrivateKeyBase64,
+          'clearPassphrase': clearPassphrase,
           'fingerprint': k.fingerprint,
           'createdAt': k.createdAt.toIso8601String(),
           'updatedAt': k.updatedAt.toIso8601String(),
@@ -396,17 +474,58 @@ class SyncManager {
               ..where((t) => t.id.equals(id)))
             .getSingleOrNull();
         if (existing == null || remoteUpdatedAt.isAfter(existing.updatedAt)) {
+          final activeKey = await _getActiveOrOpenKey();
+          Uint8List? localEncryptedPrivateKey;
+          Uint8List? localEncryptedPassphrase;
+
+          if (activeKey != null) {
+            if (data['clearPrivateKey'] != null) {
+              final rawPrivBytes =
+                  base64Decode(data['clearPrivateKey'] as String);
+              localEncryptedPrivateKey = await _cryptoService.encryptBytes(
+                clearText: rawPrivBytes,
+                secretKey: activeKey,
+              );
+              VaultCryptoService.zeroize(rawPrivBytes);
+            }
+            if (data['clearPassphrase'] != null) {
+              final rawPassBytes =
+                  utf8.encode(data['clearPassphrase'] as String);
+              localEncryptedPassphrase = await _cryptoService.encryptBytes(
+                clearText: rawPassBytes,
+                secretKey: activeKey,
+              );
+            }
+          }
+
+          if (localEncryptedPrivateKey == null) {
+            if (data['encryptedPrivateKey'] != null &&
+                (data['encryptedPrivateKey'] as String).isNotEmpty) {
+              localEncryptedPrivateKey =
+                  base64Decode(data['encryptedPrivateKey'] as String);
+            } else if (existing != null) {
+              localEncryptedPrivateKey = existing.encryptedPrivateKey;
+            } else {
+              localEncryptedPrivateKey = Uint8List(0);
+            }
+          }
+
+          if (localEncryptedPassphrase == null &&
+              data['encryptedPassphrase'] != null) {
+            localEncryptedPassphrase =
+                base64Decode(data['encryptedPassphrase'] as String);
+          } else if (localEncryptedPassphrase == null && existing != null) {
+            localEncryptedPassphrase = existing.encryptedPassphrase;
+          }
+
           await _db.into(_db.keysTable).insertOnConflictUpdate(
                 KeysTableCompanion(
                   id: Value(id),
                   label: Value(data['label'] as String? ?? 'Key'),
                   keyType: Value(data['keyType'] as String? ?? 'ed25519'),
-                  encryptedPrivateKey: Value(base64Decode(
-                      data['encryptedPrivateKey'] as String? ?? '')),
+                  encryptedPrivateKey: Value(localEncryptedPrivateKey),
                   publicKey: Value(data['publicKey'] as String? ?? ''),
-                  encryptedPassphrase: Value(data['encryptedPassphrase'] != null
-                      ? base64Decode(data['encryptedPassphrase'] as String)
-                      : null),
+                  encryptedPassphrase: Value(localEncryptedPassphrase),
                   fingerprint: Value(data['fingerprint'] as String?),
                   createdAt: Value(
                       DateTime.tryParse(data['createdAt'] as String? ?? '') ??

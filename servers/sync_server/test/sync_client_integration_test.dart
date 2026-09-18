@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:shelf/shelf_io.dart' as io;
 import 'package:shellit_sync_server/sync_server.dart';
@@ -40,7 +41,7 @@ void main() {
         argon2HashLength: 32,
       );
 
-      // 1. Setup Laptop DB & Repositories
+      // 1. Setup Laptop DB & Repositories (Master Password: LaptopPassword123)
       final laptopDb = VaultDatabaseConnection.inMemory();
       final laptopSecurity = VaultSecurityContext();
       final laptopVaultRepo = VaultRepository(
@@ -48,17 +49,24 @@ void main() {
         cryptoService: cryptoService,
         securityContext: laptopSecurity,
       );
-      await laptopVaultRepo.initializeVault('MasterPassword');
+      await laptopVaultRepo.initializeVault('LaptopPassword123');
       final laptopHostRepo =
           HostRepository(db: laptopDb, securityContext: laptopSecurity);
       final laptopSnippetRepo =
           SnippetRepository(db: laptopDb, securityContext: laptopSecurity);
+      final laptopKeyManager = KeyManager(
+        db: laptopDb,
+        cryptoService: cryptoService,
+        securityContext: laptopSecurity,
+      );
       final laptopSyncManager = SyncManager(
         db: laptopDb,
         syncCrypto: SyncCrypto(cryptoService: cryptoService),
+        cryptoService: cryptoService,
+        securityContext: laptopSecurity,
       );
 
-      // 2. Setup Phone DB & Repositories
+      // 2. Setup Phone DB & Repositories (Different Master Password: PhonePassword456)
       final phoneDb = VaultDatabaseConnection.inMemory();
       final phoneSecurity = VaultSecurityContext();
       final phoneVaultRepo = VaultRepository(
@@ -66,20 +74,27 @@ void main() {
         cryptoService: cryptoService,
         securityContext: phoneSecurity,
       );
-      await phoneVaultRepo.initializeVault('MasterPassword');
+      await phoneVaultRepo.initializeVault('PhonePassword456');
       final phoneHostRepo =
           HostRepository(db: phoneDb, securityContext: phoneSecurity);
       final phoneSnippetRepo =
           SnippetRepository(db: phoneDb, securityContext: phoneSecurity);
+      final phoneKeyManager = KeyManager(
+        db: phoneDb,
+        cryptoService: cryptoService,
+        securityContext: phoneSecurity,
+      );
       final phoneSyncManager = SyncManager(
         db: phoneDb,
         syncCrypto: SyncCrypto(cryptoService: cryptoService),
+        cryptoService: cryptoService,
+        securityContext: phoneSecurity,
       );
 
       const vaultId = 'team-vault-1';
       const syncPassphrase = 'e2ee-shared-secret-passphrase';
 
-      // 3. Laptop creates a host and a snippet
+      // 3. Laptop creates a host, snippet, and SSH key
       final now = DateTime.now();
       await laptopHostRepo.saveHost(HostEntity(
         id: 'host-k8s-prod',
@@ -100,6 +115,15 @@ void main() {
         updatedAt: now,
       ));
 
+      await laptopKeyManager.encryptAndSaveKey(
+        id: 'key-test-1',
+        label: 'Prod Key',
+        keyType: KeyType.ed25519,
+        rawPrivateKey: utf8.encode('super_secret_ssh_private_key_bytes'),
+        publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI...',
+        rawPassphrase: 'key_passphrase_secret',
+      );
+
       // 4. Laptop runs sync
       final laptopSync1 = await laptopSyncManager.synchronize(
         serverUrl: serverUrl,
@@ -108,16 +132,17 @@ void main() {
         registrationToken: 'my-token',
       );
       expect(laptopSync1.isSuccess, isTrue);
-      expect(laptopSync1.valueOrNull!.pushedCount, equals(2));
+      expect(laptopSync1.valueOrNull!.pushedCount, equals(3));
 
       // Verify server data is encrypted (zero knowledge)
       final rawItems =
           serverDb.getItemsSince(vaultId: vaultId, sinceRevision: 0);
-      expect(rawItems.length, equals(2));
+      expect(rawItems.length, equals(3));
       for (final item in rawItems) {
         // Must NOT contain plaintext
         expect(item['encryptedBlob'], isNot(contains('Production Cluster')));
         expect(item['encryptedBlob'], isNot(contains('kubectl get pods')));
+        expect(item['encryptedBlob'], isNot(contains('super_secret_ssh_private_key_bytes')));
       }
 
       // 5. Phone syncs from server
@@ -128,7 +153,7 @@ void main() {
         registrationToken: 'my-token',
       );
       expect(phoneSync1.isSuccess, isTrue);
-      expect(phoneSync1.valueOrNull!.pulledCount, equals(2));
+      expect(phoneSync1.valueOrNull!.pulledCount, equals(3));
 
       // Verify Phone now has the decrypted host and snippet
       final phoneHosts = await phoneHostRepo.getAllHosts();
@@ -136,6 +161,18 @@ void main() {
       expect(phoneHosts.first.id, equals('host-k8s-prod'));
       expect(phoneHosts.first.label, equals('Production Cluster'));
       expect(phoneHosts.first.port, equals(6443));
+
+      // Verify Phone can decrypt the SSH key using its OWN master key!
+      final phonePrivRes =
+          await phoneKeyManager.getDecryptedPrivateKey('key-test-1');
+      expect(phonePrivRes.isSuccess, isTrue);
+      expect(utf8.decode(phonePrivRes.valueOrNull!),
+          equals('super_secret_ssh_private_key_bytes'));
+
+      final phonePassRes =
+          await phoneKeyManager.getDecryptedPassphrase('key-test-1');
+      expect(phonePassRes.isSuccess, isTrue);
+      expect(phonePassRes.valueOrNull, equals('key_passphrase_secret'));
 
       final phoneSnippets = await phoneSnippetRepo.getAllSnippets();
       expect(phoneSnippets.length, equals(1));

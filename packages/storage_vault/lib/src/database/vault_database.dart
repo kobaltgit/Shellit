@@ -97,6 +97,7 @@ class VaultSettingsTable extends Table {
   BoolColumn get allowInsecureCertificates =>
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  BlobColumn get encryptedSyncPassphrase => blob().nullable()();
   TextColumn get syncPassphrase => text().nullable()();
   TextColumn get registrationToken => text().nullable()();
 
@@ -185,6 +186,10 @@ class VaultDatabase extends _$VaultDatabase {
             } catch (_) {}
             try {
               await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.encryptedSyncPassphrase);
+            } catch (_) {}
+            try {
+              await m.addColumn(
                   vaultSettingsTable, vaultSettingsTable.syncPassphrase);
             } catch (_) {}
             try {
@@ -220,6 +225,10 @@ class VaultDatabase extends _$VaultDatabase {
           try {
             await customStatement(
                 'ALTER TABLE "vault_settings_table" ADD COLUMN "last_synced_at" INTEGER;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "encrypted_sync_passphrase" BLOB;');
           } catch (_) {}
           try {
             await customStatement(
@@ -339,7 +348,7 @@ extension SnippetRecordMapper on SnippetRecord {
 
 /// Mapper extension to convert [VaultSettingsRecord] to/from [VaultSettingsEntity].
 extension VaultSettingsRecordMapper on VaultSettingsRecord {
-  VaultSettingsEntity toEntity() {
+  VaultSettingsEntity toEntity({String? decryptedPassphrase}) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes: idleLockTimeoutMinutes,
       isBiometricsEnabled: isBiometricsEnabled,
@@ -354,7 +363,7 @@ extension VaultSettingsRecordMapper on VaultSettingsRecord {
       syncVaultId: syncVaultId,
       allowInsecureCertificates: allowInsecureCertificates,
       lastSyncedAt: lastSyncedAt,
-      syncPassphrase: syncPassphrase,
+      syncPassphrase: decryptedPassphrase ?? syncPassphrase,
       registrationToken: registrationToken,
     );
   }

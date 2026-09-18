@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:drift/drift.dart';
@@ -72,43 +73,73 @@ class VaultRepository implements IVaultRepository {
         // Re-encrypt any existing keys with the new master key
         final allKeys = await _db.select(_db.keysTable).get();
         for (final keyRecord in allKeys) {
-          final decryptedPrivKey = await _cryptoService.decryptBytes(
-            encryptedData: keyRecord.encryptedPrivateKey,
-            secretKey: oldOpenKey,
-          );
-
-          Uint8List? decryptedPassphrase;
-          if (keyRecord.encryptedPassphrase != null) {
-            decryptedPassphrase = await _cryptoService.decryptBytes(
-              encryptedData: keyRecord.encryptedPassphrase!,
+          try {
+            final decryptedPrivKey = await _cryptoService.decryptBytes(
+              encryptedData: keyRecord.encryptedPrivateKey,
               secretKey: oldOpenKey,
             );
-          }
 
-          final reEncryptedPrivKey = await _cryptoService.encryptBytes(
-            clearText: decryptedPrivKey,
-            secretKey: masterKey,
-          );
-          VaultCryptoService.zeroize(decryptedPrivKey);
+            Uint8List? decryptedPassphrase;
+            if (keyRecord.encryptedPassphrase != null) {
+              decryptedPassphrase = await _cryptoService.decryptBytes(
+                encryptedData: keyRecord.encryptedPassphrase!,
+                secretKey: oldOpenKey,
+              );
+            }
 
-          Uint8List? reEncryptedPassphrase;
-          if (decryptedPassphrase != null) {
-            reEncryptedPassphrase = await _cryptoService.encryptBytes(
-              clearText: decryptedPassphrase,
+            final reEncryptedPrivKey = await _cryptoService.encryptBytes(
+              clearText: decryptedPrivKey,
               secretKey: masterKey,
             );
-            VaultCryptoService.zeroize(decryptedPassphrase);
-          }
+            VaultCryptoService.zeroize(decryptedPrivKey);
 
-          await (_db.update(_db.keysTable)
-                ..where((t) => t.id.equals(keyRecord.id)))
-              .write(
-            KeysTableCompanion(
-              encryptedPrivateKey: Value(reEncryptedPrivKey),
-              encryptedPassphrase: Value(reEncryptedPassphrase),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
+            Uint8List? reEncryptedPassphrase;
+            if (decryptedPassphrase != null) {
+              reEncryptedPassphrase = await _cryptoService.encryptBytes(
+                clearText: decryptedPassphrase,
+                secretKey: masterKey,
+              );
+              VaultCryptoService.zeroize(decryptedPassphrase);
+            }
+
+            await (_db.update(_db.keysTable)
+                  ..where((t) => t.id.equals(keyRecord.id)))
+                .write(
+              KeysTableCompanion(
+                encryptedPrivateKey: Value(reEncryptedPrivKey),
+                encryptedPassphrase: Value(reEncryptedPassphrase),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          } catch (_) {
+            // Non-fatal: if a foreign key cannot be decrypted, don't abort vault initialization
+          }
+        }
+
+        // Re-encrypt sync passphrase if present
+        final settingsRecord = await (_db.select(_db.vaultSettingsTable)
+              ..where((t) => t.id.equals(1)))
+            .getSingleOrNull();
+        if (settingsRecord?.encryptedSyncPassphrase != null) {
+          try {
+            final clearBytes = await _cryptoService.decryptBytes(
+              encryptedData: settingsRecord!.encryptedSyncPassphrase!,
+              secretKey: oldOpenKey,
+            );
+            final reEncrypted = await _cryptoService.encryptBytes(
+              clearText: clearBytes,
+              secretKey: masterKey,
+            );
+            VaultCryptoService.zeroize(clearBytes);
+            await (_db.update(_db.vaultSettingsTable)
+                  ..where((t) => t.id.equals(1)))
+                .write(
+              VaultSettingsTableCompanion(
+                encryptedSyncPassphrase: Value(reEncrypted),
+                syncPassphrase: const Value(null),
+              ),
+            );
+          } catch (_) {}
         }
       }
 
@@ -432,6 +463,7 @@ class VaultRepository implements IVaultRepository {
 
   @override
   void lock() {
+    _cachedSettings = null;
     _idleTimer?.cancel();
     _idleTimer = null;
     _securityContext.lock();
@@ -492,46 +524,76 @@ class VaultRepository implements IVaultRepository {
       // 3. Re-encrypt all private keys and passphrases in KeysTable
       final allKeys = await _db.select(_db.keysTable).get();
       for (final keyRecord in allKeys) {
-        // Decrypt with current key
-        final decryptedPrivKey = await _cryptoService.decryptBytes(
-          encryptedData: keyRecord.encryptedPrivateKey,
-          secretKey: currentDerivedKey,
-        );
-
-        Uint8List? decryptedPassphrase;
-        if (keyRecord.encryptedPassphrase != null) {
-          decryptedPassphrase = await _cryptoService.decryptBytes(
-            encryptedData: keyRecord.encryptedPassphrase!,
+        try {
+          // Decrypt with current key
+          final decryptedPrivKey = await _cryptoService.decryptBytes(
+            encryptedData: keyRecord.encryptedPrivateKey,
             secretKey: currentDerivedKey,
           );
-        }
 
-        // Re-encrypt with new key
-        final reEncryptedPrivKey = await _cryptoService.encryptBytes(
-          clearText: decryptedPrivKey,
-          secretKey: newMasterKey,
-        );
-        VaultCryptoService.zeroize(decryptedPrivKey);
+          Uint8List? decryptedPassphrase;
+          if (keyRecord.encryptedPassphrase != null) {
+            decryptedPassphrase = await _cryptoService.decryptBytes(
+              encryptedData: keyRecord.encryptedPassphrase!,
+              secretKey: currentDerivedKey,
+            );
+          }
 
-        Uint8List? reEncryptedPassphrase;
-        if (decryptedPassphrase != null) {
-          reEncryptedPassphrase = await _cryptoService.encryptBytes(
-            clearText: decryptedPassphrase,
+          // Re-encrypt with new key
+          final reEncryptedPrivKey = await _cryptoService.encryptBytes(
+            clearText: decryptedPrivKey,
             secretKey: newMasterKey,
           );
-          VaultCryptoService.zeroize(decryptedPassphrase);
-        }
+          VaultCryptoService.zeroize(decryptedPrivKey);
 
-        // Update database row
-        await (_db.update(_db.keysTable)
-              ..where((t) => t.id.equals(keyRecord.id)))
-            .write(
-          KeysTableCompanion(
-            encryptedPrivateKey: Value(reEncryptedPrivKey),
-            encryptedPassphrase: Value(reEncryptedPassphrase),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
+          Uint8List? reEncryptedPassphrase;
+          if (decryptedPassphrase != null) {
+            reEncryptedPassphrase = await _cryptoService.encryptBytes(
+              clearText: decryptedPassphrase,
+              secretKey: newMasterKey,
+            );
+            VaultCryptoService.zeroize(decryptedPassphrase);
+          }
+
+          // Update database row
+          await (_db.update(_db.keysTable)
+                ..where((t) => t.id.equals(keyRecord.id)))
+              .write(
+            KeysTableCompanion(
+              encryptedPrivateKey: Value(reEncryptedPrivKey),
+              encryptedPassphrase: Value(reEncryptedPassphrase),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        } catch (_) {
+          // Non-fatal: ignore keys that cannot be decrypted by current key
+        }
+      }
+
+      // Re-encrypt sync passphrase if present
+      final settingsRecord = await (_db.select(_db.vaultSettingsTable)
+            ..where((t) => t.id.equals(1)))
+          .getSingleOrNull();
+      if (settingsRecord?.encryptedSyncPassphrase != null) {
+        try {
+          final clearBytes = await _cryptoService.decryptBytes(
+            encryptedData: settingsRecord!.encryptedSyncPassphrase!,
+            secretKey: currentDerivedKey,
+          );
+          final reEncrypted = await _cryptoService.encryptBytes(
+            clearText: clearBytes,
+            secretKey: newMasterKey,
+          );
+          VaultCryptoService.zeroize(clearBytes);
+          await (_db.update(_db.vaultSettingsTable)
+                ..where((t) => t.id.equals(1)))
+              .write(
+            VaultSettingsTableCompanion(
+              encryptedSyncPassphrase: Value(reEncrypted),
+              syncPassphrase: const Value(null),
+            ),
+          );
+        } catch (_) {}
       }
 
       // 4. Create new verification blob
@@ -708,13 +770,64 @@ class VaultRepository implements IVaultRepository {
     }
   }
 
+  Future<SecretKey?> _getActiveOrOpenKey() async {
+    if (_securityContext.isUnlocked && _securityContext.activeMasterKey != null) {
+      return _securityContext.activeMasterKey;
+    }
+    final record = await (_db.select(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals('open_session_key')))
+        .getSingleOrNull();
+    if (record != null && record.metaValue.isNotEmpty) {
+      return SecretKey(CryptoUtils.hexToBytes(record.metaValue));
+    }
+    return null;
+  }
+
   @override
   Future<VaultSettingsEntity> getSettings() async {
     if (_cachedSettings != null) return _cachedSettings!;
     final record = await (_db.select(_db.vaultSettingsTable)
           ..where((t) => t.id.equals(1)))
         .getSingleOrNull();
-    final settings = record?.toEntity() ?? const VaultSettingsEntity();
+    if (record == null) {
+      _cachedSettings = const VaultSettingsEntity();
+      return _cachedSettings!;
+    }
+
+    String? decryptedPassphrase;
+    final activeKey = await _getActiveOrOpenKey();
+
+    if (record.encryptedSyncPassphrase != null && activeKey != null) {
+      try {
+        final clearBytes = await _cryptoService.decryptBytes(
+          encryptedData: record.encryptedSyncPassphrase!,
+          secretKey: activeKey,
+        );
+        decryptedPassphrase = utf8.decode(clearBytes);
+        VaultCryptoService.zeroize(clearBytes);
+      } catch (_) {}
+    } else if (record.syncPassphrase != null &&
+        record.syncPassphrase!.isNotEmpty) {
+      decryptedPassphrase = record.syncPassphrase;
+      if (activeKey != null) {
+        try {
+          final encryptedBytes = await _cryptoService.encryptBytes(
+            clearText: utf8.encode(decryptedPassphrase!),
+            secretKey: activeKey,
+          );
+          await (_db.update(_db.vaultSettingsTable)
+                ..where((t) => t.id.equals(1)))
+              .write(
+            VaultSettingsTableCompanion(
+              encryptedSyncPassphrase: Value(encryptedBytes),
+              syncPassphrase: const Value(null),
+            ),
+          );
+        } catch (_) {}
+      }
+    }
+
+    final settings = record.toEntity(decryptedPassphrase: decryptedPassphrase);
     _cachedSettings = settings;
     return settings;
   }
@@ -723,6 +836,18 @@ class VaultRepository implements IVaultRepository {
   Future<Result<void, VaultFailure>> updateSettings(
       VaultSettingsEntity settings) async {
     try {
+      Uint8List? encryptedPassphraseBytes;
+      final activeKey = await _getActiveOrOpenKey();
+
+      if (settings.syncPassphrase != null &&
+          settings.syncPassphrase!.isNotEmpty &&
+          activeKey != null) {
+        encryptedPassphraseBytes = await _cryptoService.encryptBytes(
+          clearText: utf8.encode(settings.syncPassphrase!),
+          secretKey: activeKey,
+        );
+      }
+
       await _db.into(_db.vaultSettingsTable).insertOnConflictUpdate(
             VaultSettingsTableCompanion(
               id: const Value(1),
@@ -740,7 +865,10 @@ class VaultRepository implements IVaultRepository {
               allowInsecureCertificates:
                   Value(settings.allowInsecureCertificates),
               lastSyncedAt: Value(settings.lastSyncedAt),
-              syncPassphrase: Value(settings.syncPassphrase),
+              encryptedSyncPassphrase: encryptedPassphraseBytes != null
+                  ? Value(encryptedPassphraseBytes)
+                  : const Value(null),
+              syncPassphrase: const Value(null),
               registrationToken: Value(settings.registrationToken),
             ),
           );

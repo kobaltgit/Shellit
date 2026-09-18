@@ -165,7 +165,7 @@
   - [x] Windows (Release EXE: `build\windows\x64\runner\Release\shellit.exe` — проверено со вшитой новой иконкой и Safe Build Protocol)
   - [ ] macOS (DMG)
   - [ ] Linux (AppImage / DEB)
-  - [ ] Android (APK)
+  - [x] Android (APK: `build\app\outputs\flutter-apk\app-release.apk` — нативная поддержка sqlite3 arm64/armv7/x86_64)
   - [x] Постоянное хранение хостов и настроек в SQLite (`%APPDATA%/com.example/shellit/data/shellit_vault.db`) с поддержкой открытого хранилища без обязательного пароля и плавной миграцией.
 - [x] Релиз версии 1.0.0 (Windows Desktop Ready с фирменной иконкой).
 
@@ -192,6 +192,8 @@
 - [x] 100% тестирование:
   - [x] Юнит-тесты сервера (`server_test.dart`).
   - [x] Сквозной интеграционный тест (`sync_client_integration_test.dart`): создание на Laptop → переливание на Phone → редактирование/удаление на Phone → обновление на Laptop.
+  - [x] Кросс-девайсная E2EE перешифровка SSH-ключей и паролей при Pull/Push (полная совместимость между устройствами с независимыми мастер-паролями).
+  - [x] Полное шифрование syncPassphrase мастер-ключом хранилища в SQLite (Blob encryptedSyncPassphrase, zero plaintext password on disk).
   - [x] Полный прогон `flutter test` и `flutter analyze` (0 ошибок, 0 предупреждений).
 
 ---
