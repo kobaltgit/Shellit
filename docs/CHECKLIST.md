@@ -44,10 +44,13 @@
 
 ### Модуль `desktop_plugin_sdk` (Агент 4)
 - [x] Определение схемы и валидатора `manifest.json`.
-- [x] Реализация `PluginPackageExtractor` (безопасная распаковка `.shell-plugin` с защитой от Zip Slip и Zip Bomb).
+- [x] Реализация `PluginPackageExtractor` (безопасная распаковка `.shellit` и `.zip` с защитой от Zip Slip и Zip Bomb).
 - [x] Спецификация JSON-RPC сообщений и песочница с разграничением прав (`IPluginBridge`).
 - [x] Изолированные заглушки для мобильных платформ (No-Op loader).
-- [x] Юнит-тесты валидации, распаковки и IPC (33/33 теста успешно).
+- [x] Локальный статический HTTP-сервер для изолированного запуска плагинов (`PluginStaticServer`).
+- [x] Десктопный рантайм плагинов (WebView2 / JSON-RPC мост к активному SSHClient хоста).
+- [x] Сборка первого эталонного плагина `docker_monitor.shellit`.
+- [x] Юнит- и виджет-тесты валидации, распаковки, сервера и UI (34/34 теста в SDK, 23/23 в apps/shellit).
 
 ---
 
@@ -86,6 +89,7 @@
   - [x] Исправление визуального стиля кнопки выгрузки (Upload) на левой панели (контрастный белый цвет вместо невидимого синего).
   - [x] Быстрые кнопки создания папок и файлов в тулбаре обеих панелей (`+ Directory`, `+ File`).
   - [x] Устранение наложения контекстных меню (`_itemRightClickHandled`) и 80px свободная область внизу списка.
+  - [x] Полный отказ от GlobalKey в панелях SFTP и замена на `PaneReloadController` для устранения сбоя монтирования дерева в `IndexedStack` (BUG-016).
   - [x] Расширение контракта `ISftpSession` методами `setPermissions` и `createFile` с реализацией через `dartssh2`.
   - [x] Нижняя панель очереди передач со стримингом прогресса.
 - [x] Матричные сплиты и Broadcast:
@@ -138,6 +142,14 @@
   - [x] Полные матрицы иконок iOS и macOS (`Assets.xcassets/AppIcon.appiconset`, App Store compliance `remove_alpha_ios: true`).
   - [x] Web PWA иконки (`favicon.png`, `Icon-192`, `Icon-512`, maskable).
   - [x] Регистрация `assets/icon/` в `apps/shellit/pubspec.yaml` и автоматизация через `flutter_launcher_icons`.
+- [x] Эргономика терминала: горячие клавиши, умный Ctrl+C, контекстное меню и визуальный Cheat Sheet:
+  - [x] Умный `Ctrl+C`: копирование выделенного текста в буфер обмена при наличии выделения; отправка `\x03` (SIGINT) при отсутствии.
+  - [x] Полный спектр шорткатов буфера обмена: `Ctrl+Shift+C`, `Ctrl+Insert`, `Ctrl+Shift+V`, `Ctrl+V`, `Shift+Insert`, `Ctrl+Shift+A` (выделить всё).
+  - [x] Вставка кликом колесика мыши (СКМ) по X11/Linux-стандарту.
+  - [x] Контекстное меню по правому клику (`TerminalContextMenu`) с кнопками Копировать, Вставить, Выделить всё, Очистить буфер, Справка.
+  - [x] Масштабирование шрифта с клавиатуры: `Ctrl + +` / `Ctrl + =` (зум+), `Ctrl + -` (зум-), `Ctrl + 0` (сброс 13pt).
+  - [x] Кнопка `[ ⌨ Keys ]` в шапке терминала и модальная шпаргалка `TerminalShortcutsDialog` (открытие по кнопке или `F1`).
+  - [x] 100% покрытие виджет-тестами в `terminal_screen_test.dart` (12/12 тестов, 0 ошибок анализатора).
 - [ ] Сборка пакетов:
   - [x] Windows (Release EXE: `build\windows\x64\runner\Release\shellit.exe` — проверено со вшитой новой иконкой и Safe Build Protocol)
   - [ ] macOS (DMG)
@@ -191,4 +203,24 @@
   - [x] Юнит-тесты генератора ключей (`key_generator_test.dart`) и сканера файлов `~/.ssh` (`ssh_discovery_test.dart`).
   - [x] Виджет-тесты интерфейса Keychain (`keychain_screen_test.dart`).
   - [x] `flutter analyze` и тесты всех пакетов (0 ошибок, 0 предупреждений, 200+ тестов успешно).
+---
 
+## Фаза 7: Открытая экосистема десктопных плагинов (.shellit)
+- [x] Стандартизация формата плагинов `.shellit`:
+  - [x] Единый формат дистрибуции `.shellit` (zip-архив с `manifest.json`, веб-бандлом и иконкой).
+  - [x] Валидатор манифеста `PluginManifestValidator` и упаковщик `PluginPacker`.
+  - [x] Чистота мобильных сборок (Android/iOS исключены из WebView-рантайма плагинов, нулевой оверхед на APK/IPA).
+- [x] Встроенный локальный веб-сервер `PluginStaticServer`:
+  - [x] Раздача статики плагина через защищенный loopback-сервер `127.0.0.1:<random_port>` (обход CORS и ограничений `file://` в WebView2).
+  - [x] Защита от path traversal (`p.isWithin`) и поддержка MIME-типов.
+- [x] Двусторонний мост JSON-RPC 2.0 (`DesktopPluginBridge`):
+  - [x] Изолированный запуск в Windows WebView2 через `window.chrome.webview.postMessage`.
+  - [x] Выполнение команд на активном SSH-сервере (`terminal.runCommand`) через `underlyingClient.run(...)`.
+  - [x] Системные уведомления (`notifications.show`) в интерфейсе приложения.
+  - [x] Автоматическое переключение контекста хоста (`host.changed` / `window.onHostChanged`) при смене вкладок терминала.
+  - [x] Поддержка прокрутки колесом мыши (mouse wheel scrolling) во Flutter WebView2 через `Listener(onPointerSignal: ...)` и прямой JS dispatch.
+- [x] Пользовательский интерфейс и менеджер плагинов:
+  - [x] Быстрая кнопка сайдбара `[🐳 Docker]` в тулбаре открытых вкладок.
+  - [x] Боковая панель плагина шириной 340px с плавной анимацией и индикацией целевого хоста (`Target: <Host>`).
+  - [x] Экран `PluginsScreen` в настройках: включение/выключение, удаление и установка новых `.shellit` архивов через диалог.
+  - [x] Эталонный бандл `docker_monitor.shellit` с поддержкой старта, остановки, перезапуска контейнеров и просмотра логов.

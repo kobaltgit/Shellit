@@ -1,64 +1,22 @@
+import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 
-class PluginDisplayItem {
-  final String id;
-  final String name;
-  final String version;
-  final String description;
-  final String author;
-  final List<String> permissions;
-  bool isEnabled;
-
-  PluginDisplayItem({
-    required this.id,
-    required this.name,
-    required this.version,
-    required this.description,
-    required this.author,
-    required this.permissions,
-    this.isEnabled = true,
-  });
-}
-
-final pluginsListProvider = StateProvider<List<PluginDisplayItem>>((ref) {
-  return [
-    PluginDisplayItem(
-      id: 'com.shellit.docker_monitor',
-      name: 'Docker Container Monitor',
-      version: '1.0.0',
-      description:
-          'Real-time Docker container stats, CPU/Memory telemetry and one-click restart.',
-      author: 'Shellit Core Team',
-      permissions: ['terminal:execute', 'notifications'],
-      isEnabled: true,
-    ),
-    PluginDisplayItem(
-      id: 'com.shellit.k8s_lens',
-      name: 'Kubernetes Pod Inspector',
-      version: '0.9.2',
-      description:
-          'Inspect cluster pods, describe resources and stream kubectl logs into splits.',
-      author: 'DevOps Community',
-      permissions: ['terminal:execute'],
-      isEnabled: false,
-    ),
-  ];
-});
+import '../../plugins/plugin_manager_provider.dart';
 
 class PluginsScreen extends ConsumerWidget {
   const PluginsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final plugins = ref.watch(pluginsListProvider);
+    final pluginsAsync = ref.watch(pluginManagerProvider);
 
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
         title: const Text(
-          'Desktop Plugin Extensions',
+          'Desktop Plugin Extensions (.shellit)',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
@@ -68,7 +26,7 @@ class PluginsScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(right: 16),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.file_download_outlined, size: 16),
-              label: const Text('Install .shell-plugin'),
+              label: const Text('Install .shellit'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentBlue,
                 foregroundColor: Colors.white,
@@ -82,122 +40,266 @@ class PluginsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: plugins.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final plugin = plugins[index];
-          return Card(
-            color: ShellitColors.obsidianCard,
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(color: ShellitColors.border),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+      body: pluginsAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: ShellitColors.accentCyan),
+        ),
+        error: (err, _) => Center(
+          child: Text(
+            'Error loading plugins: $err',
+            style: const TextStyle(color: ShellitColors.statusRed),
+          ),
+        ),
+        data: (plugins) {
+          if (plugins.isEmpty) {
+            return Center(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: ShellitColors.accentBlue.withValues(
-                            alpha: 0.1,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(
-                          Icons.extension_outlined,
-                          color: ShellitColors.accentCyan,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              plugin.name,
-                              style: const TextStyle(
-                                color: ShellitColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'v${plugin.version} by ${plugin.author}',
-                              style: const TextStyle(
-                                color: ShellitColors.textMuted,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: plugin.isEnabled,
-                        activeThumbColor: ShellitColors.statusGreen,
-                        onChanged: (val) {
-                          ref.read(pluginsListProvider.notifier).update((
-                            state,
-                          ) {
-                            return state.map((p) {
-                              if (p.id == plugin.id) p.isEnabled = val;
-                              return p;
-                            }).toList();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    plugin.description,
-                    style: const TextStyle(
-                      color: ShellitColors.textSecondary,
-                      fontSize: 13,
-                    ),
+                  const Icon(
+                    Icons.extension_off_outlined,
+                    size: 48,
+                    color: ShellitColors.textMuted,
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Text(
-                        'Permissions: ',
-                        style: TextStyle(
-                          color: ShellitColors.textMuted,
-                          fontSize: 11,
-                        ),
-                      ),
-                      ...plugin.permissions.map((perm) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Chip(
-                            label: Text(
-                              perm,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: ShellitColors.accentCyan,
-                              ),
-                            ),
-                            backgroundColor: ShellitColors.obsidianBackground,
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        );
-                      }),
-                    ],
+                  const Text(
+                    'No plugins installed',
+                    style: TextStyle(
+                      color: ShellitColors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Install .shellit package to extend Shellit with custom tools',
+                    style: TextStyle(
+                      color: ShellitColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Install .shellit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ShellitColors.accentBlue,
+                    ),
+                    onPressed: () => _showInstallDialog(context, ref),
                   ),
                 ],
               ),
-            ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: plugins.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final plugin = plugins[index];
+              return Card(
+                color: ShellitColors.obsidianCard,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(color: ShellitColors.border),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: ShellitColors.accentBlue.withValues(
+                                alpha: 0.1,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Icon(
+                              Icons.extension_outlined,
+                              color: ShellitColors.accentCyan,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      plugin.manifest.name,
+                                      style: const TextStyle(
+                                        color: ShellitColors.textPrimary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: ShellitColors.obsidianBackground,
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(
+                                          color: ShellitColors.border,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        plugin.manifest.target.name.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
+                                          color: ShellitColors.accentBlue,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'v${plugin.manifest.version} by ${plugin.manifest.author} • ${plugin.manifest.id}',
+                                  style: const TextStyle(
+                                    color: ShellitColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              size: 18,
+                              color: ShellitColors.statusRed,
+                            ),
+                            tooltip: 'Uninstall Plugin',
+                            onPressed: () => _confirmUninstall(context, ref, plugin),
+                          ),
+                          const SizedBox(width: 8),
+                          Switch(
+                            value: plugin.isEnabled,
+                            activeThumbColor: ShellitColors.statusGreen,
+                            onChanged: (val) {
+                              ref
+                                  .read(pluginManagerProvider.notifier)
+                                  .togglePlugin(plugin.manifest.id, val);
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        plugin.manifest.description,
+                        style: const TextStyle(
+                          color: ShellitColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Text(
+                            'Permissions: ',
+                            style: TextStyle(
+                              color: ShellitColors.textMuted,
+                              fontSize: 11,
+                            ),
+                          ),
+                          if (plugin.manifest.permissions.isEmpty)
+                            const Text(
+                              'None',
+                              style: TextStyle(
+                                color: ShellitColors.textMuted,
+                                fontSize: 11,
+                              ),
+                            )
+                          else
+                            ...plugin.manifest.permissions.map((perm) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: Chip(
+                                  label: Text(
+                                    perm,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: ShellitColors.accentCyan,
+                                    ),
+                                  ),
+                                  backgroundColor: ShellitColors.obsidianBackground,
+                                  padding: EdgeInsets.zero,
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              );
+                            }),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
+      ),
+    );
+  }
+
+  void _confirmUninstall(
+    BuildContext context,
+    WidgetRef ref,
+    InstalledPlugin plugin,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ShellitColors.obsidianCard,
+        title: Text(
+          'Uninstall ${plugin.manifest.name}?',
+          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 15),
+        ),
+        content: Text(
+          'Are you sure you want to remove this plugin and all its files?',
+          style: const TextStyle(color: ShellitColors.textSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ShellitColors.statusRed,
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final res = await ref
+                  .read(pluginManagerProvider.notifier)
+                  .uninstallPlugin(plugin.manifest.id);
+              if (context.mounted) {
+                if (res.isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Uninstalled ${plugin.manifest.name}')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${res.failureOrNull?.message}')),
+                  );
+                }
+              }
+            },
+            child: const Text('Uninstall', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }
@@ -214,12 +316,13 @@ class PluginsScreen extends ConsumerWidget {
           style: TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
         ),
         content: SizedBox(
-          width: 440,
+          width: 460,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Enter path to .shell-plugin or .pkit bundle archive:',
+                'Enter full file path to .shellit (or .zip) bundle archive:',
                 style: TextStyle(
                   color: ShellitColors.textSecondary,
                   fontSize: 13,
@@ -234,7 +337,7 @@ class PluginsScreen extends ConsumerWidget {
                 ),
                 decoration: const InputDecoration(
                   labelText: 'Plugin Archive File Path',
-                  hintText: 'C:\\path\\to\\my_plugin.shell-plugin',
+                  hintText: r'C:\path\to\docker_monitor.shellit',
                 ),
               ),
             ],
@@ -249,15 +352,33 @@ class PluginsScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: ShellitColors.accentBlue,
             ),
-            onPressed: () {
+            onPressed: () async {
+              final path = pathCtrl.text.trim();
+              if (path.isEmpty) return;
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Plugin verified and installed safely! (Zip Slip check passed)',
-                  ),
-                ),
-              );
+
+              final res = await ref
+                  .read(pluginManagerProvider.notifier)
+                  .installFromArchive(path);
+
+              if (context.mounted) {
+                if (res.isSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Plugin "${res.getOrThrow().manifest.name}" installed safely!',
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed: ${res.failureOrNull?.message}'),
+                      backgroundColor: ShellitColors.statusRed,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text('Install', style: TextStyle(color: Colors.white)),
           ),

@@ -37,7 +37,7 @@ void main() {
       expect(Directory(demoPluginDir).existsSync(), isTrue);
 
       final archivePath =
-          p.join(tempWorkDir.path, 'docker_monitor.shell-plugin');
+          p.join(tempWorkDir.path, 'docker_monitor.shellit');
 
       // Pack
       final packResult = await PluginPacker.packDirectory(
@@ -71,7 +71,7 @@ void main() {
     test('toggles plugin enabled status and persists state', () async {
       final demoPluginDir = p.join(
           Directory.current.path, 'assets', 'demo_plugins', 'docker_monitor');
-      final archivePath = p.join(tempWorkDir.path, 'docker_monitor.pkit');
+      final archivePath = p.join(tempWorkDir.path, 'docker_monitor.shellit');
 
       await PluginPacker.packDirectory(
         sourceDir: demoPluginDir,
@@ -101,7 +101,7 @@ void main() {
       final demoPluginDir = p.join(
           Directory.current.path, 'assets', 'demo_plugins', 'docker_monitor');
       final archivePath =
-          p.join(tempWorkDir.path, 'docker_monitor.shell-plugin');
+          p.join(tempWorkDir.path, 'docker_monitor.shellit');
 
       await PluginPacker.packDirectory(
         sourceDir: demoPluginDir,
@@ -146,7 +146,7 @@ void main() {
       archive.addFile(ArchiveFile('index.html', 5, utf8.encode('hello')));
 
       final zipBytes = ZipEncoder().encode(archive)!;
-      final evilArchive = File(p.join(tempWorkDir.path, 'evil.shell-plugin'));
+      final evilArchive = File(p.join(tempWorkDir.path, 'evil.shellit'));
       evilArchive.writeAsBytesSync(zipBytes);
 
       final result = await loader.installFromArchive(evilArchive.path);

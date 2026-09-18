@@ -27,6 +27,8 @@ class ShellitAppShell extends ConsumerStatefulWidget {
   final ValueChanged<SnippetEntity>? onExecuteSnippet;
   final Future<void> Function(ITerminalSession session, HostEntity host)?
       onToggleRecording;
+  final Widget Function(BuildContext context)? pluginSidebarBuilder;
+  final Widget? topBarTrailing;
 
   const ShellitAppShell({
     super.key,
@@ -37,6 +39,8 @@ class ShellitAppShell extends ConsumerStatefulWidget {
     this.snippets,
     this.onExecuteSnippet,
     this.onToggleRecording,
+    this.pluginSidebarBuilder,
+    this.topBarTrailing,
   });
 
   @override
@@ -250,6 +254,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                       TopBarTabs(
                         onQuickConnect: _handleQuickConnect,
                         onOmniBarOpen: _openOmniBar,
+                        trailing: widget.topBarTrailing,
                         onDuplicateTab: (tab) async {
                           if (tab.host != null) {
                             await _handleConnectHost(tab.host!);
@@ -290,6 +295,10 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                     ],
                   ),
                 ),
+
+                // Right-docked Desktop Plugin Sidebar (visible only when inside an active session tab)
+                if (widget.pluginSidebarBuilder != null && activeTab != null)
+                  widget.pluginSidebarBuilder!(context),
               ],
             );
           },

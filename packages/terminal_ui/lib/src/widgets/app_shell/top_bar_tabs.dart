@@ -23,7 +23,10 @@ class TopBarTabs extends ConsumerStatefulWidget {
     this.onDuplicateTab,
     this.onOpenSftp,
     this.onReconnectTab,
+    this.trailing,
   });
+
+  final Widget? trailing;
 
   @override
   ConsumerState<TopBarTabs> createState() => _TopBarTabsState();
@@ -230,6 +233,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
             tooltip: 'Command Palette (Ctrl+K)',
             onPressed: widget.onOmniBarOpen,
           ),
+          if (widget.trailing != null) widget.trailing!,
           const SizedBox(width: 8),
         ],
       ),

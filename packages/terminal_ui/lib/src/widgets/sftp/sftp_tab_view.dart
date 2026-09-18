@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'local_file_pane.dart';
+import 'pane_reload_controller.dart';
 import 'remote_file_pane.dart';
 import 'transfer_queue_bar.dart';
 
@@ -21,8 +22,8 @@ class SftpTabView extends StatefulWidget {
 }
 
 class _SftpTabViewState extends State<SftpTabView> {
-  final GlobalKey<LocalFilePaneState> _localPaneKey = GlobalKey();
-  final GlobalKey<RemoteFilePaneState> _remotePaneKey = GlobalKey();
+  final PaneReloadController _localReloadController = PaneReloadController();
+  final PaneReloadController _remoteReloadController = PaneReloadController();
 
   FileSystemEntity? _selectedLocalEntity;
   String _currentLocalPath = Directory.current.path;
@@ -31,6 +32,13 @@ class _SftpTabViewState extends State<SftpTabView> {
   String _currentRemotePath = '/';
 
   final List<FileTransferItem> _transfers = [];
+
+  @override
+  void dispose() {
+    _localReloadController.dispose();
+    _remoteReloadController.dispose();
+    super.dispose();
+  }
 
   void _handleUpload() {
     final localEntity = _selectedLocalEntity;
@@ -80,7 +88,7 @@ class _SftpTabViewState extends State<SftpTabView> {
           progress: 1.0,
           status: TransferStatus.completed,
         );
-        _remotePaneKey.currentState?.reload();
+        _remoteReloadController.reload();
         sub?.cancel();
       },
     );
@@ -130,7 +138,7 @@ class _SftpTabViewState extends State<SftpTabView> {
           progress: 1.0,
           status: TransferStatus.completed,
         );
-        _localPaneKey.currentState?.reload();
+        _localReloadController.reload();
         sub?.cancel();
       },
     );
@@ -173,7 +181,7 @@ class _SftpTabViewState extends State<SftpTabView> {
             children: [
               Expanded(
                 child: LocalFilePane(
-                  key: _localPaneKey,
+                  reloadController: _localReloadController,
                   onSelectionChanged: (entity) {
                     setState(() => _selectedLocalEntity = entity);
                   },
@@ -183,7 +191,7 @@ class _SftpTabViewState extends State<SftpTabView> {
               ),
               Expanded(
                 child: RemoteFilePane(
-                  key: _remotePaneKey,
+                  reloadController: _remoteReloadController,
                   session: widget.sftpSession,
                   onSelectionChanged: (item) {
                     setState(() => _selectedRemoteItem = item);
@@ -205,3 +213,4 @@ class _SftpTabViewState extends State<SftpTabView> {
     );
   }
 }
+

@@ -6,10 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm/xterm.dart';
+import 'package:flutter/gestures.dart';
 import '../../providers/theme_provider.dart';
+import '../../theme/shellit_theme.dart';
 import 'prod_confirmation_dialog.dart';
 import 'prod_guard_border.dart';
+import 'terminal_context_menu.dart';
 import 'terminal_session_registry.dart';
+import 'terminal_shortcuts_dialog.dart';
 
 class TerminalScreen extends ConsumerStatefulWidget {
   final ITerminalSession session;
@@ -174,12 +178,173 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     widget.onBroadcastOutput?.call(data);
   }
 
+  Future<void> _copySelection() async {
+    final selection = _controller.selection;
+    if (selection == null) return;
+    final text = _terminal.buffer.getText(selection);
+    if (text.isNotEmpty) {
+      await Clipboard.setData(ClipboardData(text: text));
+      if (mounted) {
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_circle_outline, size: 14, color: ShellitColors.statusGreen),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Copied (${text.trim().length} chars)',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: ShellitColors.obsidianCard,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: ShellitColors.border),
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text;
+    if (text != null && text.isNotEmpty) {
+      _terminal.paste(text);
+      _controller.clearSelection();
+    }
+  }
+
+  void _selectAll() {
+    final height = _terminal.buffer.height;
+    _controller.setSelection(
+      _terminal.buffer.createAnchor(0, 0),
+      _terminal.buffer.createAnchor(_terminal.viewWidth, height > 0 ? height - 1 : 0),
+      mode: SelectionMode.line,
+    );
+  }
+
+  void _clearTerminalBuffer() {
+    _terminal.buffer.clear();
+    _terminal.setCursor(0, 0);
+    _terminal.notifyListeners();
+    _controller.clearSelection();
+  }
+
+  void _showShortcutsHelp() {
+    TerminalShortcutsDialog.show(context);
+  }
+
+  void _showContextMenu(Offset globalPosition) {
+    final selection = _controller.selection;
+    String? selectedText;
+    if (selection != null) {
+      selectedText = _terminal.buffer.getText(selection);
+    }
+    TerminalContextMenu.show(
+      context: context,
+      globalPosition: globalPosition,
+      hasSelection: selection != null,
+      selectedText: selectedText,
+      onCopy: _copySelection,
+      onPaste: _pasteFromClipboard,
+      onSelectAll: _selectAll,
+      onClear: _clearTerminalBuffer,
+      onShowShortcuts: _showShortcutsHelp,
+    );
+  }
+
   KeyEventResult _handleTerminalKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
 
-    // Let Ctrl and Alt combinations be handled by xterm shortcuts and keyInput
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
     final isAlt = HardwareKeyboard.instance.isAltPressed;
+    final isShift = HardwareKeyboard.instance.isShiftPressed;
+    final isMeta = HardwareKeyboard.instance.isMetaPressed;
+    final isCmdOrCtrl = isCtrl || isMeta;
+    final key = event.logicalKey;
+
+    // 1. Help: F1
+    if (key == LogicalKeyboardKey.f1) {
+      _showShortcutsHelp();
+      return KeyEventResult.handled;
+    }
+
+    // 2. Escape: If text is selected, clear selection!
+    if (key == LogicalKeyboardKey.escape && _controller.selection != null) {
+      _controller.clearSelection();
+      return KeyEventResult.handled;
+    }
+
+    // 3. Zoom shortcuts:
+    // Ctrl + Plus, Ctrl + =, Ctrl + NumpadAdd
+    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.equal || key == LogicalKeyboardKey.add || key == LogicalKeyboardKey.numpadAdd)) {
+      if (_fontSize < 28) setState(() => _fontSize += 1);
+      return KeyEventResult.handled;
+    }
+    // Ctrl + Minus, Ctrl + NumpadSubtract
+    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.minus || key == LogicalKeyboardKey.numpadSubtract)) {
+      if (_fontSize > 8) setState(() => _fontSize -= 1);
+      return KeyEventResult.handled;
+    }
+    // Ctrl + 0, Ctrl + Numpad0
+    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0)) {
+      setState(() => _fontSize = 13.0);
+      return KeyEventResult.handled;
+    }
+
+    // 4. Copy:
+    // Ctrl + Shift + C
+    // Ctrl + Insert
+    // Or Ctrl + C / Cmd + C when there IS an active selection!
+    final isCopyShortcut = (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyC) ||
+        (isCtrl && key == LogicalKeyboardKey.insert);
+    final isSmartCtrlC = isCmdOrCtrl && !isShift && !isAlt && key == LogicalKeyboardKey.keyC && _controller.selection != null;
+
+    if (isCopyShortcut || isSmartCtrlC) {
+      _copySelection();
+      return KeyEventResult.handled;
+    }
+
+    // 5. Paste:
+    // Ctrl + Shift + V
+    // Ctrl + V
+    // Shift + Insert
+    // Cmd + V
+    final isPasteShortcut = (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyV) ||
+        (isCmdOrCtrl && !isAlt && key == LogicalKeyboardKey.keyV) ||
+        (isShift && key == LogicalKeyboardKey.insert);
+
+    if (isPasteShortcut) {
+      _pasteFromClipboard();
+      return KeyEventResult.handled;
+    }
+
+    // 6. Select All:
+    // Ctrl + Shift + A or Cmd + A
+    if ((isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyA) ||
+        (isMeta && key == LogicalKeyboardKey.keyA)) {
+      _selectAll();
+      return KeyEventResult.handled;
+    }
+
+    // 7. Clear buffer:
+    // Ctrl + Shift + K
+    if (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyK) {
+      _clearTerminalBuffer();
+      return KeyEventResult.handled;
+    }
+
+    // Let Ctrl and Alt combinations be handled by xterm shortcuts and keyInput
     if (isCtrl || isAlt) {
       return KeyEventResult.ignored;
     }
@@ -202,7 +367,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       LogicalKeyboardKey.pageDown,
     };
 
-    if (specialKeys.contains(event.logicalKey)) {
+    if (specialKeys.contains(key)) {
       return KeyEventResult.ignored;
     }
 
@@ -296,19 +461,29 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             Container(
               color: terminalTheme.background,
               padding: EdgeInsets.only(top: isProd ? 24 : 0),
-              child: TerminalView(
-                _terminal,
-                controller: _controller,
-                focusNode: _focusNode,
-                autofocus: widget.autoFocus,
-                hardwareKeyboardOnly: isDesktop,
-                onKeyEvent: _handleTerminalKeyEvent,
-                theme: terminalTheme,
-                textStyle: TerminalStyle(
-                  fontSize: _fontSize,
-                  fontFamily: 'JetBrains Mono',
+              child: Listener(
+                onPointerDown: (event) {
+                  if (event.buttons == kMiddleMouseButton) {
+                    _pasteFromClipboard();
+                  }
+                },
+                child: TerminalView(
+                  _terminal,
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  autofocus: widget.autoFocus,
+                  hardwareKeyboardOnly: isDesktop,
+                  onKeyEvent: _handleTerminalKeyEvent,
+                  onSecondaryTapUp: (details, offset) {
+                    _showContextMenu(details.globalPosition);
+                  },
+                  theme: terminalTheme,
+                  textStyle: TerminalStyle(
+                    fontSize: _fontSize,
+                    fontFamily: 'JetBrains Mono',
+                  ),
+                  backgroundOpacity: 1.0,
                 ),
-                backgroundOpacity: 1.0,
               ),
             ),
 
@@ -325,6 +500,35 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    Tooltip(
+                      message: 'Keyboard Shortcuts (F1)',
+                      child: InkWell(
+                        onTap: _showShortcutsHelp,
+                        borderRadius: BorderRadius.circular(4),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.keyboard_outlined,
+                                  size: 13, color: Colors.white70),
+                              SizedBox(width: 4),
+                              Text(
+                                'Keys',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white70),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(width: 1, height: 12, color: Colors.white24),
+                    const SizedBox(width: 4),
                     if (widget.onOpenSftp != null) ...[
                       Tooltip(
                         message: 'Open SFTP for this host',

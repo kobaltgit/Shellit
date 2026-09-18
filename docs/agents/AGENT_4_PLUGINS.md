@@ -6,10 +6,10 @@
 
 ---
 
-## 2. Архитектура пакета плагина (.shell-plugin / .pkit)
-Плагин представляет собой ZIP-архив с расширением `.shell-plugin` или `.pkit`, содержащий:
+## 2. Архитектура пакета плагина (.shellit)
+Плагин представляет собой ZIP-архив с расширением `.shellit`, содержащий:
 ```text
-my-awesome-plugin.shell-plugin
+my-awesome-plugin.shellit
 ├── manifest.json         # Метаданные, права доступа, точки входа (Entry points)
 ├── icon.png              # Иконка плагина (64x64)
 ├── index.html            # UI песочницы (для плагинов с визуальным интерфейсом)

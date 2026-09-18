@@ -4,7 +4,7 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:path/path.dart' as p;
 import '../manifest/plugin_manifest_validator.dart';
 
-/// Utility to pack a plugin directory into a `.shell-plugin` or `.pkit` archive.
+/// Utility to pack a plugin directory into a `.shellit` or `.zip` archive.
 class PluginPacker {
   /// Packs the contents of [sourceDir] into [outputFilePath].
   /// Validates [manifest.json] and ensures [entryPoint] exists before packaging.
@@ -50,10 +50,10 @@ class PluginPacker {
 
     // Ensure output extension is valid
     final ext = p.extension(outputFilePath).toLowerCase();
-    if (ext != '.shell-plugin' && ext != '.pkit' && ext != '.zip') {
+    if (ext != '.shellit' && ext != '.zip') {
       return Result.error(
         PluginFailure(
-          "Invalid archive extension '$ext'. Supported: .shell-plugin, .pkit",
+          "Invalid archive extension '$ext'. Supported: .shellit, .zip",
           type: PluginFailureType.invalidManifest,
         ),
       );

@@ -102,7 +102,7 @@ abstract class IPluginLoader {
   /// Scans default plugin directory (~/.shellit/plugins) and returns detected plugins.
   Future<List<InstalledPlugin>> scanInstalledPlugins();
 
-  /// Unpacks and installs a `.shell-plugin` or `.pkit` archive.
+  /// Unpacks and installs a `.shellit` or `.zip` archive.
   Future<Result<InstalledPlugin, PluginFailure>> installFromArchive(
       String archiveFilePath);
 

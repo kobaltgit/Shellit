@@ -2,18 +2,21 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/shellit_theme.dart';
+import 'pane_reload_controller.dart';
 import 'sftp_dialogs.dart';
 
 class LocalFilePane extends StatefulWidget {
   final ValueChanged<FileSystemEntity?>? onSelectionChanged;
   final ValueChanged<String>? onPathChanged;
   final VoidCallback? onUploadSelected;
+  final PaneReloadController? reloadController;
 
   const LocalFilePane({
     super.key,
     this.onSelectionChanged,
     this.onPathChanged,
     this.onUploadSelected,
+    this.reloadController,
   });
 
   @override
@@ -31,15 +34,44 @@ class LocalFilePaneState extends State<LocalFilePane> {
   @override
   void initState() {
     super.initState();
-    _currentDirectory = Directory.current;
+    widget.reloadController?.addListener(reload);
+    _currentDirectory = _getInitialDirectory();
     _pathController.text = _currentDirectory.path;
-    _loadDirectory(_currentDirectory);
+    _readDirectorySync(_currentDirectory);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onPathChanged?.call(_currentDirectory.path);
+      widget.onSelectionChanged?.call(null);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant LocalFilePane oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reloadController != oldWidget.reloadController) {
+      oldWidget.reloadController?.removeListener(reload);
+      widget.reloadController?.addListener(reload);
+    }
   }
 
   @override
   void dispose() {
+    widget.reloadController?.removeListener(reload);
     _pathController.dispose();
     super.dispose();
+  }
+
+  Directory _getInitialDirectory() {
+    try {
+      final userProfile = Platform.environment['USERPROFILE'] ??
+          Platform.environment['HOME'];
+      if (userProfile != null && Directory(userProfile).existsSync()) {
+        return Directory(userProfile);
+      }
+      return Directory.current;
+    } catch (_) {
+      return Directory.current;
+    }
   }
 
   /// Public reload method for real-time updates.
@@ -47,7 +79,7 @@ class LocalFilePaneState extends State<LocalFilePane> {
     _loadDirectory(_currentDirectory);
   }
 
-  void _loadDirectory(Directory dir) {
+  void _readDirectorySync(Directory dir) {
     try {
       var list = dir.listSync().toList();
       if (!_showHiddenFiles) {
@@ -64,17 +96,26 @@ class LocalFilePaneState extends State<LocalFilePane> {
         return a.path.toLowerCase().compareTo(b.path.toLowerCase());
       });
 
-      setState(() {
-        _currentDirectory = dir;
-        _items = list;
-        _selectedEntity = null;
-        _pathController.text = dir.path;
-      });
-      widget.onPathChanged?.call(dir.path);
-      widget.onSelectionChanged?.call(null);
+      _currentDirectory = dir;
+      _items = list;
+      _selectedEntity = null;
+      _pathController.text = dir.path;
     } catch (e) {
-      _showError('Failed to read directory: $e');
+      _items = [];
+      _selectedEntity = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showError('Failed to read directory: $e');
+      });
     }
+  }
+
+  void _loadDirectory(Directory dir) {
+    _readDirectorySync(dir);
+    if (mounted) {
+      setState(() {});
+    }
+    widget.onPathChanged?.call(dir.path);
+    widget.onSelectionChanged?.call(null);
   }
 
   void _showError(String message) {

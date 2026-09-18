@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import '../manifest/plugin_manifest_validator.dart';
 import '../security/safe_archive_extractor.dart';
 
-/// Desktop implementation of [IPluginLoader] supporting `.shell-plugin` and `.pkit` packages.
+/// Desktop implementation of [IPluginLoader] supporting `.shellit` and `.zip` packages.
 class DesktopPluginLoader implements IPluginLoader {
   static const String stateFileName = 'plugins_state.json';
   final String pluginsDirectory;
@@ -126,10 +126,10 @@ class DesktopPluginLoader implements IPluginLoader {
     }
 
     final ext = p.extension(archiveFilePath).toLowerCase();
-    if (ext != '.shell-plugin' && ext != '.pkit' && ext != '.zip') {
+    if (ext != '.shellit' && ext != '.zip') {
       return Result.error(
         PluginFailure(
-          "Unsupported plugin archive extension '$ext'. Supported: .shell-plugin, .pkit",
+          "Unsupported plugin archive extension '$ext'. Supported: .shellit, .zip",
           type: PluginFailureType.invalidManifest,
         ),
       );

@@ -2,6 +2,7 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/shellit_theme.dart';
+import 'pane_reload_controller.dart';
 import 'sftp_dialogs.dart';
 
 class RemoteFilePane extends StatefulWidget {
@@ -9,6 +10,7 @@ class RemoteFilePane extends StatefulWidget {
   final ValueChanged<SftpItem?>? onSelectionChanged;
   final ValueChanged<String>? onPathChanged;
   final VoidCallback? onDownloadSelected;
+  final PaneReloadController? reloadController;
 
   const RemoteFilePane({
     super.key,
@@ -16,6 +18,7 @@ class RemoteFilePane extends StatefulWidget {
     this.onSelectionChanged,
     this.onPathChanged,
     this.onDownloadSelected,
+    this.reloadController,
   });
 
   @override
@@ -36,11 +39,22 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
   @override
   void initState() {
     super.initState();
+    widget.reloadController?.addListener(reload);
     _loadDirectory(_currentPath);
   }
 
   @override
+  void didUpdateWidget(covariant RemoteFilePane oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.reloadController != oldWidget.reloadController) {
+      oldWidget.reloadController?.removeListener(reload);
+      widget.reloadController?.addListener(reload);
+    }
+  }
+
+  @override
   void dispose() {
+    widget.reloadController?.removeListener(reload);
     _pathController.dispose();
     super.dispose();
   }

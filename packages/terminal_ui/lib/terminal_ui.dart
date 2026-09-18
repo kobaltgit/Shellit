@@ -27,8 +27,10 @@ export 'src/widgets/hosts/host_form_dialog.dart';
 export 'src/widgets/hosts/os_icon_badge.dart';
 export 'src/widgets/hosts/os_svg_icons.dart';
 
-// Terminal Screen & Prod Guard
+// Terminal Screen, Shortcuts & Prod Guard
 export 'src/widgets/terminal/terminal_screen.dart';
+export 'src/widgets/terminal/terminal_context_menu.dart';
+export 'src/widgets/terminal/terminal_shortcuts_dialog.dart';
 export 'src/widgets/terminal/prod_guard_border.dart';
 export 'src/widgets/terminal/prod_confirmation_dialog.dart';
 

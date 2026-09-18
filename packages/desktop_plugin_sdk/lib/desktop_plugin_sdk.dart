@@ -34,3 +34,6 @@ export 'src/bridge/noop_plugin_bridge.dart';
 
 // Platform
 export 'src/platform/plugin_platform.dart';
+
+// Server
+export 'src/server/plugin_static_server.dart';

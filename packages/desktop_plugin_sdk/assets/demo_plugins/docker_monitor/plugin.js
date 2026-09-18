@@ -61,7 +61,16 @@
 
   function handleIncomingMessage(event) {
     const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-    if (!data || data.jsonrpc !== '2.0') return;
+    if (!data) return;
+
+    // Handle host/tab switch notification
+    if (data.method === 'host.changed') {
+      console.log('Shellit host switched:', data.params);
+      refreshContainers();
+      return;
+    }
+
+    if (data.jsonrpc !== '2.0') return;
 
     // Handle response
     if (data.id && pendingRequests.has(data.id)) {
@@ -76,6 +85,26 @@
       }
     }
   }
+
+  // Global callback callable directly by host executeScript
+  window.onHostChanged = function(hostInfo) {
+    console.log('Host changed via executeScript:', hostInfo);
+    refreshContainers();
+  };
+
+  // Ensure mouse wheel scrolling works reliably inside WebView
+  window.addEventListener('wheel', (e) => {
+    const modal = document.getElementById('logsModal');
+    if (modal && modal.classList.contains('active')) {
+      const logs = document.getElementById('logsTerminal');
+      if (logs) logs.scrollTop += e.deltaY;
+      return;
+    }
+    const list = document.getElementById('containerList');
+    if (list) {
+      list.scrollTop += e.deltaY;
+    }
+  }, { passive: true });
 
   // Setup listeners
   if (window.chrome && window.chrome.webview) {
@@ -211,6 +240,21 @@
 
   async function refreshContainers() {
     bridgeStatusEl.textContent = 'Updating...';
+
+    function renderNoSessionPlaceholder() {
+      containerListEl.innerHTML = `
+        <div style="text-align: center; padding: 40px 16px; color: var(--text-dim);">
+          <div style="font-size: 28px; margin-bottom: 12px;">🐳</div>
+          <div style="font-weight: 600; color: #fff; margin-bottom: 6px;">No Active SSH Session</div>
+          <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5;">
+            Open a server tab to monitor and manage Docker containers.
+          </div>
+        </div>
+      `;
+      containerCountEl.textContent = '0 containers';
+      bridgeStatusEl.textContent = 'Disconnected';
+    }
+
     try {
       const result = await callRpc('terminal.runCommand', {
         command: "docker ps -a --format '{\"id\":\"{{.ID}}\",\"name\":\"{{.Names}}\",\"image\":\"{{.Image}}\",\"status\":\"{{.Status}}\",\"state\":\"{{.State}}\",\"ports\":\"{{.Ports}}\"}'\n"
@@ -228,15 +272,18 @@
           renderContainers(parsed);
           bridgeStatusEl.textContent = 'Connected (SSH)';
           return;
+        } else {
+          containerListEl.innerHTML = '<div style="text-align:center; padding: 30px; color: var(--text-muted)">No Docker containers found on this host</div>';
+          containerCountEl.textContent = '0 containers';
+          bridgeStatusEl.textContent = 'Connected (SSH)';
+          return;
         }
       }
     } catch (err) {
-      // In standalone or disconnected mode, fall back to mock
-      console.log('Shellit host unreachable or terminal command failed, fallback to mock data');
+      console.log('Terminal command error or host disconnected:', err);
     }
 
-    renderContainers(mockContainers);
-    bridgeStatusEl.textContent = 'Live (Demo Mode)';
+    renderNoSessionPlaceholder();
   }
 
   btnRefresh.addEventListener('click', refreshContainers);

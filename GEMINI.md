@@ -49,7 +49,7 @@ We use `raw-sources/reference.png` solely as an ergonomic guideline (sidebar lay
 3. **Multi-View Catalog:** Quick toggle between Grid View, Dense List View (for 50+ servers), and Hierarchical Folder Tree View.
 4. **Omni-Bar (`Ctrl+K` / `Cmd+K`):** Raycast-style command palette for instant host connect, snippets execution, split layout management, and theme switching.
 5. **Matrix Tiling Splits:** 2x2, horizontal and vertical splits inside tabs with Broadcast Input mode.
-6. **Open Desktop Plugin SDK:** User-extendable plugins (`.shell-plugin` / `.pkit`) via sandboxed WebView IPC.
+6. **Open Desktop Plugin SDK:** User-extendable plugins (`.shellit`) via sandboxed WebView IPC.
 
 ---
 

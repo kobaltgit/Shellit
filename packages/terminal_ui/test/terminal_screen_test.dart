@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:terminal_ui/src/widgets/terminal/terminal_session_registry.dart';
 import 'package:terminal_ui/terminal_ui.dart';
+import 'package:xterm/xterm.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -13,13 +16,31 @@ void main() {
   group('TerminalScreen keyboard input and focus regression tests (BUG-007)',
       () {
     late FakeTerminalSession session;
+    String? mockClipboardText;
 
     setUp(() {
       session = FakeTerminalSession(id: 'sess-1', hostId: 'host-1');
+      mockClipboardText = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (MethodCall call) async {
+        if (call.method == 'Clipboard.setData') {
+          mockClipboardText = (call.arguments as Map)['text'] as String?;
+          return null;
+        }
+        if (call.method == 'Clipboard.getData') {
+          return mockClipboardText == null ? null : {'text': mockClipboardText};
+        }
+        if (call.method == 'Clipboard.hasStrings') {
+          return {'value': mockClipboardText != null};
+        }
+        return null;
+      });
     });
 
     tearDown(() async {
       await session.terminate();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
     });
 
     testWidgets(
@@ -269,6 +290,242 @@ void main() {
       await tester.pump(const Duration(milliseconds: 150));
 
       expect(toggleCalled, isTrue);
+    });
+
+    testWidgets(
+        'Ctrl+C without selection sends SIGINT to terminal session',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyC);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyC);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      final combinedInput =
+          session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
+      expect(combinedInput, contains('\x03'));
+    });
+
+    testWidgets(
+        'Ctrl+C with active selection copies selected text to Clipboard',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final registryEntry = TerminalSessionRegistry.instance.getOrCreate(session);
+      registryEntry.terminal.write('Hello World');
+      await tester.pump();
+
+      // Select all text using Ctrl+Shift+A
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyA);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      expect(registryEntry.controller.selection != null, isTrue);
+
+      // Copy using Ctrl+C with active selection
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyC);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyC);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final clipData = await Clipboard.getData(Clipboard.kTextPlain);
+      expect(clipData?.text, contains('Hello'));
+      expect(find.byType(SnackBar), findsOneWidget);
+
+      // Advance past SnackBar duration to clear timers
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets(
+        'Ctrl+Shift+V pastes clipboard text into session',
+        (tester) async {
+      await Clipboard.setData(const ClipboardData(text: 'pasted_cmd\n'));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyV);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyV);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      // Pump microtasks for Clipboard.getData and paste
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final combinedInput =
+          session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
+      expect(combinedInput, contains('pasted_cmd'));
+    });
+
+    testWidgets(
+        'Ctrl + = and Ctrl + - hotkeys zoom font size',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('13pt'), findsOneWidget);
+
+      // Zoom in: Ctrl + =
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.equal);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.equal);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('14pt'), findsOneWidget);
+
+      // Zoom out: Ctrl + -
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.minus);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.minus);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(find.text('13pt'), findsOneWidget);
+    });
+
+    testWidgets(
+        'Tapping Keys button opens TerminalShortcutsDialog',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Keys'), findsOneWidget);
+      await tester.tap(find.text('Keys'));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.byType(TerminalShortcutsDialog), findsOneWidget);
+      expect(find.text('Terminal Keyboard Shortcuts'), findsOneWidget);
+
+      // Close dialog
+      await tester.tap(find.text('Got it'));
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.byType(TerminalShortcutsDialog), findsNothing);
+    });
+
+    testWidgets(
+        'Secondary click on terminal shows context menu',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Right-click in the terminal view
+      await tester.tap(find.byType(TerminalView), buttons: kSecondaryMouseButton);
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.text('Paste'), findsOneWidget);
+      expect(find.text('Select All'), findsOneWidget);
+      expect(find.text('Clear Buffer'), findsOneWidget);
+      expect(find.text('Keyboard Shortcuts...'), findsOneWidget);
+
+      // Dismiss menu
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pump(const Duration(milliseconds: 250));
     });
   });
 }
