@@ -100,3 +100,16 @@ final appPluginBridgeProvider = Provider<IPluginBridge>((ref) {
 final appOsDetectorProvider = Provider<IOsDetector>((ref) {
   return const OsDetector();
 });
+
+/// Sync Crypto Provider
+final appSyncCryptoProvider = Provider<SyncCrypto>((ref) {
+  final crypto = ref.watch(vaultCryptoServiceProvider);
+  return SyncCrypto(cryptoService: crypto);
+});
+
+/// Sync Manager Provider
+final appSyncManagerProvider = Provider<SyncManager>((ref) {
+  final db = ref.watch(vaultDatabaseProvider);
+  final syncCrypto = ref.watch(appSyncCryptoProvider);
+  return SyncManager(db: db, syncCrypto: syncCrypto);
+});

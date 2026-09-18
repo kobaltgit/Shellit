@@ -90,9 +90,26 @@ class VaultSettingsTable extends Table {
       boolean().withDefault(const Constant(true))();
   IntColumn get pingIntervalSeconds =>
       integer().withDefault(const Constant(45))();
+  TextColumn get syncServerUrl => text().nullable()();
+  BoolColumn get isSyncEnabled =>
+      boolean().withDefault(const Constant(false))();
+  TextColumn get syncVaultId => text().nullable()();
+  BoolColumn get allowInsecureCertificates =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('SyncTombstoneRecord')
+class SyncTombstonesTable extends Table {
+  TextColumn get entityId => text()();
+  TextColumn get entityType => text()(); // 'host', 'key', 'folder', 'snippet'
+  DateTimeColumn get deletedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {entityId};
 }
 
 @DataClassName('VaultMetaRecord')
@@ -111,6 +128,7 @@ class VaultMetadataTable extends Table {
   SnippetsTable,
   VaultSettingsTable,
   VaultMetadataTable,
+  SyncTombstonesTable,
 ])
 class VaultDatabase extends _$VaultDatabase {
   VaultDatabase(QueryExecutor e) : super(e);
@@ -134,6 +152,8 @@ class VaultDatabase extends _$VaultDatabase {
               terminalFontSize: Value(14.0),
               enableLiveLatencyPing: Value(true),
               pingIntervalSeconds: Value(45),
+              isSyncEnabled: Value(false),
+              allowInsecureCertificates: Value(false),
             ),
             mode: InsertMode.insertOrIgnore,
           );
@@ -257,6 +277,11 @@ extension VaultSettingsRecordMapper on VaultSettingsRecord {
       terminalFontSize: terminalFontSize,
       enableLiveLatencyPing: enableLiveLatencyPing,
       pingIntervalSeconds: pingIntervalSeconds,
+      syncServerUrl: syncServerUrl,
+      isSyncEnabled: isSyncEnabled,
+      syncVaultId: syncVaultId,
+      allowInsecureCertificates: allowInsecureCertificates,
+      lastSyncedAt: lastSyncedAt,
     );
   }
 }

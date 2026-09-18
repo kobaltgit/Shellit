@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  shellit-sync:
+    build: .
+    container_name: shellit-sync-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - DATA_PATH=/data/shellit-sync.db
+      # Optional: require invite token for creating new vaults
+      - REGISTRATION_TOKEN=change-me-to-your-secure-token

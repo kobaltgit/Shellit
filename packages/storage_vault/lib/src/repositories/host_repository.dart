@@ -69,6 +69,9 @@ class HostRepository implements IHostRepository {
               updatedAt: Value(host.updatedAt),
             ),
           );
+      await (_db.delete(_db.syncTombstonesTable)
+            ..where((t) => t.entityId.equals(host.id)))
+          .go();
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));
@@ -83,6 +86,13 @@ class HostRepository implements IHostRepository {
 
     try {
       await (_db.delete(_db.hostsTable)..where((t) => t.id.equals(id))).go();
+      await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
+            SyncTombstonesTableCompanion(
+              entityId: Value(id),
+              entityType: const Value('host'),
+              deletedAt: Value(DateTime.now()),
+            ),
+          );
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));

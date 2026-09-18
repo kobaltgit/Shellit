@@ -12,4 +12,8 @@ export 'src/repositories/vault_repository.dart';
 export 'src/security/biometric_storage.dart';
 export 'src/security/vault_security_context.dart';
 export 'src/services/vault_backup_service.dart';
+export 'src/sync/sync_crypto.dart';
+export 'src/sync/sync_models.dart';
+export 'src/sync/sync_client.dart';
+export 'src/sync/sync_manager.dart';
 export 'package:drift/drift.dart' show driftRuntimeOptions;

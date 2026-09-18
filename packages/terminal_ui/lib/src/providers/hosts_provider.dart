@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -52,9 +53,13 @@ class HostsNotifier extends StateNotifier<List<HostEntity>> {
   Future<void> _loadHosts() async {
     if (_repository != null) {
       final hosts = await _repository!.getAllHosts();
-      state = hosts;
+      if (mounted) {
+        state = hosts;
+      }
       _repository!.watchAllHosts().listen((updatedList) {
-        state = updatedList;
+        if (mounted) {
+          state = updatedList;
+        }
       });
     } else {
       // Seed sample hosts for preview / test

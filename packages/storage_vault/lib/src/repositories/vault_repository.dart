@@ -602,6 +602,12 @@ class VaultRepository implements IVaultRepository {
               terminalFontSize: Value(settings.terminalFontSize),
               enableLiveLatencyPing: Value(settings.enableLiveLatencyPing),
               pingIntervalSeconds: Value(settings.pingIntervalSeconds),
+              syncServerUrl: Value(settings.syncServerUrl),
+              isSyncEnabled: Value(settings.isSyncEnabled),
+              syncVaultId: Value(settings.syncVaultId),
+              allowInsecureCertificates:
+                  Value(settings.allowInsecureCertificates),
+              lastSyncedAt: Value(settings.lastSyncedAt),
             ),
           );
       _cachedSettings = settings;

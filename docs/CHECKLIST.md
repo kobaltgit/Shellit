@@ -146,3 +146,28 @@
   - [x] Постоянное хранение хостов и настроек в SQLite (`%APPDATA%/com.example/shellit/data/shellit_vault.db`) с поддержкой открытого хранилища без обязательного пароля и плавной миграцией.
 - [x] Релиз версии 1.0.0 (Windows Desktop Ready с фирменной иконкой).
 
+---
+
+## Фаза 5: Кроссплатформенная синхронизация (Self-Hosted E2EE Sync)
+- [x] Сервер синхронизации `servers/sync_server` (Zero-Knowledge Relay):
+  - [x] Легковесный бэкенд на Dart + SQLite (потребление RAM < 20 МБ, без тяжелых внешних СУБД).
+  - [x] REST API (`/api/v1/vault/init`, `/api/v1/sync/changes`, `/api/v1/sync/push`, `/api/v1/health`).
+  - [x] WebSocket-хаб (`/api/v1/sync/ws`) для мгновенного push-оповещения клиентов о новых ревизиях.
+  - [x] Контейнеризация: многоэтапный `Dockerfile` (минимальный runtime-образ) и готовый `docker-compose.example.yml`.
+  - [x] Документация и инструкция по развертыванию на VPS за 1 минуту (`servers/sync_server/README.md`).
+- [x] Клиентский движок синхронизации (`packages/storage_vault`):
+  - [x] Модуль `SyncCrypto`: деривация ключа из парольной фразы (Argon2id), слепой `authHash` и шифрование данных (AES-256-GCM).
+  - [x] Механизм учета удалений: таблица `SyncTombstonesTable` в Drift для предотвращения «воскрешения» удаленных сущностей.
+  - [x] Клиент `SyncClient`: поддержка как чистого `http://` (внутри WireGuard / Tailscale / LAN), так и `https://` с пропуском проверки для самоподписанных сертификатов (`allowInsecureCertificates`).
+  - [x] Оркестратор `SyncManager`: бесконфликтное слияние данных по алгоритму Pull-Then-Push с LWW (Last-Write-Wins) по таймстемпам.
+- [x] Сетевые разрешения для мобильных платформ:
+  - [x] Android: включение `android.permission.INTERNET` и `android:usesCleartextTraffic="true"` в `AndroidManifest.xml`.
+  - [x] iOS: добавление `NSAppTransportSecurity` (`NSAllowsArbitraryLoads`) в `Info.plist`.
+- [x] Пользовательский интерфейс (`apps/shellit`):
+  - [x] Виджет `SyncSettingsCard` в `SettingsScreen`: ввод Server URL, Vault ID, парольной фразы, invite-токена, тумблер Self-Signed SSL.
+  - [x] Живой статус синхронизации (Online / Synced / Syncing / Error) и кнопки «Test Connection» и «Sync Now».
+- [x] 100% тестирование:
+  - [x] Юнит-тесты сервера (`server_test.dart`).
+  - [x] Сквозной интеграционный тест (`sync_client_integration_test.dart`): создание на Laptop → переливание на Phone → редактирование/удаление на Phone → обновление на Laptop.
+  - [x] Полный прогон `flutter test` и `flutter analyze` (0 ошибок, 0 предупреждений).
+

@@ -2186,6 +2186,44 @@ class $VaultSettingsTableTable extends VaultSettingsTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(45));
+  static const VerificationMeta _syncServerUrlMeta =
+      const VerificationMeta('syncServerUrl');
+  @override
+  late final GeneratedColumn<String> syncServerUrl = GeneratedColumn<String>(
+      'sync_server_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isSyncEnabledMeta =
+      const VerificationMeta('isSyncEnabled');
+  @override
+  late final GeneratedColumn<bool> isSyncEnabled = GeneratedColumn<bool>(
+      'is_sync_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_sync_enabled" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _syncVaultIdMeta =
+      const VerificationMeta('syncVaultId');
+  @override
+  late final GeneratedColumn<String> syncVaultId = GeneratedColumn<String>(
+      'sync_vault_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _allowInsecureCertificatesMeta =
+      const VerificationMeta('allowInsecureCertificates');
+  @override
+  late final GeneratedColumn<bool> allowInsecureCertificates =
+      GeneratedColumn<bool>('allow_insecure_certificates', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("allow_insecure_certificates" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -2196,7 +2234,12 @@ class $VaultSettingsTableTable extends VaultSettingsTable
         terminalFontFamily,
         terminalFontSize,
         enableLiveLatencyPing,
-        pingIntervalSeconds
+        pingIntervalSeconds,
+        syncServerUrl,
+        isSyncEnabled,
+        syncVaultId,
+        allowInsecureCertificates,
+        lastSyncedAt
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2258,6 +2301,37 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           pingIntervalSeconds.isAcceptableOrUnknown(
               data['ping_interval_seconds']!, _pingIntervalSecondsMeta));
     }
+    if (data.containsKey('sync_server_url')) {
+      context.handle(
+          _syncServerUrlMeta,
+          syncServerUrl.isAcceptableOrUnknown(
+              data['sync_server_url']!, _syncServerUrlMeta));
+    }
+    if (data.containsKey('is_sync_enabled')) {
+      context.handle(
+          _isSyncEnabledMeta,
+          isSyncEnabled.isAcceptableOrUnknown(
+              data['is_sync_enabled']!, _isSyncEnabledMeta));
+    }
+    if (data.containsKey('sync_vault_id')) {
+      context.handle(
+          _syncVaultIdMeta,
+          syncVaultId.isAcceptableOrUnknown(
+              data['sync_vault_id']!, _syncVaultIdMeta));
+    }
+    if (data.containsKey('allow_insecure_certificates')) {
+      context.handle(
+          _allowInsecureCertificatesMeta,
+          allowInsecureCertificates.isAcceptableOrUnknown(
+              data['allow_insecure_certificates']!,
+              _allowInsecureCertificatesMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
     return context;
   }
 
@@ -2287,6 +2361,17 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           data['${effectivePrefix}enable_live_latency_ping'])!,
       pingIntervalSeconds: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}ping_interval_seconds'])!,
+      syncServerUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_server_url']),
+      isSyncEnabled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_sync_enabled'])!,
+      syncVaultId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_vault_id']),
+      allowInsecureCertificates: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}allow_insecure_certificates'])!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
     );
   }
 
@@ -2307,6 +2392,11 @@ class VaultSettingsRecord extends DataClass
   final double terminalFontSize;
   final bool enableLiveLatencyPing;
   final int pingIntervalSeconds;
+  final String? syncServerUrl;
+  final bool isSyncEnabled;
+  final String? syncVaultId;
+  final bool allowInsecureCertificates;
+  final DateTime? lastSyncedAt;
   const VaultSettingsRecord(
       {required this.id,
       required this.idleLockTimeoutMinutes,
@@ -2316,7 +2406,12 @@ class VaultSettingsRecord extends DataClass
       required this.terminalFontFamily,
       required this.terminalFontSize,
       required this.enableLiveLatencyPing,
-      required this.pingIntervalSeconds});
+      required this.pingIntervalSeconds,
+      this.syncServerUrl,
+      required this.isSyncEnabled,
+      this.syncVaultId,
+      required this.allowInsecureCertificates,
+      this.lastSyncedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2329,6 +2424,18 @@ class VaultSettingsRecord extends DataClass
     map['terminal_font_size'] = Variable<double>(terminalFontSize);
     map['enable_live_latency_ping'] = Variable<bool>(enableLiveLatencyPing);
     map['ping_interval_seconds'] = Variable<int>(pingIntervalSeconds);
+    if (!nullToAbsent || syncServerUrl != null) {
+      map['sync_server_url'] = Variable<String>(syncServerUrl);
+    }
+    map['is_sync_enabled'] = Variable<bool>(isSyncEnabled);
+    if (!nullToAbsent || syncVaultId != null) {
+      map['sync_vault_id'] = Variable<String>(syncVaultId);
+    }
+    map['allow_insecure_certificates'] =
+        Variable<bool>(allowInsecureCertificates);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
     return map;
   }
 
@@ -2343,6 +2450,17 @@ class VaultSettingsRecord extends DataClass
       terminalFontSize: Value(terminalFontSize),
       enableLiveLatencyPing: Value(enableLiveLatencyPing),
       pingIntervalSeconds: Value(pingIntervalSeconds),
+      syncServerUrl: syncServerUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncServerUrl),
+      isSyncEnabled: Value(isSyncEnabled),
+      syncVaultId: syncVaultId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncVaultId),
+      allowInsecureCertificates: Value(allowInsecureCertificates),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
     );
   }
 
@@ -2364,6 +2482,12 @@ class VaultSettingsRecord extends DataClass
           serializer.fromJson<bool>(json['enableLiveLatencyPing']),
       pingIntervalSeconds:
           serializer.fromJson<int>(json['pingIntervalSeconds']),
+      syncServerUrl: serializer.fromJson<String?>(json['syncServerUrl']),
+      isSyncEnabled: serializer.fromJson<bool>(json['isSyncEnabled']),
+      syncVaultId: serializer.fromJson<String?>(json['syncVaultId']),
+      allowInsecureCertificates:
+          serializer.fromJson<bool>(json['allowInsecureCertificates']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
     );
   }
   @override
@@ -2379,6 +2503,12 @@ class VaultSettingsRecord extends DataClass
       'terminalFontSize': serializer.toJson<double>(terminalFontSize),
       'enableLiveLatencyPing': serializer.toJson<bool>(enableLiveLatencyPing),
       'pingIntervalSeconds': serializer.toJson<int>(pingIntervalSeconds),
+      'syncServerUrl': serializer.toJson<String?>(syncServerUrl),
+      'isSyncEnabled': serializer.toJson<bool>(isSyncEnabled),
+      'syncVaultId': serializer.toJson<String?>(syncVaultId),
+      'allowInsecureCertificates':
+          serializer.toJson<bool>(allowInsecureCertificates),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
     };
   }
 
@@ -2391,7 +2521,12 @@ class VaultSettingsRecord extends DataClass
           String? terminalFontFamily,
           double? terminalFontSize,
           bool? enableLiveLatencyPing,
-          int? pingIntervalSeconds}) =>
+          int? pingIntervalSeconds,
+          Value<String?> syncServerUrl = const Value.absent(),
+          bool? isSyncEnabled,
+          Value<String?> syncVaultId = const Value.absent(),
+          bool? allowInsecureCertificates,
+          Value<DateTime?> lastSyncedAt = const Value.absent()}) =>
       VaultSettingsRecord(
         id: id ?? this.id,
         idleLockTimeoutMinutes:
@@ -2404,6 +2539,14 @@ class VaultSettingsRecord extends DataClass
         enableLiveLatencyPing:
             enableLiveLatencyPing ?? this.enableLiveLatencyPing,
         pingIntervalSeconds: pingIntervalSeconds ?? this.pingIntervalSeconds,
+        syncServerUrl:
+            syncServerUrl.present ? syncServerUrl.value : this.syncServerUrl,
+        isSyncEnabled: isSyncEnabled ?? this.isSyncEnabled,
+        syncVaultId: syncVaultId.present ? syncVaultId.value : this.syncVaultId,
+        allowInsecureCertificates:
+            allowInsecureCertificates ?? this.allowInsecureCertificates,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
       );
   VaultSettingsRecord copyWithCompanion(VaultSettingsTableCompanion data) {
     return VaultSettingsRecord(
@@ -2430,6 +2573,20 @@ class VaultSettingsRecord extends DataClass
       pingIntervalSeconds: data.pingIntervalSeconds.present
           ? data.pingIntervalSeconds.value
           : this.pingIntervalSeconds,
+      syncServerUrl: data.syncServerUrl.present
+          ? data.syncServerUrl.value
+          : this.syncServerUrl,
+      isSyncEnabled: data.isSyncEnabled.present
+          ? data.isSyncEnabled.value
+          : this.isSyncEnabled,
+      syncVaultId:
+          data.syncVaultId.present ? data.syncVaultId.value : this.syncVaultId,
+      allowInsecureCertificates: data.allowInsecureCertificates.present
+          ? data.allowInsecureCertificates.value
+          : this.allowInsecureCertificates,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
     );
   }
 
@@ -2444,7 +2601,12 @@ class VaultSettingsRecord extends DataClass
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('enableLiveLatencyPing: $enableLiveLatencyPing, ')
-          ..write('pingIntervalSeconds: $pingIntervalSeconds')
+          ..write('pingIntervalSeconds: $pingIntervalSeconds, ')
+          ..write('syncServerUrl: $syncServerUrl, ')
+          ..write('isSyncEnabled: $isSyncEnabled, ')
+          ..write('syncVaultId: $syncVaultId, ')
+          ..write('allowInsecureCertificates: $allowInsecureCertificates, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
           ..write(')'))
         .toString();
   }
@@ -2459,7 +2621,12 @@ class VaultSettingsRecord extends DataClass
       terminalFontFamily,
       terminalFontSize,
       enableLiveLatencyPing,
-      pingIntervalSeconds);
+      pingIntervalSeconds,
+      syncServerUrl,
+      isSyncEnabled,
+      syncVaultId,
+      allowInsecureCertificates,
+      lastSyncedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2472,7 +2639,12 @@ class VaultSettingsRecord extends DataClass
           other.terminalFontFamily == this.terminalFontFamily &&
           other.terminalFontSize == this.terminalFontSize &&
           other.enableLiveLatencyPing == this.enableLiveLatencyPing &&
-          other.pingIntervalSeconds == this.pingIntervalSeconds);
+          other.pingIntervalSeconds == this.pingIntervalSeconds &&
+          other.syncServerUrl == this.syncServerUrl &&
+          other.isSyncEnabled == this.isSyncEnabled &&
+          other.syncVaultId == this.syncVaultId &&
+          other.allowInsecureCertificates == this.allowInsecureCertificates &&
+          other.lastSyncedAt == this.lastSyncedAt);
 }
 
 class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
@@ -2485,6 +2657,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
   final Value<double> terminalFontSize;
   final Value<bool> enableLiveLatencyPing;
   final Value<int> pingIntervalSeconds;
+  final Value<String?> syncServerUrl;
+  final Value<bool> isSyncEnabled;
+  final Value<String?> syncVaultId;
+  final Value<bool> allowInsecureCertificates;
+  final Value<DateTime?> lastSyncedAt;
   const VaultSettingsTableCompanion({
     this.id = const Value.absent(),
     this.idleLockTimeoutMinutes = const Value.absent(),
@@ -2495,6 +2672,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.terminalFontSize = const Value.absent(),
     this.enableLiveLatencyPing = const Value.absent(),
     this.pingIntervalSeconds = const Value.absent(),
+    this.syncServerUrl = const Value.absent(),
+    this.isSyncEnabled = const Value.absent(),
+    this.syncVaultId = const Value.absent(),
+    this.allowInsecureCertificates = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
   });
   VaultSettingsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -2506,6 +2688,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.terminalFontSize = const Value.absent(),
     this.enableLiveLatencyPing = const Value.absent(),
     this.pingIntervalSeconds = const Value.absent(),
+    this.syncServerUrl = const Value.absent(),
+    this.isSyncEnabled = const Value.absent(),
+    this.syncVaultId = const Value.absent(),
+    this.allowInsecureCertificates = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
   });
   static Insertable<VaultSettingsRecord> custom({
     Expression<int>? id,
@@ -2517,6 +2704,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     Expression<double>? terminalFontSize,
     Expression<bool>? enableLiveLatencyPing,
     Expression<int>? pingIntervalSeconds,
+    Expression<String>? syncServerUrl,
+    Expression<bool>? isSyncEnabled,
+    Expression<String>? syncVaultId,
+    Expression<bool>? allowInsecureCertificates,
+    Expression<DateTime>? lastSyncedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2533,6 +2725,12 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
         'enable_live_latency_ping': enableLiveLatencyPing,
       if (pingIntervalSeconds != null)
         'ping_interval_seconds': pingIntervalSeconds,
+      if (syncServerUrl != null) 'sync_server_url': syncServerUrl,
+      if (isSyncEnabled != null) 'is_sync_enabled': isSyncEnabled,
+      if (syncVaultId != null) 'sync_vault_id': syncVaultId,
+      if (allowInsecureCertificates != null)
+        'allow_insecure_certificates': allowInsecureCertificates,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
     });
   }
 
@@ -2545,7 +2743,12 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       Value<String>? terminalFontFamily,
       Value<double>? terminalFontSize,
       Value<bool>? enableLiveLatencyPing,
-      Value<int>? pingIntervalSeconds}) {
+      Value<int>? pingIntervalSeconds,
+      Value<String?>? syncServerUrl,
+      Value<bool>? isSyncEnabled,
+      Value<String?>? syncVaultId,
+      Value<bool>? allowInsecureCertificates,
+      Value<DateTime?>? lastSyncedAt}) {
     return VaultSettingsTableCompanion(
       id: id ?? this.id,
       idleLockTimeoutMinutes:
@@ -2558,6 +2761,12 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       enableLiveLatencyPing:
           enableLiveLatencyPing ?? this.enableLiveLatencyPing,
       pingIntervalSeconds: pingIntervalSeconds ?? this.pingIntervalSeconds,
+      syncServerUrl: syncServerUrl ?? this.syncServerUrl,
+      isSyncEnabled: isSyncEnabled ?? this.isSyncEnabled,
+      syncVaultId: syncVaultId ?? this.syncVaultId,
+      allowInsecureCertificates:
+          allowInsecureCertificates ?? this.allowInsecureCertificates,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
     );
   }
 
@@ -2593,6 +2802,22 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     if (pingIntervalSeconds.present) {
       map['ping_interval_seconds'] = Variable<int>(pingIntervalSeconds.value);
     }
+    if (syncServerUrl.present) {
+      map['sync_server_url'] = Variable<String>(syncServerUrl.value);
+    }
+    if (isSyncEnabled.present) {
+      map['is_sync_enabled'] = Variable<bool>(isSyncEnabled.value);
+    }
+    if (syncVaultId.present) {
+      map['sync_vault_id'] = Variable<String>(syncVaultId.value);
+    }
+    if (allowInsecureCertificates.present) {
+      map['allow_insecure_certificates'] =
+          Variable<bool>(allowInsecureCertificates.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
     return map;
   }
 
@@ -2607,7 +2832,12 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
           ..write('terminalFontFamily: $terminalFontFamily, ')
           ..write('terminalFontSize: $terminalFontSize, ')
           ..write('enableLiveLatencyPing: $enableLiveLatencyPing, ')
-          ..write('pingIntervalSeconds: $pingIntervalSeconds')
+          ..write('pingIntervalSeconds: $pingIntervalSeconds, ')
+          ..write('syncServerUrl: $syncServerUrl, ')
+          ..write('isSyncEnabled: $isSyncEnabled, ')
+          ..write('syncVaultId: $syncVaultId, ')
+          ..write('allowInsecureCertificates: $allowInsecureCertificates, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
           ..write(')'))
         .toString();
   }
@@ -2806,6 +3036,246 @@ class VaultMetadataTableCompanion extends UpdateCompanion<VaultMetaRecord> {
   }
 }
 
+class $SyncTombstonesTableTable extends SyncTombstonesTable
+    with TableInfo<$SyncTombstonesTableTable, SyncTombstoneRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncTombstonesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _entityIdMeta =
+      const VerificationMeta('entityId');
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+      'entity_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _entityTypeMeta =
+      const VerificationMeta('entityType');
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+      'entity_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+      'deleted_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [entityId, entityType, deletedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_tombstones_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SyncTombstoneRecord> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('entity_id')) {
+      context.handle(_entityIdMeta,
+          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+          _entityTypeMeta,
+          entityType.isAcceptableOrUnknown(
+              data['entity_type']!, _entityTypeMeta));
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    } else if (isInserting) {
+      context.missing(_deletedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {entityId};
+  @override
+  SyncTombstoneRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncTombstoneRecord(
+      entityId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_id'])!,
+      entityType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_type'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at'])!,
+    );
+  }
+
+  @override
+  $SyncTombstonesTableTable createAlias(String alias) {
+    return $SyncTombstonesTableTable(attachedDatabase, alias);
+  }
+}
+
+class SyncTombstoneRecord extends DataClass
+    implements Insertable<SyncTombstoneRecord> {
+  final String entityId;
+  final String entityType;
+  final DateTime deletedAt;
+  const SyncTombstoneRecord(
+      {required this.entityId,
+      required this.entityType,
+      required this.deletedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['entity_id'] = Variable<String>(entityId);
+    map['entity_type'] = Variable<String>(entityType);
+    map['deleted_at'] = Variable<DateTime>(deletedAt);
+    return map;
+  }
+
+  SyncTombstonesTableCompanion toCompanion(bool nullToAbsent) {
+    return SyncTombstonesTableCompanion(
+      entityId: Value(entityId),
+      entityType: Value(entityType),
+      deletedAt: Value(deletedAt),
+    );
+  }
+
+  factory SyncTombstoneRecord.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncTombstoneRecord(
+      entityId: serializer.fromJson<String>(json['entityId']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      deletedAt: serializer.fromJson<DateTime>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'entityId': serializer.toJson<String>(entityId),
+      'entityType': serializer.toJson<String>(entityType),
+      'deletedAt': serializer.toJson<DateTime>(deletedAt),
+    };
+  }
+
+  SyncTombstoneRecord copyWith(
+          {String? entityId, String? entityType, DateTime? deletedAt}) =>
+      SyncTombstoneRecord(
+        entityId: entityId ?? this.entityId,
+        entityType: entityType ?? this.entityType,
+        deletedAt: deletedAt ?? this.deletedAt,
+      );
+  SyncTombstoneRecord copyWithCompanion(SyncTombstonesTableCompanion data) {
+    return SyncTombstoneRecord(
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      entityType:
+          data.entityType.present ? data.entityType.value : this.entityType,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncTombstoneRecord(')
+          ..write('entityId: $entityId, ')
+          ..write('entityType: $entityType, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(entityId, entityType, deletedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncTombstoneRecord &&
+          other.entityId == this.entityId &&
+          other.entityType == this.entityType &&
+          other.deletedAt == this.deletedAt);
+}
+
+class SyncTombstonesTableCompanion
+    extends UpdateCompanion<SyncTombstoneRecord> {
+  final Value<String> entityId;
+  final Value<String> entityType;
+  final Value<DateTime> deletedAt;
+  final Value<int> rowid;
+  const SyncTombstonesTableCompanion({
+    this.entityId = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncTombstonesTableCompanion.insert({
+    required String entityId,
+    required String entityType,
+    required DateTime deletedAt,
+    this.rowid = const Value.absent(),
+  })  : entityId = Value(entityId),
+        entityType = Value(entityType),
+        deletedAt = Value(deletedAt);
+  static Insertable<SyncTombstoneRecord> custom({
+    Expression<String>? entityId,
+    Expression<String>? entityType,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (entityId != null) 'entity_id': entityId,
+      if (entityType != null) 'entity_type': entityType,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncTombstonesTableCompanion copyWith(
+      {Value<String>? entityId,
+      Value<String>? entityType,
+      Value<DateTime>? deletedAt,
+      Value<int>? rowid}) {
+    return SyncTombstonesTableCompanion(
+      entityId: entityId ?? this.entityId,
+      entityType: entityType ?? this.entityType,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncTombstonesTableCompanion(')
+          ..write('entityId: $entityId, ')
+          ..write('entityType: $entityType, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$VaultDatabase extends GeneratedDatabase {
   _$VaultDatabase(QueryExecutor e) : super(e);
   $VaultDatabaseManager get managers => $VaultDatabaseManager(this);
@@ -2817,6 +3287,8 @@ abstract class _$VaultDatabase extends GeneratedDatabase {
       $VaultSettingsTableTable(this);
   late final $VaultMetadataTableTable vaultMetadataTable =
       $VaultMetadataTableTable(this);
+  late final $SyncTombstonesTableTable syncTombstonesTable =
+      $SyncTombstonesTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2827,7 +3299,8 @@ abstract class _$VaultDatabase extends GeneratedDatabase {
         foldersTable,
         snippetsTable,
         vaultSettingsTable,
-        vaultMetadataTable
+        vaultMetadataTable,
+        syncTombstonesTable
       ];
 }
 
@@ -3833,6 +4306,11 @@ typedef $$VaultSettingsTableTableCreateCompanionBuilder
   Value<double> terminalFontSize,
   Value<bool> enableLiveLatencyPing,
   Value<int> pingIntervalSeconds,
+  Value<String?> syncServerUrl,
+  Value<bool> isSyncEnabled,
+  Value<String?> syncVaultId,
+  Value<bool> allowInsecureCertificates,
+  Value<DateTime?> lastSyncedAt,
 });
 typedef $$VaultSettingsTableTableUpdateCompanionBuilder
     = VaultSettingsTableCompanion Function({
@@ -3845,6 +4323,11 @@ typedef $$VaultSettingsTableTableUpdateCompanionBuilder
   Value<double> terminalFontSize,
   Value<bool> enableLiveLatencyPing,
   Value<int> pingIntervalSeconds,
+  Value<String?> syncServerUrl,
+  Value<bool> isSyncEnabled,
+  Value<String?> syncVaultId,
+  Value<bool> allowInsecureCertificates,
+  Value<DateTime?> lastSyncedAt,
 });
 
 class $$VaultSettingsTableTableFilterComposer
@@ -3888,6 +4371,22 @@ class $$VaultSettingsTableTableFilterComposer
   ColumnFilters<int> get pingIntervalSeconds => $composableBuilder(
       column: $table.pingIntervalSeconds,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncServerUrl => $composableBuilder(
+      column: $table.syncServerUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSyncEnabled => $composableBuilder(
+      column: $table.isSyncEnabled, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncVaultId => $composableBuilder(
+      column: $table.syncVaultId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get allowInsecureCertificates => $composableBuilder(
+      column: $table.allowInsecureCertificates,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$VaultSettingsTableTableOrderingComposer
@@ -3932,6 +4431,25 @@ class $$VaultSettingsTableTableOrderingComposer
   ColumnOrderings<int> get pingIntervalSeconds => $composableBuilder(
       column: $table.pingIntervalSeconds,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncServerUrl => $composableBuilder(
+      column: $table.syncServerUrl,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSyncEnabled => $composableBuilder(
+      column: $table.isSyncEnabled,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncVaultId => $composableBuilder(
+      column: $table.syncVaultId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get allowInsecureCertificates => $composableBuilder(
+      column: $table.allowInsecureCertificates,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$VaultSettingsTableTableAnnotationComposer
@@ -3969,6 +4487,21 @@ class $$VaultSettingsTableTableAnnotationComposer
 
   GeneratedColumn<int> get pingIntervalSeconds => $composableBuilder(
       column: $table.pingIntervalSeconds, builder: (column) => column);
+
+  GeneratedColumn<String> get syncServerUrl => $composableBuilder(
+      column: $table.syncServerUrl, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSyncEnabled => $composableBuilder(
+      column: $table.isSyncEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get syncVaultId => $composableBuilder(
+      column: $table.syncVaultId, builder: (column) => column);
+
+  GeneratedColumn<bool> get allowInsecureCertificates => $composableBuilder(
+      column: $table.allowInsecureCertificates, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
 }
 
 class $$VaultSettingsTableTableTableManager extends RootTableManager<
@@ -4009,6 +4542,11 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<double> terminalFontSize = const Value.absent(),
             Value<bool> enableLiveLatencyPing = const Value.absent(),
             Value<int> pingIntervalSeconds = const Value.absent(),
+            Value<String?> syncServerUrl = const Value.absent(),
+            Value<bool> isSyncEnabled = const Value.absent(),
+            Value<String?> syncVaultId = const Value.absent(),
+            Value<bool> allowInsecureCertificates = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
           }) =>
               VaultSettingsTableCompanion(
             id: id,
@@ -4020,6 +4558,11 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             terminalFontSize: terminalFontSize,
             enableLiveLatencyPing: enableLiveLatencyPing,
             pingIntervalSeconds: pingIntervalSeconds,
+            syncServerUrl: syncServerUrl,
+            isSyncEnabled: isSyncEnabled,
+            syncVaultId: syncVaultId,
+            allowInsecureCertificates: allowInsecureCertificates,
+            lastSyncedAt: lastSyncedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -4031,6 +4574,11 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<double> terminalFontSize = const Value.absent(),
             Value<bool> enableLiveLatencyPing = const Value.absent(),
             Value<int> pingIntervalSeconds = const Value.absent(),
+            Value<String?> syncServerUrl = const Value.absent(),
+            Value<bool> isSyncEnabled = const Value.absent(),
+            Value<String?> syncVaultId = const Value.absent(),
+            Value<bool> allowInsecureCertificates = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
           }) =>
               VaultSettingsTableCompanion.insert(
             id: id,
@@ -4042,6 +4590,11 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             terminalFontSize: terminalFontSize,
             enableLiveLatencyPing: enableLiveLatencyPing,
             pingIntervalSeconds: pingIntervalSeconds,
+            syncServerUrl: syncServerUrl,
+            isSyncEnabled: isSyncEnabled,
+            syncVaultId: syncVaultId,
+            allowInsecureCertificates: allowInsecureCertificates,
+            lastSyncedAt: lastSyncedAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4196,6 +4749,154 @@ typedef $$VaultMetadataTableTableProcessedTableManager = ProcessedTableManager<
     ),
     VaultMetaRecord,
     PrefetchHooks Function()>;
+typedef $$SyncTombstonesTableTableCreateCompanionBuilder
+    = SyncTombstonesTableCompanion Function({
+  required String entityId,
+  required String entityType,
+  required DateTime deletedAt,
+  Value<int> rowid,
+});
+typedef $$SyncTombstonesTableTableUpdateCompanionBuilder
+    = SyncTombstonesTableCompanion Function({
+  Value<String> entityId,
+  Value<String> entityType,
+  Value<DateTime> deletedAt,
+  Value<int> rowid,
+});
+
+class $$SyncTombstonesTableTableFilterComposer
+    extends Composer<_$VaultDatabase, $SyncTombstonesTableTable> {
+  $$SyncTombstonesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get entityId => $composableBuilder(
+      column: $table.entityId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$SyncTombstonesTableTableOrderingComposer
+    extends Composer<_$VaultDatabase, $SyncTombstonesTableTable> {
+  $$SyncTombstonesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get entityId => $composableBuilder(
+      column: $table.entityId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SyncTombstonesTableTableAnnotationComposer
+    extends Composer<_$VaultDatabase, $SyncTombstonesTableTable> {
+  $$SyncTombstonesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$SyncTombstonesTableTableTableManager extends RootTableManager<
+    _$VaultDatabase,
+    $SyncTombstonesTableTable,
+    SyncTombstoneRecord,
+    $$SyncTombstonesTableTableFilterComposer,
+    $$SyncTombstonesTableTableOrderingComposer,
+    $$SyncTombstonesTableTableAnnotationComposer,
+    $$SyncTombstonesTableTableCreateCompanionBuilder,
+    $$SyncTombstonesTableTableUpdateCompanionBuilder,
+    (
+      SyncTombstoneRecord,
+      BaseReferences<_$VaultDatabase, $SyncTombstonesTableTable,
+          SyncTombstoneRecord>
+    ),
+    SyncTombstoneRecord,
+    PrefetchHooks Function()> {
+  $$SyncTombstonesTableTableTableManager(
+      _$VaultDatabase db, $SyncTombstonesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncTombstonesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncTombstonesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncTombstonesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> entityId = const Value.absent(),
+            Value<String> entityType = const Value.absent(),
+            Value<DateTime> deletedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncTombstonesTableCompanion(
+            entityId: entityId,
+            entityType: entityType,
+            deletedAt: deletedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String entityId,
+            required String entityType,
+            required DateTime deletedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SyncTombstonesTableCompanion.insert(
+            entityId: entityId,
+            entityType: entityType,
+            deletedAt: deletedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SyncTombstonesTableTableProcessedTableManager = ProcessedTableManager<
+    _$VaultDatabase,
+    $SyncTombstonesTableTable,
+    SyncTombstoneRecord,
+    $$SyncTombstonesTableTableFilterComposer,
+    $$SyncTombstonesTableTableOrderingComposer,
+    $$SyncTombstonesTableTableAnnotationComposer,
+    $$SyncTombstonesTableTableCreateCompanionBuilder,
+    $$SyncTombstonesTableTableUpdateCompanionBuilder,
+    (
+      SyncTombstoneRecord,
+      BaseReferences<_$VaultDatabase, $SyncTombstonesTableTable,
+          SyncTombstoneRecord>
+    ),
+    SyncTombstoneRecord,
+    PrefetchHooks Function()>;
 
 class $VaultDatabaseManager {
   final _$VaultDatabase _db;
@@ -4212,4 +4913,6 @@ class $VaultDatabaseManager {
       $$VaultSettingsTableTableTableManager(_db, _db.vaultSettingsTable);
   $$VaultMetadataTableTableTableManager get vaultMetadataTable =>
       $$VaultMetadataTableTableTableManager(_db, _db.vaultMetadataTable);
+  $$SyncTombstonesTableTableTableManager get syncTombstonesTable =>
+      $$SyncTombstonesTableTableTableManager(_db, _db.syncTombstonesTable);
 }

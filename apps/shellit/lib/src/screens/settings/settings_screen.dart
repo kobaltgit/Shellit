@@ -5,6 +5,7 @@ import 'package:terminal_ui/terminal_ui.dart';
 import '../../controllers/log_controllers.dart';
 import '../../controllers/recording_settings_provider.dart';
 import '../../di/app_providers.dart';
+import 'sync_settings_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -242,7 +243,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Section 4: Logs & Diagnostics
+          // Section 4: Synchronization
+          _buildSectionHeader('Synchronization & Multi-Device'),
+          const SizedBox(height: 8),
+          const SyncSettingsCard(),
+          const SizedBox(height: 24),
+
+          // Section 5: Logs & Diagnostics
           _buildSectionHeader('Logs & Diagnostics'),
           const SizedBox(height: 8),
           Card(
