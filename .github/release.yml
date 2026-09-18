@@ -1,0 +1,33 @@
+# Configuration for GitHub's automated release notes generator
+changelog:
+  categories:
+    - title: "🚀 New Features & Enhancements"
+      labels:
+        - "feature"
+        - "enhancement"
+        - "feat"
+    - title: "🐛 Bug Fixes & Stability"
+      labels:
+        - "fix"
+        - "bug"
+        - "bugfix"
+    - title: "🛡️ Security & Vault"
+      labels:
+        - "security"
+        - "vault"
+        - "encryption"
+    - title: "⚡ UI & Terminal Experience"
+      labels:
+        - "ui"
+        - "terminal"
+        - "tabs"
+        - "splits"
+    - title: "📦 Dependency Updates & Maintenance"
+      labels:
+        - "dependencies"
+        - "chore"
+        - "refactor"
+    - title: "📝 Documentation"
+      labels:
+        - "documentation"
+        - "docs"

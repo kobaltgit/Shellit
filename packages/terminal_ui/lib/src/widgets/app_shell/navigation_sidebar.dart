@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/shellit_theme.dart';
+import 'shellit_logo.dart';
 
 enum SidebarSection {
   hosts,
@@ -53,23 +54,7 @@ class NavigationSidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        ShellitColors.accentBlue,
-                        ShellitColors.accentCyan
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child:
-                      const Icon(Icons.terminal, color: Colors.white, size: 20),
-                ),
+                const ShellitLogo(size: 32, borderRadius: 8),
                 if (!isCollapsed) ...[
                   const SizedBox(width: 12),
                   const Expanded(

@@ -130,10 +130,19 @@
   - [x] Интерактивный индикатор и кнопка `● REC [01:23]` в тулбаре терминала (`TerminalScreen`) с возможностью включения/остановки записи на лету.
   - [x] Автоматическая финализация и сохранение метаданных и файлов (`.cast`, `.log`) в `SessionStorageService` при отключении или ручной остановке.
   - [x] 100% покрытие юнит- и виджет-тестами (`session_connect_flow_test.dart`, `terminal_screen_test.dart`, 163/163 теста успешно, 0 ошибок анализатора).
+- [x] Фирменный стиль и кроссплатформенная иконка приложения:
+  - [x] Векторный брендовый логотип `S_` в дизайне Obsidian Dark (`icon-02.svg`, градиент `#5FB300`→`#8AEB1A`, подложка `#1C213D`).
+  - [x] Встраиваемый Flutter-виджет `ShellitLogo` в `terminal_ui` (сайдбар, окно «О программе»).
+  - [x] Мультиразрешенная иконка Windows (`app_icon.ico` со слоями 16, 24, 32, 48, 64, 128, 256 px).
+  - [x] Набор иконок Android (`mipmap-mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi` + `launcher_icon.png`).
+  - [x] Полные матрицы иконок iOS и macOS (`Assets.xcassets/AppIcon.appiconset`, App Store compliance `remove_alpha_ios: true`).
+  - [x] Web PWA иконки (`favicon.png`, `Icon-192`, `Icon-512`, maskable).
+  - [x] Регистрация `assets/icon/` в `apps/shellit/pubspec.yaml` и автоматизация через `flutter_launcher_icons`.
 - [ ] Сборка пакетов:
-  - [x] Windows (Release EXE: `build\windows\x64\runner\Release\shellit.exe` — проверено с Safe Build Protocol)
+  - [x] Windows (Release EXE: `build\windows\x64\runner\Release\shellit.exe` — проверено со вшитой новой иконкой и Safe Build Protocol)
   - [ ] macOS (DMG)
   - [ ] Linux (AppImage / DEB)
   - [ ] Android (APK)
   - [x] Постоянное хранение хостов и настроек в SQLite (`%APPDATA%/com.example/shellit/data/shellit_vault.db`) с поддержкой открытого хранилища без обязательного пароля и плавной миграцией.
-- [x] Релиз версии 1.0.0 (Windows Desktop Ready).
+- [x] Релиз версии 1.0.0 (Windows Desktop Ready с фирменной иконкой).
+

@@ -16,6 +16,7 @@ export 'src/providers/theme_provider.dart';
 
 // App Shell Widgets
 export 'src/widgets/app_shell/shellit_app_shell.dart';
+export 'src/widgets/app_shell/shellit_logo.dart';
 export 'src/widgets/app_shell/navigation_sidebar.dart';
 export 'src/widgets/app_shell/top_bar_tabs.dart';
 

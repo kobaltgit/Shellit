@@ -1,0 +1,169 @@
+name: Release Multiplatform
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        description: 'Mark as prerelease (Alpha / Beta)'
+        required: true
+        type: boolean
+        default: true
+      draft:
+        description: 'Create as draft release'
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows (Setup.exe & Portable Zip)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd apps/shellit
+          flutter pub get
+
+      - name: Build Flutter Windows Release
+        run: |
+          cd apps/shellit
+          flutter build windows --release
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Package Windows Installer & Portable Archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build_output
+          $tag = "${{ github.ref_name }}"
+          $version = if ($tag.StartsWith("v")) { $tag.Substring(1) } else { $tag }
+          if ([string]::IsNullOrWhiteSpace($version)) { $version = "0.1.0" }
+
+          # 1. Create portable ZIP
+          Compress-Archive -Path apps/shellit/build/windows/x64/runner/Release/* -DestinationPath "build_output/Shellit-Windows-x64-$tag.zip" -Force
+
+          # 2. Compile Inno Setup installer
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc "/DMyAppVersion=$version" packaging/windows/shellit_installer.iss
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-assets
+          path: build_output/*
+
+  build-linux:
+    name: Build Linux (Tar.gz Archive)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd apps/shellit
+          flutter pub get
+
+      - name: Build Flutter Linux Release
+        run: |
+          cd apps/shellit
+          flutter build linux --release
+
+      - name: Package Linux Archive
+        run: |
+          mkdir -p build_output
+          tar -czvf "build_output/Shellit-Linux-x64-${{ github.ref_name }}.tar.gz" -C apps/shellit/build/linux/x64/release/bundle .
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-assets
+          path: build_output/*
+
+  build-android:
+    name: Build Android (APK)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          cd apps/shellit
+          flutter pub get
+
+      - name: Build Android APK
+        run: |
+          cd apps/shellit
+          flutter build apk --release
+
+      - name: Package Android Artifact
+        run: |
+          mkdir -p build_output
+          cp apps/shellit/build/app/outputs/flutter-apk/app-release.apk "build_output/Shellit-Android-${{ github.ref_name }}.apk"
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-assets
+          path: build_output/*
+
+  publish-release:
+    name: Publish to GitHub Releases
+    needs: [build-windows, build-linux, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_assets
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Shellit ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          draft: ${{ inputs.draft || false }}
+          prerelease: ${{ inputs.prerelease || startsWith(github.ref_name, 'v0.') }}
+          generate_release_notes: true
+          files: release_assets/*
