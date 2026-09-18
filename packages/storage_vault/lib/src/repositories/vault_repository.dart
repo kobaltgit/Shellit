@@ -567,6 +567,11 @@ class VaultRepository implements IVaultRepository {
         VaultCryptoService.zeroize(newMasterKeyBytes);
       }
 
+      // 7. If PIN is enabled, invalidate it to prevent stale key restoration
+      if (settings.isPinEnabled) {
+        await disablePin();
+      }
+
       _securityContext.unlock(newMasterKey);
       await _resetIdleTimer();
 

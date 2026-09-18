@@ -40,6 +40,9 @@ jobs:
           flutter pub get
 
       - name: Build Flutter Windows Release
+        shell: pwsh
+        env:
+          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
         run: |
           cd apps/shellit
           flutter build windows --release
