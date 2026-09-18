@@ -2,6 +2,7 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/vault_provider.dart';
 import '../../theme/shellit_theme.dart';
@@ -177,7 +178,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           // Tab Overflow Dropdown Button
           if (sessionState.tabs.length > 2)
             Tooltip(
-              message: 'All Open Tabs (${sessionState.tabs.length})',
+              message: context.tr('tabs.overflow_all_tabs',
+                      defaultText: 'All Open Tabs ({count})')
+                  .replaceAll('{count}', sessionState.tabs.length.toString()),
               child: InkWell(
                 onTap: () => TabOverflowMenu.show(
                   context,
@@ -230,7 +233,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           IconButton(
             icon: const Icon(Icons.search,
                 size: 20, color: ShellitColors.textSecondary),
-            tooltip: 'Command Palette (Ctrl+K)',
+            tooltip: context.tr('omni.command_palette_tooltip',
+                defaultText: 'Command Palette (Ctrl+K)'),
             onPressed: widget.onOmniBarOpen,
           ),
           if (widget.trailing != null) widget.trailing!,
@@ -273,7 +277,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Hosts',
+                context.tr('hosts.title', defaultText: 'Hosts'),
                 style: TextStyle(
                   color: isActive
                       ? ShellitColors.textPrimary
@@ -291,7 +295,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
 
   Widget _buildNewTabButton({required VoidCallback onTap}) {
     return Tooltip(
-      message: 'New Tab (Open Hosts Catalog)',
+      message: context.tr('tabs.new_tab_tooltip',
+          defaultText: 'New Tab (Open Hosts Catalog)'),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(6),
@@ -348,10 +353,10 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
             const SizedBox(width: 8),
             Text(
               isLocked
-                  ? '${vaultState.activeVaultName} (Locked)'
+                  ? '${vaultState.activeVaultName} (${context.tr('vault.status_locked', defaultText: 'Locked')})'
                   : (isProtected
                       ? vaultState.activeVaultName
-                      : '${vaultState.activeVaultName} (Open)'),
+                      : '${vaultState.activeVaultName} (${context.tr('vault.status_open', defaultText: 'Open')})'),
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -373,21 +378,25 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
       builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: ShellitColors.obsidianCard,
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.lock, color: ShellitColors.accentBlue, size: 22),
-              SizedBox(width: 8),
-              Text('Unlock Vault',
-                  style: TextStyle(
-                      fontSize: 16, color: ShellitColors.textPrimary)),
+              const Icon(Icons.lock, color: ShellitColors.accentBlue, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                context.tr('vault.unlock_title',
+                    defaultText: 'Unlock Shellit Vault'),
+                style: const TextStyle(
+                    fontSize: 16, color: ShellitColors.textPrimary),
+              ),
             ],
           ),
           content: TextField(
             controller: passController,
             obscureText: true,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Enter Master Password',
+            decoration: InputDecoration(
+              hintText: context.tr('vault.unlock_password_label',
+                  defaultText: 'Master Password'),
             ),
             onSubmitted: (pwd) async {
               final ok = await ref
@@ -398,7 +407,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   Navigator.of(dialogCtx).pop();
                 } else {
                   final err = ref.read(vaultProvider).errorMessage ??
-                      'Invalid master password';
+                      context.tr('vault.unlock_failed',
+                          defaultText:
+                              'Invalid master password. Please try again.');
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(err),
@@ -412,7 +423,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -424,7 +435,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                     Navigator.of(dialogCtx).pop();
                   } else {
                     final err = ref.read(vaultProvider).errorMessage ??
-                        'Invalid master password';
+                        context.tr('vault.unlock_failed',
+                            defaultText:
+                                'Invalid master password. Please try again.');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(err),
@@ -434,7 +447,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   }
                 }
               },
-              child: const Text('Unlock'),
+              child:
+                  Text(context.tr('vault.unlock_btn', defaultText: 'Unlock')),
             ),
           ],
         );
@@ -451,13 +465,16 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
       builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: ShellitColors.obsidianCard,
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.shield, color: ShellitColors.accentBlue, size: 22),
-              SizedBox(width: 8),
-              Text('Set Master Password',
-                  style: TextStyle(
-                      fontSize: 16, color: ShellitColors.textPrimary)),
+              const Icon(Icons.shield, color: ShellitColors.accentBlue, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                context.tr('vault.setup_password_title',
+                    defaultText: 'Set Master Password'),
+                style: const TextStyle(
+                    fontSize: 16, color: ShellitColors.textPrimary),
+              ),
             ],
           ),
           content: SizedBox(
@@ -466,9 +483,11 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Your vault is currently unencrypted. Setting a master password encrypts your stored SSH keys and credentials with Argon2id and AES-256-GCM.',
-                  style: TextStyle(
+                Text(
+                  context.tr('vault.setup_password_desc',
+                      defaultText:
+                          'Your vault is currently unencrypted. Setting a master password encrypts your stored SSH keys and credentials with Argon2id and AES-256-GCM.'),
+                  style: const TextStyle(
                       fontSize: 13, color: ShellitColors.textSecondary),
                 ),
                 const SizedBox(height: 16),
@@ -476,18 +495,22 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   controller: passController,
                   obscureText: true,
                   autofocus: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Master Password',
-                    hintText: 'Choose a strong password',
+                  decoration: InputDecoration(
+                    labelText: context.tr('vault.setup_password_label',
+                        defaultText: 'Master Password'),
+                    hintText: context.tr('vault.setup_password_hint',
+                        defaultText: 'Choose a strong password'),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: confirmController,
                   obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirm Password',
-                    hintText: 'Repeat password',
+                  decoration: InputDecoration(
+                    labelText: context.tr('vault.confirm_password_label',
+                        defaultText: 'Confirm Password'),
+                    hintText: context.tr('vault.confirm_password_hint',
+                        defaultText: 'Repeat password'),
                   ),
                 ),
               ],
@@ -496,7 +519,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -504,8 +527,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                 final confirm = confirmController.text;
                 if (pwd.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Password cannot be empty'),
+                    SnackBar(
+                      content: Text(context.tr('vault.err_password_empty',
+                          defaultText: 'Password cannot be empty')),
                       backgroundColor: ShellitColors.statusRed,
                     ),
                   );
@@ -513,8 +537,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                 }
                 if (pwd != confirm) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Passwords do not match'),
+                    SnackBar(
+                      content: Text(context.tr('vault.err_passwords_mismatch',
+                          defaultText: 'Passwords do not match')),
                       backgroundColor: ShellitColors.statusRed,
                     ),
                   );
@@ -527,23 +552,26 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   if (ok) {
                     Navigator.of(dialogCtx).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Master password set successfully! Vault is protected.'),
+                      SnackBar(
+                        content: Text(context.tr('vault.setup_password_success',
+                            defaultText:
+                                'Master password set successfully! Vault is protected.')),
                         backgroundColor: ShellitColors.statusGreen,
                       ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Failed to set master password'),
+                      SnackBar(
+                        content: Text(context.tr('vault.setup_password_failed',
+                            defaultText: 'Failed to set master password')),
                         backgroundColor: ShellitColors.statusRed,
                       ),
                     );
                   }
                 }
               },
-              child: const Text('Set Password'),
+              child: Text(context.tr('vault.setup_password_btn',
+                  defaultText: 'Set Password')),
             ),
           ],
         );
@@ -605,11 +633,15 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: tab.colorTag ??
-                (isActive
-                    ? (isProd
-                        ? ShellitColors.statusRed
-                        : ShellitColors.accentBlue)
-                    : ShellitColors.border),
+                (tab.connectionError != null
+                    ? ShellitColors.statusRed
+                    : (tab.isConnecting
+                        ? ShellitColors.accentCyan.withValues(alpha: 0.6)
+                        : (isActive
+                            ? (isProd
+                                ? ShellitColors.statusRed
+                                : ShellitColors.accentBlue)
+                            : ShellitColors.border))),
             width: tab.colorTag != null ? 1.8 : (isActive ? 1.5 : 1.0),
           ),
         ),
@@ -627,17 +659,35 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
               ),
               const SizedBox(width: 5),
             ],
-            Icon(
-              icon,
-              size: 14,
-              color: isProd
-                  ? ShellitColors.statusRed
-                  : (tab.type == TabType.sftp
-                      ? ShellitColors.accentCyan
-                      : (isActive
-                          ? ShellitColors.accentBlue
-                          : ShellitColors.textSecondary)),
-            ),
+            if (tab.isConnecting) ...[
+              const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(ShellitColors.accentCyan),
+                ),
+              ),
+            ] else if (tab.connectionError != null) ...[
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 14,
+                color: ShellitColors.statusRed,
+              ),
+            ] else ...[
+              Icon(
+                icon,
+                size: 14,
+                color: isProd
+                    ? ShellitColors.statusRed
+                    : (tab.type == TabType.sftp
+                        ? ShellitColors.accentCyan
+                        : (isActive
+                            ? ShellitColors.accentBlue
+                            : ShellitColors.textSecondary)),
+              ),
+            ],
             if (isPinned) ...[
               const SizedBox(width: 4),
               const Icon(Icons.push_pin,
@@ -675,9 +725,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   border:
                       Border.all(color: ShellitColors.envProdText, width: 0.5),
                 ),
-                child: const Text(
-                  'PROD',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('hosts.card.env_prod', defaultText: 'PROD'),
+                  style: const TextStyle(
                     color: ShellitColors.envProdText,
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -771,7 +821,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
         controller: _quickConnectController,
         style: const TextStyle(fontSize: 12, color: ShellitColors.textPrimary),
         decoration: InputDecoration(
-          hintText: 'ssh user@hostname',
+          hintText: context.tr('hosts.quick_connect_placeholder',
+              defaultText: 'ssh user@hostname'),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           prefixIcon:
@@ -779,7 +830,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           suffixIcon: IconButton(
             icon: const Icon(Icons.arrow_forward,
                 size: 14, color: ShellitColors.accentBlue),
-            tooltip: 'Connect',
+            tooltip: context.tr('common.connect', defaultText: 'Connect'),
             onPressed: _submitQuickConnect,
           ),
         ),

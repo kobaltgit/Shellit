@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 enum TransferDirection { upload, download }
@@ -79,7 +80,14 @@ class TransferQueueBar extends StatelessWidget {
               size: 18, color: ShellitColors.accentBlue),
           const SizedBox(width: 8),
           Text(
-            'Transfers (${activeTransfers.length} active, ${transfers.length} total)',
+            context.tr(
+              'sftp.transfers_summary',
+              defaultText: 'Transfers ({active} active, {total} total)',
+              namedArgs: {
+                'active': activeTransfers.length.toString(),
+                'total': transfers.length.toString(),
+              },
+            ),
             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 14),
@@ -171,7 +179,7 @@ class TransferQueueBar extends StatelessWidget {
           if (onClearCompleted != null)
             TextButton(
               onPressed: onClearCompleted,
-              child: const Text('Clear', style: TextStyle(fontSize: 11)),
+              child: Text(context.tr('common.clear', defaultText: 'Clear'), style: const TextStyle(fontSize: 11)),
             ),
         ],
       ),

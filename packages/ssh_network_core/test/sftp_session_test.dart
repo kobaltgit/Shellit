@@ -340,7 +340,7 @@ void main() {
 
       final res = await session.listDirectory('/any');
       expect(res.isError, isTrue);
-      expect(res.failureOrNull?.message, contains('закрыта'));
+      expect(res.failureOrNull?.message, contains('closed'));
     });
   });
 }

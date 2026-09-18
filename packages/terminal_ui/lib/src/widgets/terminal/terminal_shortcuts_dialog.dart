@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 class TerminalShortcutsDialog extends StatelessWidget {
@@ -49,22 +50,25 @@ class TerminalShortcutsDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Terminal Keyboard Shortcuts',
-                          style: TextStyle(
+                          context.tr('terminal.shortcuts_title',
+                              defaultText: 'Terminal Keyboard Shortcuts'),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: ShellitColors.textPrimary,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Quick reference for clipboard, selection, font zoom, and navigation',
-                          style: TextStyle(
+                          context.tr('terminal.shortcuts_desc',
+                              defaultText:
+                                  'Quick reference for clipboard, selection, font zoom, and navigation'),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: ShellitColors.textSecondary,
                           ),
@@ -76,7 +80,7 @@ class TerminalShortcutsDialog extends StatelessWidget {
                     icon: const Icon(Icons.close, size: 18),
                     color: ShellitColors.textSecondary,
                     onPressed: () => Navigator.of(context).pop(),
-                    tooltip: 'Close',
+                    tooltip: context.tr('common.close', defaultText: 'Close'),
                   ),
                 ],
               ),
@@ -86,26 +90,34 @@ class TerminalShortcutsDialog extends StatelessWidget {
             // Shortcuts Content
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSectionHeader(
                       icon: Icons.content_copy_rounded,
-                      title: 'Clipboard & Text Selection',
+                      title: context.tr('terminal.shortcuts_section_clipboard',
+                          defaultText: 'Clipboard & Text Selection'),
                     ),
                     const SizedBox(height: 8),
                     _buildShortcutRow(
-                      label: 'Copy selected text',
+                      label: context.tr('terminal.shortcuts_copy',
+                          defaultText: 'Copy selected text'),
                       keys: [
                         '$cmdOrCtrl + Shift + C',
-                        '$cmdOrCtrl + C (with selection)',
+                        '$cmdOrCtrl + C (${context.tr('terminal.shortcuts_with_selection', defaultText: 'with selection')})',
                         if (!isMac) 'Ctrl + Insert',
                       ],
-                      note: 'If no text is selected, $cmdOrCtrl + C sends interrupt (SIGINT)',
+                      note: context
+                          .tr('terminal.shortcuts_copy_note',
+                              defaultText:
+                                  'If no text is selected, {key} sends interrupt (SIGINT)')
+                          .replaceAll('{key}', '$cmdOrCtrl + C'),
                     ),
                     _buildShortcutRow(
-                      label: 'Paste from clipboard',
+                      label: context.tr('terminal.shortcuts_paste',
+                          defaultText: 'Paste from clipboard'),
                       keys: [
                         '$cmdOrCtrl + Shift + V',
                         '$cmdOrCtrl + V',
@@ -113,75 +125,109 @@ class TerminalShortcutsDialog extends StatelessWidget {
                       ],
                     ),
                     _buildShortcutRow(
-                      label: 'Select all text in terminal',
+                      label: context.tr('terminal.shortcuts_select_all',
+                          defaultText: 'Select all text in terminal'),
                       keys: ['$cmdOrCtrl + Shift + A'],
                     ),
                     _buildShortcutRow(
-                      label: 'Clear selection',
-                      keys: ['Esc', 'Left click'],
+                      label: context.tr('terminal.shortcuts_clear_selection',
+                          defaultText: 'Clear selection'),
+                      keys: [
+                        'Esc',
+                        context.tr('terminal.shortcuts_left_click',
+                            defaultText: 'Left click')
+                      ],
                     ),
                     _buildShortcutRow(
-                      label: 'Mouse selection',
-                      keys: ['Left drag (characters)', 'Double click (word)'],
+                      label: context.tr('terminal.shortcuts_mouse_selection',
+                          defaultText: 'Mouse selection'),
+                      keys: [
+                        context.tr('terminal.shortcuts_left_drag',
+                            defaultText: 'Left drag (characters)'),
+                        context.tr('terminal.shortcuts_double_click',
+                            defaultText: 'Double click (word)')
+                      ],
                     ),
-
                     const SizedBox(height: 16),
                     _buildSectionHeader(
                       icon: Icons.mouse_outlined,
-                      title: 'Mouse & Context Menu',
+                      title: context.tr('terminal.shortcuts_section_mouse',
+                          defaultText: 'Mouse & Context Menu'),
                     ),
                     const SizedBox(height: 8),
                     _buildShortcutRow(
-                      label: 'Context menu (Copy / Paste / Clear)',
-                      keys: ['Right click'],
+                      label: context.tr('terminal.shortcuts_context_menu',
+                          defaultText: 'Context menu (Copy / Paste / Clear)'),
+                      keys: [
+                        context.tr('terminal.shortcuts_right_click',
+                            defaultText: 'Right click')
+                      ],
                     ),
                     _buildShortcutRow(
-                      label: 'Quick paste from clipboard',
-                      keys: ['Middle click (wheel)'],
-                      note: 'Classic X11/Linux terminal behavior',
+                      label: context.tr('terminal.shortcuts_quick_paste',
+                          defaultText: 'Quick paste from clipboard'),
+                      keys: [
+                        context.tr('terminal.shortcuts_middle_click',
+                            defaultText: 'Middle click (wheel)')
+                      ],
+                      note: context.tr('terminal.shortcuts_middle_click_note',
+                          defaultText: 'Classic X11/Linux terminal behavior'),
                     ),
-
                     const SizedBox(height: 16),
                     _buildSectionHeader(
                       icon: Icons.zoom_in_outlined,
-                      title: 'Font Zoom',
+                      title: context.tr('terminal.shortcuts_section_zoom',
+                          defaultText: 'Font Zoom'),
                     ),
                     const SizedBox(height: 8),
                     _buildShortcutRow(
-                      label: 'Increase font size',
+                      label: context.tr('terminal.shortcuts_zoom_in',
+                          defaultText: 'Increase font size'),
                       keys: ['$cmdOrCtrl + +', '$cmdOrCtrl + ='],
                     ),
                     _buildShortcutRow(
-                      label: 'Decrease font size',
+                      label: context.tr('terminal.shortcuts_zoom_out',
+                          defaultText: 'Decrease font size'),
                       keys: ['$cmdOrCtrl + -'],
                     ),
                     _buildShortcutRow(
-                      label: 'Reset default size (13pt)',
+                      label: context.tr('terminal.shortcuts_zoom_reset',
+                          defaultText: 'Reset default size (13pt)'),
                       keys: ['$cmdOrCtrl + 0'],
                     ),
-
                     const SizedBox(height: 16),
                     _buildSectionHeader(
                       icon: Icons.terminal_outlined,
-                      title: 'Screen & Session Controls',
+                      title: context.tr('terminal.shortcuts_section_controls',
+                          defaultText: 'Screen & Session Controls'),
                     ),
                     const SizedBox(height: 8),
                     _buildShortcutRow(
-                      label: 'Clear terminal buffer',
+                      label: context.tr('terminal.shortcuts_clear_buffer',
+                          defaultText: 'Clear terminal buffer'),
                       keys: ['$cmdOrCtrl + Shift + K'],
                     ),
                     _buildShortcutRow(
-                      label: 'Interrupt running command (SIGINT)',
+                      label: context.tr('terminal.shortcuts_sigint',
+                          defaultText: 'Interrupt running command (SIGINT)'),
                       keys: ['$cmdOrCtrl + C'],
-                      note: 'Only when no text is selected',
+                      note: context.tr('terminal.shortcuts_sigint_note',
+                          defaultText: 'Only when no text is selected'),
                     ),
                     _buildShortcutRow(
-                      label: 'Command Palette & Quick Connect (Omni-Bar)',
+                      label: context.tr('terminal.shortcuts_omnibar',
+                          defaultText:
+                              'Command Palette & Quick Connect (Omni-Bar)'),
                       keys: ['$cmdOrCtrl + K'],
                     ),
                     _buildShortcutRow(
-                      label: 'Open this shortcuts sheet',
-                      keys: ['F1', '⌨ toolbar icon'],
+                      label: context.tr('terminal.shortcuts_open_sheet',
+                          defaultText: 'Open this shortcuts sheet'),
+                      keys: [
+                        'F1',
+                        context.tr('terminal.shortcuts_toolbar_icon',
+                            defaultText: '⌨ toolbar icon')
+                      ],
                     ),
                   ],
                 ),
@@ -202,9 +248,13 @@ class TerminalShortcutsDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                     ),
-                    child: const Text('Got it', style: TextStyle(fontSize: 13)),
+                    child: Text(
+                      context.tr('common.got_it', defaultText: 'Got it'),
+                      style: const TextStyle(fontSize: 13),
+                    ),
                   ),
                 ],
               ),
@@ -245,7 +295,8 @@ class TerminalShortcutsDialog extends StatelessWidget {
         decoration: BoxDecoration(
           color: ShellitColors.obsidianSidebar.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: ShellitColors.border.withValues(alpha: 0.5)),
+          border:
+              Border.all(color: ShellitColors.border.withValues(alpha: 0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

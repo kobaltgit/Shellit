@@ -103,7 +103,7 @@ class KeyParserService {
     if (trimmedPem.isEmpty) {
       return const Result.error(
         NetworkFailure(
-          'SSH ключ пуст.',
+          'SSH key is empty.',
           type: NetworkFailureType.keyParseError,
         ),
       );
@@ -115,7 +115,7 @@ class KeyParserService {
       if (encrypted && (passphrase == null || passphrase.isEmpty)) {
         return const Result.error(
           NetworkFailure(
-            'SSH ключ зашифрован. Требуется passphrase.',
+            'SSH key is encrypted. A passphrase is required.',
             type: NetworkFailureType.keyParseError,
           ),
         );
@@ -128,7 +128,7 @@ class KeyParserService {
       if (keyPairs.isEmpty) {
         return const Result.error(
           NetworkFailure(
-            'В PEM файле не найдено действительных SSH ключей.',
+            'No valid SSH keys found in PEM file.',
             type: NetworkFailureType.keyParseError,
           ),
         );
@@ -152,7 +152,7 @@ class KeyParserService {
     } on SSHKeyDecryptError catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Неверный passphrase для расшифровки SSH ключа.',
+          'Invalid passphrase for SSH key decryption.',
           type: NetworkFailureType.keyParseError,
           cause: e,
           stackTrace: stack,
@@ -161,7 +161,7 @@ class KeyParserService {
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Ошибка при парсинге SSH ключа: $e',
+          'Error parsing SSH key: $e',
           type: NetworkFailureType.keyParseError,
           cause: e,
           stackTrace: stack,
@@ -181,7 +181,7 @@ class KeyParserService {
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Не удалось прочитать байты SSH ключа в формате UTF-8.',
+          'Failed to read SSH key bytes as UTF-8.',
           type: NetworkFailureType.keyParseError,
           cause: e,
           stackTrace: stack,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 /// Interactive dialog to edit POSIX file permissions (chmod).
@@ -111,7 +112,8 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Permissions: ${widget.fileName}',
+              context.tr('sftp.chmod_title', defaultText: 'Permissions: {name}')
+                  .replaceAll('{name}', widget.fileName),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
             ),
@@ -133,32 +135,40 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
               },
               defaultVerticalAlignment: TableCellVerticalAlignment.middle,
               children: [
-                const TableRow(
+                TableRow(
                   children: [
-                    Text('', style: TextStyle(fontSize: 12)),
+                    const Text('', style: TextStyle(fontSize: 12)),
                     Center(
-                        child: Text('Read (r)',
-                            style: TextStyle(
+                        child: Text(
+                            context.tr('sftp.chmod_read',
+                                defaultText: 'Read (r)'),
+                            style: const TextStyle(
                                 fontSize: 11,
                                 color: ShellitColors.textSecondary))),
                     Center(
-                        child: Text('Write (w)',
-                            style: TextStyle(
+                        child: Text(
+                            context.tr('sftp.chmod_write',
+                                defaultText: 'Write (w)'),
+                            style: const TextStyle(
                                 fontSize: 11,
                                 color: ShellitColors.textSecondary))),
                     Center(
-                        child: Text('Exec (x)',
-                            style: TextStyle(
+                        child: Text(
+                            context.tr('sftp.chmod_exec',
+                                defaultText: 'Exec (x)'),
+                            style: const TextStyle(
                                 fontSize: 11,
                                 color: ShellitColors.textSecondary))),
                   ],
                 ),
                 TableRow(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text('Owner',
-                          style: TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                          context.tr('sftp.chmod_owner',
+                              defaultText: 'Owner'),
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                     Center(
@@ -195,10 +205,12 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
                 ),
                 TableRow(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text('Group',
-                          style: TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                          context.tr('sftp.chmod_group',
+                              defaultText: 'Group'),
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                     Center(
@@ -235,10 +247,12 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
                 ),
                 TableRow(
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
-                      child: Text('Others',
-                          style: TextStyle(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Text(
+                          context.tr('sftp.chmod_others',
+                              defaultText: 'Others'),
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
                     Center(
@@ -278,8 +292,10 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text('Octal notation: ',
-                    style: TextStyle(
+                Text(
+                    context.tr('sftp.chmod_octal',
+                        defaultText: 'Octal notation: '),
+                    style: const TextStyle(
                         fontSize: 12, color: ShellitColors.textSecondary)),
                 const SizedBox(width: 8),
                 SizedBox(
@@ -306,7 +322,7 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -314,7 +330,7 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
             foregroundColor: Colors.black,
           ),
           onPressed: () => Navigator.of(context).pop(_calculateMode()),
-          child: const Text('Apply'),
+          child: Text(context.tr('common.apply', defaultText: 'Apply')),
         ),
       ],
     );
@@ -354,12 +370,12 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
         borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: ShellitColors.border),
       ),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.edit_outlined, size: 18, color: ShellitColors.accentBlue),
-          SizedBox(width: 8),
-          Text('Rename',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          const Icon(Icons.edit_outlined, size: 18, color: ShellitColors.accentBlue),
+          const SizedBox(width: 8),
+          Text(context.tr('sftp.rename_title', defaultText: 'Rename'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         ],
       ),
       content: SizedBox(
@@ -368,9 +384,9 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
           controller: _controller,
           autofocus: true,
           style: const TextStyle(fontSize: 13, fontFamily: 'JetBrains Mono'),
-          decoration: const InputDecoration(
-            labelText: 'New name',
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: InputDecoration(
+            labelText: context.tr('sftp.rename_label', defaultText: 'New name'),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           onSubmitted: (val) {
             final trimmed = val.trim();
@@ -383,7 +399,7 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -396,7 +412,7 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
               Navigator.of(context).pop(trimmed);
             }
           },
-          child: const Text('Rename'),
+          child: Text(context.tr('sftp.rename_btn', defaultText: 'Rename')),
         ),
       ],
     );
@@ -424,8 +440,15 @@ class _SftpCreateDialogState extends State<SftpCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isDirectory ? 'New Directory' : 'New File';
-    final label = widget.isDirectory ? 'Directory name' : 'File name';
+    final title = widget.isDirectory
+        ? context.tr('sftp.create_dir_title', defaultText: 'New Directory')
+        : context.tr('sftp.create_file_title', defaultText: 'New File');
+    final label = widget.isDirectory
+        ? context.tr('sftp.create_dir_label', defaultText: 'Directory name')
+        : context.tr('sftp.create_file_label', defaultText: 'File name');
+    final hint = widget.isDirectory
+        ? context.tr('sftp.create_dir_hint', defaultText: 'folder_name')
+        : context.tr('sftp.create_file_hint', defaultText: 'filename.txt');
     final icon = widget.isDirectory
         ? Icons.create_new_folder_outlined
         : Icons.note_add_outlined;
@@ -453,7 +476,7 @@ class _SftpCreateDialogState extends State<SftpCreateDialog> {
           style: const TextStyle(fontSize: 13, fontFamily: 'JetBrains Mono'),
           decoration: InputDecoration(
             labelText: label,
-            hintText: widget.isDirectory ? 'folder_name' : 'filename.txt',
+            hintText: hint,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
@@ -468,7 +491,7 @@ class _SftpCreateDialogState extends State<SftpCreateDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -481,7 +504,7 @@ class _SftpCreateDialogState extends State<SftpCreateDialog> {
               Navigator.of(context).pop(trimmed);
             }
           },
-          child: const Text('Create'),
+          child: Text(context.tr('common.create', defaultText: 'Create')),
         ),
       ],
     );
@@ -501,6 +524,15 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final title = isDirectory
+        ? context.tr('sftp.delete_dir_title', defaultText: 'Delete Directory')
+        : context.tr('sftp.delete_file_title', defaultText: 'Delete File');
+    final confirmMsg = context.tr(
+      'sftp.delete_confirm_msg',
+      defaultText: 'Are you sure you want to delete "{name}"?',
+      namedArgs: {'name': name},
+    );
+
     return AlertDialog(
       backgroundColor: ShellitColors.obsidianCard,
       shape: RoundedRectangleBorder(
@@ -513,7 +545,7 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
               size: 20, color: ShellitColors.statusRed),
           const SizedBox(width: 8),
           Text(
-            isDirectory ? 'Delete Directory' : 'Delete File',
+            title,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
         ],
@@ -523,14 +555,16 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Are you sure you want to delete "$name"?',
+            confirmMsg,
             style: const TextStyle(fontSize: 13),
           ),
           if (isDirectory) ...[
             const SizedBox(height: 8),
-            const Text(
-              'This will recursively delete the directory and all of its contents. This action cannot be undone.',
-              style: TextStyle(fontSize: 12, color: ShellitColors.statusRed),
+            Text(
+              context.tr('sftp.delete_dir_warning',
+                  defaultText:
+                      'This will recursively delete the directory and all of its contents. This action cannot be undone.'),
+              style: const TextStyle(fontSize: 12, color: ShellitColors.statusRed),
             ),
           ],
         ],
@@ -538,7 +572,7 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -546,7 +580,7 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
             foregroundColor: Colors.white,
           ),
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Delete'),
+          child: Text(context.tr('common.delete', defaultText: 'Delete')),
         ),
       ],
     );

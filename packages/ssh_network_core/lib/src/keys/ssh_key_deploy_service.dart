@@ -31,7 +31,7 @@ class SshKeyDeployService {
     if (cleanKey.isEmpty) {
       return const Result.error(
         NetworkFailure(
-          'Публичный ключ пуст.',
+          'Public key is empty.',
           type: NetworkFailureType.keyParseError,
         ),
       );
@@ -40,7 +40,7 @@ class SshKeyDeployService {
     if (cleanKey.contains('\n') || cleanKey.contains('\r')) {
       return const Result.error(
         NetworkFailure(
-          'Публичный ключ должен быть одной строкой.',
+          'Public key must be a single line.',
           type: NetworkFailureType.keyParseError,
         ),
       );
@@ -125,7 +125,7 @@ class SshKeyDeployService {
     } on TimeoutException catch (e, st) {
       return Result.error(
         NetworkFailure(
-          'Превышено время ожидания при деплое ключа на $host:$port: $e',
+          'Timeout deploying key to $host:$port: $e',
           type: NetworkFailureType.connectionTimeout,
           cause: e,
           stackTrace: st,
@@ -134,7 +134,7 @@ class SshKeyDeployService {
     } on SSHAuthFailError catch (e, st) {
       return Result.error(
         NetworkFailure(
-          'Ошибка авторизации на сервере $host:$port ($username). Проверьте пароль.',
+          'Authentication failed on $host:$port ($username). Check password.',
           type: NetworkFailureType.authFailed,
           cause: e,
           stackTrace: st,
@@ -143,7 +143,7 @@ class SshKeyDeployService {
     } catch (e, st) {
       return Result.error(
         NetworkFailure(
-          'Не удалось скопировать ключ на $host:$port: $e',
+          'Failed to copy key to $host:$port: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: st,

@@ -26,23 +26,23 @@ class VaultFailure extends Failure {
   }) : super(message, cause, stackTrace);
 
   factory VaultFailure.locked() => const VaultFailure(
-        'Хранилище заблокировано. Требуется мастер-пароль или биометрия.',
+        'Vault is locked. Master password or biometrics required.',
         type: VaultFailureType.locked,
       );
 
   factory VaultFailure.invalidMasterPassword() => const VaultFailure(
-        'Неверный мастер-пароль или ошибка проверки контрольной суммы.',
+        'Invalid master password or checksum verification failed.',
         type: VaultFailureType.invalidPassword,
       );
 
   factory VaultFailure.corrupted([Object? cause]) => VaultFailure(
-        'Файл базы данных поврежден или не может быть расшифрован.',
+        'Database file is corrupted or cannot be decrypted.',
         type: VaultFailureType.corrupted,
         cause: cause,
       );
 
   factory VaultFailure.biometricFailed([String? details]) => VaultFailure(
-        'Биометрическая аутентификация не удалась${details != null ? ': $details' : ''}.',
+        'Biometric authentication failed${details != null ? ': $details' : ''}.',
         type: VaultFailureType.biometricFailed,
       );
 }
@@ -68,26 +68,26 @@ class NetworkFailure extends Failure {
   }) : super(message, cause, stackTrace);
 
   factory NetworkFailure.timeout([String? target]) => NetworkFailure(
-        'Таймаут подключения к серверу ${target ?? ''}',
+        'Connection timeout to server ${target ?? ''}',
         type: NetworkFailureType.connectionTimeout,
       );
 
   factory NetworkFailure.unreachable(String host, int port, [Object? cause]) =>
       NetworkFailure(
-        'Хост $host:$port недоступен${cause != null ? ' ($cause)' : ''}.',
+        'Host $host:$port is unreachable${cause != null ? ' ($cause)' : ''}.',
         type: NetworkFailureType.hostUnreachable,
         cause: cause,
       );
 
   factory NetworkFailure.authFailed(String user, [Object? cause]) =>
       NetworkFailure(
-        'Аутентификация для пользователя "$user" не удалась. Проверьте пароль или SSH-ключ.',
+        'Authentication failed for user "$user". Please check your password or SSH key.',
         type: NetworkFailureType.authFailed,
         cause: cause,
       );
 
   factory NetworkFailure.connectionReset([Object? cause]) => NetworkFailure(
-        'Соединение разорвано удаленной стороной (Connection reset by peer).',
+        'Connection reset by peer.',
         type: NetworkFailureType.connectionReset,
         cause: cause,
       );
@@ -114,18 +114,18 @@ class SftpFailure extends Failure {
   }) : super(message, cause, stackTrace);
 
   factory SftpFailure.fileNotFound(String path) => SftpFailure(
-        'Файл или директория не найдены: $path',
+        'File or directory not found: $path',
         type: SftpFailureType.fileNotFound,
       );
 
   factory SftpFailure.permissionDenied(String path) => SftpFailure(
-        'Доступ запрещен (Permission denied): $path',
+        'Permission denied: $path',
         type: SftpFailureType.permissionDenied,
       );
 
   factory SftpFailure.transferAborted(String path, [Object? cause]) =>
       SftpFailure(
-        'Передача файла прервана: $path',
+        'File transfer aborted: $path',
         type: SftpFailureType.transferAborted,
         cause: cause,
       );
@@ -151,17 +151,17 @@ class PluginFailure extends Failure {
   }) : super(message, cause, stackTrace);
 
   factory PluginFailure.invalidManifest(String details) => PluginFailure(
-        'Некорректный manifest.json плагина: $details',
+        'Invalid plugin manifest.json: $details',
         type: PluginFailureType.invalidManifest,
       );
 
   factory PluginFailure.zipSlipDetected(String maliciousPath) => PluginFailure(
-        'Обнаружена потенциальная Zip Slip уязвимость при распаковке: $maliciousPath',
+        'Potential Zip Slip vulnerability detected during extraction: $maliciousPath',
         type: PluginFailureType.zipSlipAttempt,
       );
 
   factory PluginFailure.permissionDenied(String permission) => PluginFailure(
-        'Плагин запросил недопустимую операцию без разрешения: $permission',
+        'Plugin requested an unauthorized operation without permission: $permission',
         type: PluginFailureType.permissionDenied,
       );
 }

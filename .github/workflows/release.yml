@@ -155,6 +155,66 @@ jobs:
     needs: [build-windows, build-linux, build-android]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository for changelog
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Release Notes from Git Commits
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${{ github.ref_name }}$" | head -n 1 || true)
+          echo "Current tag: ${{ github.ref_name }}"
+          echo "Previous tag: $PREV_TAG"
+
+          echo "## What's Changed in ${{ github.ref_name }}" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          # 1. Features
+          FEAT=$(git log $RANGE --grep="^feat" --pretty=format:"* %s (%h)" --no-merges || true)
+          if [ -n "$FEAT" ]; then
+            echo "### 🚀 Features & Enhancements" >> RELEASE_NOTES.md
+            echo "$FEAT" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
+
+          # 2. Bug fixes
+          FIX=$(git log $RANGE --grep="^fix" --pretty=format:"* %s (%h)" --no-merges || true)
+          if [ -n "$FIX" ]; then
+            echo "### 🐛 Bug Fixes & Stability" >> RELEASE_NOTES.md
+            echo "$FIX" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
+
+          # 3. Documentation
+          DOCS=$(git log $RANGE --grep="^docs" --pretty=format:"* %s (%h)" --no-merges || true)
+          if [ -n "$DOCS" ]; then
+            echo "### 📝 Documentation" >> RELEASE_NOTES.md
+            echo "$DOCS" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
+
+          # 4. Other commits (chore, refactor, perf, ci)
+          OTHER=$(git log $RANGE --grep="^feat" --grep="^fix" --grep="^docs" --invert-grep --pretty=format:"* %s (%h)" --no-merges || true)
+          if [ -n "$OTHER" ]; then
+            echo "### 🔧 Maintenance & Improvements" >> RELEASE_NOTES.md
+            echo "$OTHER" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
+
+          # 5. Full comparison link
+          if [ -n "$PREV_TAG" ]; then
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${{ github.ref_name }}" >> RELEASE_NOTES.md
+          fi
+
+          echo "--- Generated Release Notes Preview ---"
+          cat RELEASE_NOTES.md
+
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -168,5 +228,5 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: ${{ inputs.draft || false }}
           prerelease: ${{ inputs.prerelease || startsWith(github.ref_name, 'v0.') }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
           files: release_assets/*

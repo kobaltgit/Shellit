@@ -45,7 +45,12 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
   Future<void> _handleGenerate() async {
     final label = _labelCtrl.text.trim();
     if (label.isEmpty) {
-      setState(() => _errorMessage = 'Введите название ключа (Label)');
+      setState(
+        () => _errorMessage = context.tr(
+          'keychain.gen_err_label_required',
+          defaultText: 'Please enter a key label',
+        ),
+      );
       return;
     }
 
@@ -112,7 +117,8 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
     } catch (e) {
       setState(() {
         _isGenerating = false;
-        _errorMessage = 'Ошибка генерации: $e';
+        _errorMessage =
+            '${context.tr('keychain.gen_err_prefix', defaultText: 'Generation error')}: $e';
       });
     }
   }
@@ -141,7 +147,15 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
           ),
           const SizedBox(width: 12),
           Text(
-            _generatedKey == null ? 'Generate SSH Key Pair' : 'Key Generated!',
+            _generatedKey == null
+                ? context.tr(
+                    'keychain.generate_dialog_title',
+                    defaultText: 'Generate SSH Key Pair',
+                  )
+                : context.tr(
+                    'keychain.generate_dialog_generated_title',
+                    defaultText: 'Key Generated!',
+                  ),
             style: const TextStyle(
               color: ShellitColors.textPrimary,
               fontSize: 16,
@@ -196,9 +210,9 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
               ],
             ),
           ),
-        const Text(
-          'Algorithm Type',
-          style: TextStyle(
+        Text(
+          context.tr('keychain.generate_dialog_type_field', defaultText: 'Algorithm Type'),
+          style: const TextStyle(
             color: ShellitColors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -211,7 +225,7 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
               child: _buildTypeOption(
                 type: KeyType.ed25519,
                 title: 'Ed25519',
-                subtitle: 'Fast & Secure (Recommended)',
+                subtitle: context.tr('keychain.gen_ed25519_desc', defaultText: 'Fast & Secure (Recommended)'),
               ),
             ),
             const SizedBox(width: 10),
@@ -219,7 +233,7 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
               child: _buildTypeOption(
                 type: KeyType.rsa,
                 title: 'RSA 4096-bit',
-                subtitle: 'Legacy compatibility',
+                subtitle: context.tr('keychain.gen_rsa_desc', defaultText: 'Legacy compatibility'),
               ),
             ),
           ],
@@ -231,10 +245,10 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
             color: ShellitColors.textPrimary,
             fontSize: 13,
           ),
-          decoration: const InputDecoration(
-            labelText: 'Key Label / Name *',
-            hintText: 'e.g. id_ed25519_prod',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.tr('keychain.generate_dialog_label_field', defaultText: 'Key Label / Name *'),
+            hintText: context.tr('keychain.add_label_hint', defaultText: 'e.g. id_ed25519_prod'),
+            border: const OutlineInputBorder(),
             isDense: true,
           ),
         ),
@@ -245,10 +259,10 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
             color: ShellitColors.textPrimary,
             fontSize: 13,
           ),
-          decoration: const InputDecoration(
-            labelText: 'Comment (Public ID)',
+          decoration: InputDecoration(
+            labelText: context.tr('keychain.generate_dialog_comment_field', defaultText: 'Comment (Public ID)'),
             hintText: 'e.g. user@hostname',
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
             isDense: true,
           ),
         ),
@@ -261,8 +275,8 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
             fontSize: 13,
           ),
           decoration: InputDecoration(
-            labelText: 'Passphrase (Optional)',
-            hintText: 'Leave empty for no passphrase',
+            labelText: context.tr('keychain.generate_dialog_passphrase_field', defaultText: 'Passphrase (Optional)'),
+            hintText: context.tr('keychain.generate_dialog_passphrase_hint', defaultText: 'Leave empty for no passphrase'),
             border: const OutlineInputBorder(),
             isDense: true,
             suffixIcon: IconButton(
@@ -373,7 +387,7 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Key Pair created & safely encrypted in Vault!\nFingerprint: ${key.fingerprint}',
+                  '${context.tr('keychain.generate_dialog_success_desc', defaultText: 'Key pair successfully generated and saved to encrypted vault.')}\n${context.tr('keychain.fingerprint_label', defaultText: 'Fingerprint')}: ${key.fingerprint}',
                   style: const TextStyle(
                     color: ShellitColors.statusGreen,
                     fontSize: 11,
@@ -384,9 +398,12 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
-          'OpenSSH Public Key (Add this to your servers):',
-          style: TextStyle(
+        Text(
+          context.tr(
+            'keychain.generate_dialog_public_key_label',
+            defaultText: 'OpenSSH Public Key (Add this to your servers):',
+          ),
+          style: const TextStyle(
             color: ShellitColors.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -417,13 +434,17 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
             minimumSize: const Size.fromHeight(36),
           ),
           icon: const Icon(Icons.copy, size: 14),
-          label: const Text('Copy Public Key to Clipboard'),
+          label: Text(
+            context.tr('keychain.btn_copy_public_key', defaultText: 'Copy Public Key to Clipboard'),
+          ),
           onPressed: () {
             Clipboard.setData(ClipboardData(text: key.publicKeyString));
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Public key copied to clipboard!'),
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: Text(
+                  context.tr('keychain.copied_snackbar', defaultText: 'Public key copied to clipboard!'),
+                ),
+                duration: const Duration(seconds: 2),
               ),
             );
           },
@@ -436,9 +457,9 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
     return [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text(
-          'Cancel',
-          style: TextStyle(color: ShellitColors.textMuted),
+        child: Text(
+          context.tr('keychain.btn_cancel', defaultText: 'Cancel'),
+          style: const TextStyle(color: ShellitColors.textMuted),
         ),
       ),
       ElevatedButton.icon(
@@ -456,7 +477,11 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
                 ),
               )
             : const Icon(Icons.bolt, size: 16),
-        label: Text(_isGenerating ? 'Generating...' : 'Generate & Save'),
+        label: Text(
+          _isGenerating
+              ? context.tr('keychain.generate_dialog_btn_generating', defaultText: 'Generating...')
+              : context.tr('keychain.generate_dialog_btn_generate', defaultText: 'Generate & Save'),
+        ),
         onPressed: _isGenerating ? null : _handleGenerate,
       ),
     ];
@@ -470,7 +495,9 @@ class _GenerateKeyDialogState extends ConsumerState<GenerateKeyDialog> {
           foregroundColor: Colors.white,
         ),
         onPressed: () => Navigator.pop(context),
-        child: const Text('Done'),
+        child: Text(
+          context.tr('common.done', defaultText: 'Done'),
+        ),
       ),
     ];
   }

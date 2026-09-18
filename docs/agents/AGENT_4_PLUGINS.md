@@ -26,7 +26,8 @@ my-awesome-plugin.shellit
   "author": "Dev Team",
   "description": "Отображает статус контейнеров на удаленном хосте в боковой панели",
   "entryPoint": "index.html",
-  "target": "sidebar", // "sidebar" | "statusbar" | "modal" | "headless"
+  "target": "sidebar", // "sidebar" | "statusbar" | "modal" | "headless" | "localization"
+  "locale": "ru_RU",  // Обязательно только для target: "localization"
   "permissions": [
     "terminal:execute",
     "vault:read_hosts",
@@ -69,7 +70,14 @@ my-awesome-plugin.shellit
 
 ---
 
-## 5. Изоляция от мобильных платформ (Critical!)
+## 5. Поддержка языковых пакетов (target: "localization")
+* **Без песочницы WebView:** Плагины локализации не требуют запуска браузерной песочницы. При сканировании их словарь (`entryPoint`: например, `ru.json`) загружается в память и передаётся менеджеру локализации (`LocalizationService`).
+* **Экспорт эталонного шаблона:** Реализация экспорта текущего актуального набора ключей со встроенным английским текстом в файл `shellit_strings_template.json` по запросу пользователя из настроек плагинов, экрана языков и Omni-Bar (`Developer: Export Localization Template`).
+* См. подробную спецификацию в [`docs/LOCALIZATION_AND_I18N_GUIDE.md`](file:///d:/Projects/active/Shellit/docs/LOCALIZATION_AND_I18N_GUIDE.md).
+
+---
+
+## 6. Изоляция от мобильных платформ (Critical!)
 * На мобильных устройствах (iOS / Android) модуль должен экспортировать легковесную заглушку (No-Op implementation):
 ```dart
 abstract class IPluginLoader {
@@ -83,9 +91,11 @@ abstract class IPluginLoader {
 
 ---
 
-## 6. Чек-лист проверки качества
+## 7. Чек-лист проверки качества
 - [ ] Безопасная распаковка архивов (защита от Zip Slip уязвимостей).
-- [ ] Валидация манифеста перед установкой плагина.
+- [ ] Валидация манифеста перед установкой плагина (включая корректный код `locale` для `target: "localization"`).
+- [ ] Корректное чтение JSON-словарей языковых плагинов без создания лишних WebView инстансов.
+- [ ] Доступность экспорта шаблона перевода `template.json`.
 - [ ] Проверка прав: плагин без разрешения `terminal:execute` получает отказ при вызове выполнения команды.
 - [ ] Мобильные сборки (Android/iOS) компилируются без ссылок на десктопные библиотеки плагинов.
 - [ ] 0 предупреждений анализатора Dart.

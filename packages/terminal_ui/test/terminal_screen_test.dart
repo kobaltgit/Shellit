@@ -22,7 +22,8 @@ void main() {
       session = FakeTerminalSession(id: 'sess-1', hostId: 'host-1');
       mockClipboardText = null;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, (MethodCall call) async {
+          .setMockMethodCallHandler(SystemChannels.platform,
+              (MethodCall call) async {
         if (call.method == 'Clipboard.setData') {
           mockClipboardText = (call.arguments as Map)['text'] as String?;
           return null;
@@ -292,8 +293,7 @@ void main() {
       expect(toggleCalled, isTrue);
     });
 
-    testWidgets(
-        'Ctrl+C without selection sends SIGINT to terminal session',
+    testWidgets('Ctrl+C without selection sends SIGINT to terminal session',
         (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -347,7 +347,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final registryEntry = TerminalSessionRegistry.instance.getOrCreate(session);
+      final registryEntry =
+          TerminalSessionRegistry.instance.getOrCreate(session);
       registryEntry.terminal.write('Hello World');
       await tester.pump();
 
@@ -377,8 +378,7 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets(
-        'Ctrl+Shift+V pastes clipboard text into session',
+    testWidgets('Ctrl+Shift+V pastes clipboard text into session',
         (tester) async {
       await Clipboard.setData(const ClipboardData(text: 'pasted_cmd\n'));
 
@@ -415,9 +415,7 @@ void main() {
       expect(combinedInput, contains('pasted_cmd'));
     });
 
-    testWidgets(
-        'Ctrl + = and Ctrl + - hotkeys zoom font size',
-        (tester) async {
+    testWidgets('Ctrl + = and Ctrl + - hotkeys zoom font size', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -456,8 +454,7 @@ void main() {
       expect(find.text('13pt'), findsOneWidget);
     });
 
-    testWidgets(
-        'Tapping Keys button opens TerminalShortcutsDialog',
+    testWidgets('Tapping Keys button opens TerminalShortcutsDialog',
         (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -491,8 +488,7 @@ void main() {
       expect(find.byType(TerminalShortcutsDialog), findsNothing);
     });
 
-    testWidgets(
-        'Secondary click on terminal shows context menu',
+    testWidgets('Secondary click on terminal shows context menu',
         (tester) async {
       await tester.pumpWidget(
         ProviderScope(
@@ -514,7 +510,8 @@ void main() {
       await tester.pump();
 
       // Right-click in the terminal view
-      await tester.tap(find.byType(TerminalView), buttons: kSecondaryMouseButton);
+      await tester.tap(find.byType(TerminalView),
+          buttons: kSecondaryMouseButton);
       await tester.pump(const Duration(milliseconds: 250));
 
       expect(find.text('Copy'), findsOneWidget);

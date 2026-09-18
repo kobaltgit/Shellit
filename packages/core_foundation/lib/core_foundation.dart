@@ -24,3 +24,4 @@ export 'src/interfaces/storage_interfaces.dart';
 export 'src/interfaces/network_interfaces.dart';
 export 'src/interfaces/plugin_interfaces.dart';
 export 'src/interfaces/session_recorder_interface.dart';
+export 'src/interfaces/localization_interfaces.dart';

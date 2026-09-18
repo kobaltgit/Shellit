@@ -158,7 +158,7 @@ class VaultRepository implements IVaultRepository {
       if (!initialized) {
         return Result.error(
           const VaultFailure(
-            'Хранилище еще не инициализировано.',
+            'Vault has not been initialized yet.',
             type: VaultFailureType.notFound,
           ),
         );
@@ -207,20 +207,20 @@ class VaultRepository implements IVaultRepository {
   Future<Result<void, VaultFailure>> unlockWithBiometrics() async {
     if (_biometricStorage == null) {
       return Result.error(VaultFailure.biometricFailed(
-          'Биометрия не поддерживается на платформе'));
+          'Biometrics is not supported on this platform'));
     }
 
     final settings = await getSettings();
     if (!settings.isBiometricsEnabled) {
       return Result.error(
-          VaultFailure.biometricFailed('Биометрия отключена в настройках'));
+          VaultFailure.biometricFailed('Biometrics is disabled in settings'));
     }
 
     try {
       final secret = await _biometricStorage!.readBiometricSecret();
       if (secret == null || secret.isEmpty) {
         return Result.error(
-            VaultFailure.biometricFailed('Биометрический ключ не найден'));
+            VaultFailure.biometricFailed('Biometric key not found'));
       }
 
       final masterKey = SecretKey(secret);
@@ -244,7 +244,7 @@ class VaultRepository implements IVaultRepository {
 
       if (!isValid) {
         return Result.error(VaultFailure.biometricFailed(
-            'Недействительный биометрический ключ'));
+            'Invalid biometric key'));
       }
 
       _securityContext.unlock(masterKey);
@@ -262,7 +262,7 @@ class VaultRepository implements IVaultRepository {
     if (!settings.isPinEnabled) {
       return Result.error(
         const VaultFailure(
-          'Вход по PIN-коду отключен в настройках.',
+          'PIN unlock is disabled in settings.',
           type: VaultFailureType.invalidPassword,
         ),
       );
@@ -283,7 +283,7 @@ class VaultRepository implements IVaultRepository {
           pinVerificationRecord == null ||
           encryptedMasterKeyRecord == null) {
         return Result.error(
-            VaultFailure.corrupted('Отсутствуют метаданные PIN-кода.'));
+            VaultFailure.corrupted('Missing PIN metadata.'));
       }
 
       final pinSalt = CryptoUtils.hexToBytes(pinSaltRecord.metaValue);
@@ -397,7 +397,7 @@ class VaultRepository implements IVaultRepository {
   Future<Result<void, VaultFailure>> enableBiometrics() async {
     if (_biometricStorage == null) {
       return Result.error(
-          VaultFailure.biometricFailed('Биометрия не поддерживается'));
+          VaultFailure.biometricFailed('Biometrics is not supported'));
     }
     if (!_securityContext.isUnlocked ||
         _securityContext.activeMasterKey == null) {
@@ -574,6 +574,133 @@ class VaultRepository implements IVaultRepository {
 
       _securityContext.unlock(newMasterKey);
       await _resetIdleTimer();
+
+      return const Result.success(null);
+    } catch (e) {
+      return Result.error(VaultFailure.corrupted(e));
+    }
+  }
+
+  @override
+  Future<Result<void, VaultFailure>> disableMasterPassword({
+    required String currentPassword,
+  }) async {
+    // 1. Verify current password
+    final saltRecord = await (_db.select(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals('salt')))
+        .getSingleOrNull();
+    final verificationRecord = await (_db.select(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals('verification_blob')))
+        .getSingleOrNull();
+
+    if (saltRecord == null || verificationRecord == null) {
+      return Result.error(
+          VaultFailure.corrupted('Missing vault initialization metadata'));
+    }
+
+    final currentSalt = CryptoUtils.hexToBytes(saltRecord.metaValue);
+    final currentVerificationBlob =
+        CryptoUtils.hexToBytes(verificationRecord.metaValue);
+
+    final currentDerivedKey = await _cryptoService.deriveMasterKey(
+      password: currentPassword,
+      salt: currentSalt,
+    );
+
+    final isValid = await _cryptoService.verifyKey(
+      verificationBlob: currentVerificationBlob,
+      key: currentDerivedKey,
+    );
+
+    if (!isValid) {
+      return Result.error(VaultFailure.invalidMasterPassword());
+    }
+
+    try {
+      // 2. Generate random 32-byte open session key
+      final openKeyBytes = _cryptoService.generateRandomBytes(32);
+      final openKey = SecretKey(openKeyBytes);
+
+      // 3. Re-encrypt all keys in KeysTable with the new open session key
+      final allKeys = await _db.select(_db.keysTable).get();
+      for (final keyRecord in allKeys) {
+        final decryptedPrivKey = await _cryptoService.decryptBytes(
+          encryptedData: keyRecord.encryptedPrivateKey,
+          secretKey: currentDerivedKey,
+        );
+
+        Uint8List? decryptedPassphrase;
+        if (keyRecord.encryptedPassphrase != null) {
+          decryptedPassphrase = await _cryptoService.decryptBytes(
+            encryptedData: keyRecord.encryptedPassphrase!,
+            secretKey: currentDerivedKey,
+          );
+        }
+
+        final reEncryptedPrivKey = await _cryptoService.encryptBytes(
+          clearText: decryptedPrivKey,
+          secretKey: openKey,
+        );
+        VaultCryptoService.zeroize(decryptedPrivKey);
+
+        Uint8List? reEncryptedPassphrase;
+        if (decryptedPassphrase != null) {
+          reEncryptedPassphrase = await _cryptoService.encryptBytes(
+            clearText: decryptedPassphrase,
+            secretKey: openKey,
+          );
+          VaultCryptoService.zeroize(decryptedPassphrase);
+        }
+
+        await (_db.update(_db.keysTable)
+              ..where((t) => t.id.equals(keyRecord.id)))
+            .write(
+          KeysTableCompanion(
+            encryptedPrivateKey: Value(reEncryptedPrivKey),
+            encryptedPassphrase: Value(reEncryptedPassphrase),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+
+      // 4. Update vault metadata: remove master password artifacts and insert open_session_key
+      await _db.batch((batch) {
+        batch.deleteWhere(
+          _db.vaultMetadataTable,
+          (t) => t.metaKey.isIn([
+            'is_initialized',
+            'salt',
+            'verification_blob',
+            'pin_salt',
+            'pin_verification_blob',
+            'pin_encrypted_master_key',
+          ]),
+        );
+        batch.insert(
+          _db.vaultMetadataTable,
+          VaultMetadataTableCompanion.insert(
+            metaKey: 'open_session_key',
+            metaValue: CryptoUtils.bytesToHex(openKeyBytes),
+          ),
+          mode: InsertMode.insertOrReplace,
+        );
+      });
+
+      // 5. Cleanup biometric and PIN settings
+      if (_biometricStorage != null) {
+        await _biometricStorage!.deleteBiometricSecret();
+      }
+      final currentSettings = await getSettings();
+      await updateSettings(currentSettings.copyWith(
+        isBiometricsEnabled: false,
+        isPinEnabled: false,
+        idleLockTimeoutMinutes: 0,
+      ));
+
+      // 6. Unlock security context with open key and cancel idle timer
+      _idleTimer?.cancel();
+      _idleTimer = null;
+      _securityContext.unlock(openKey);
 
       return const Result.success(null);
     } catch (e) {

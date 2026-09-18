@@ -167,7 +167,7 @@ class KeyManager implements IKeyManager {
     if (key == null) {
       return Result.error(
         VaultFailure(
-          'SSH-ключ с ID "$keyId" не найден.',
+          'SSH key with ID "$keyId" not found.',
           type: VaultFailureType.notFound,
         ),
       );
@@ -197,7 +197,7 @@ class KeyManager implements IKeyManager {
     if (key == null) {
       return Result.error(
         VaultFailure(
-          'SSH-ключ с ID "$keyId" не найден.',
+          'SSH key with ID "$keyId" not found.',
           type: VaultFailureType.notFound,
         ),
       );

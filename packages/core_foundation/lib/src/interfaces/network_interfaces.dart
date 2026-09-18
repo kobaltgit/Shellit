@@ -126,6 +126,7 @@ abstract class ISshClientService {
     List<int>? privateKeyBytes,
     String? passphrase,
     ISessionRecorder? recorder,
+    void Function(String status)? onProgress,
   });
 
   /// Opens a dedicated SFTP session for the given host.
@@ -134,6 +135,7 @@ abstract class ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    void Function(String status)? onProgress,
   });
 
   /// Performs a lightweight background TCP ping to check availability and RTT latency in ms.

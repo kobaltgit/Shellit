@@ -19,11 +19,7 @@ class DesktopPluginHostView extends ConsumerStatefulWidget {
   final InstalledPlugin plugin;
   final VoidCallback? onClose;
 
-  const DesktopPluginHostView({
-    super.key,
-    required this.plugin,
-    this.onClose,
-  });
+  const DesktopPluginHostView({super.key, required this.plugin, this.onClose});
 
   @override
   ConsumerState<DesktopPluginHostView> createState() =>
@@ -48,7 +44,8 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
   Future<void> _initPluginHost() async {
     if (kIsWeb || !Platform.isWindows) {
       setState(() {
-        _errorMessage = 'Desktop plugins are currently supported on Windows (WebView2).';
+        _errorMessage =
+            'Desktop plugins are currently supported on Windows (WebView2).';
       });
       return;
     }
@@ -77,13 +74,13 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
         _outgoingSub = bridge
             .outgoingMessagesStream(widget.plugin.manifest.id)
             .listen((message) {
-          try {
-            final jsonStr = json.encode(message);
-            _controller.postWebMessage(jsonStr);
-          } catch (e) {
-            AppLogger.w('Failed to post web message to plugin: $e');
-          }
-        });
+              try {
+                final jsonStr = json.encode(message);
+                _controller.postWebMessage(jsonStr);
+              } catch (e) {
+                AppLogger.w('Failed to post web message to plugin: $e');
+              }
+            });
       }
 
       // 5. Load plugin entry URL
@@ -96,8 +93,12 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
         });
       }
     } catch (e, st) {
-      AppLogger.e('Failed to initialize plugin WebView',
-          tag: 'DesktopPluginHost', error: e, stackTrace: st);
+      AppLogger.e(
+        'Failed to initialize plugin WebView',
+        tag: 'DesktopPluginHost',
+        error: e,
+        stackTrace: st,
+      );
       if (mounted) {
         setState(() {
           _errorMessage = 'Failed to launch plugin: $e';
@@ -133,7 +134,7 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
 
       // If no active terminal session is connected
       return {
-        'error': 'No active SSH terminal session. Please connect to a server.'
+        'error': 'No active SSH terminal session. Please connect to a server.',
       };
     });
 
@@ -233,15 +234,15 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
   @override
   Widget build(BuildContext context) {
     // Listen for tab switching to automatically update plugin data
-    ref.listen(
-      sessionManagerProvider.select((s) => s.activeTab?.id),
-      (previous, next) {
-        if (previous != next) {
-          final activeTab = ref.read(sessionManagerProvider).activeTab;
-          _notifyHostChanged(activeTab);
-        }
-      },
-    );
+    ref.listen(sessionManagerProvider.select((s) => s.activeTab?.id), (
+      previous,
+      next,
+    ) {
+      if (previous != next) {
+        final activeTab = ref.read(sessionManagerProvider).activeTab;
+        _notifyHostChanged(activeTab);
+      }
+    });
 
     final activeTab = ref.watch(sessionManagerProvider).activeTab;
     final hostLabel = activeTab?.host?.label ?? 'No Active Session';
@@ -250,9 +251,7 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
       width: 340,
       decoration: const BoxDecoration(
         color: ShellitColors.obsidianBackground,
-        border: Border(
-          left: BorderSide(color: ShellitColors.border),
-        ),
+        border: Border(left: BorderSide(color: ShellitColors.border)),
       ),
       child: Column(
         children: [
@@ -261,9 +260,7 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: const BoxDecoration(
               color: ShellitColors.obsidianCard,
-              border: Border(
-                bottom: BorderSide(color: ShellitColors.border),
-              ),
+              border: Border(bottom: BorderSide(color: ShellitColors.border)),
             ),
             child: Row(
               children: [
@@ -312,7 +309,10 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
                     color: ShellitColors.textMuted,
                     splashRadius: 16,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                    constraints: const BoxConstraints(
+                      minWidth: 24,
+                      minHeight: 24,
+                    ),
                     onPressed: widget.onClose,
                   ),
               ],
@@ -336,20 +336,20 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
                     ),
                   )
                 : !_isInitialized
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: ShellitColors.accentCyan,
-                        ),
-                      )
-                    : Listener(
-                        onPointerSignal: (event) {
-                          if (event is PointerScrollEvent) {
-                            _handlePointerScroll(event.scrollDelta.dy);
-                          }
-                        },
-                        child: Webview(_controller),
-                      ),
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: ShellitColors.accentCyan,
+                    ),
+                  )
+                : Listener(
+                    onPointerSignal: (event) {
+                      if (event is PointerScrollEvent) {
+                        _handlePointerScroll(event.scrollDelta.dy);
+                      }
+                    },
+                    child: Webview(_controller),
+                  ),
           ),
         ],
       ),

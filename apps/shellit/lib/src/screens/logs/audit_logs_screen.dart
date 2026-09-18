@@ -53,9 +53,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
-        title: const Text(
-          'Logs & Audit Center',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          context.tr('audit.title', defaultText: 'Logs & Audit Center'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianHeader,
         elevation: 0,
@@ -68,11 +68,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
-          tabs: const [
-            Tab(icon: Icon(Icons.dvr_outlined, size: 18), text: 'System Logs'),
+          tabs: [
             Tab(
-              icon: Icon(Icons.fiber_smart_record_outlined, size: 18),
-              text: 'Session Recordings',
+              icon: const Icon(Icons.dvr_outlined, size: 18),
+              text: context.tr('audit.tab_system_logs', defaultText: 'System Logs'),
+            ),
+            Tab(
+              icon: const Icon(Icons.fiber_smart_record_outlined, size: 18),
+              text: context.tr('audit.tab_session_recordings', defaultText: 'Session Recordings'),
             ),
           ],
         ),
@@ -119,7 +122,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                           color: ShellitColors.textPrimary,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'Search message, tag or error...',
+                          hintText: context.tr(
+                            'audit.search_logs',
+                            defaultText: 'Search message, tag or error...',
+                          ),
                           prefixIcon: const Icon(
                             Icons.search,
                             size: 16,
@@ -170,9 +176,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                         child: DropdownButton<String?>(
                           value: state.selectedTag,
                           dropdownColor: ShellitColors.obsidianCard,
-                          hint: const Text(
-                            'All Tags',
-                            style: TextStyle(
+                          hint: Text(
+                            context.tr('audit.all_tags', defaultText: 'All Tags'),
+                            style: const TextStyle(
                               fontSize: 12,
                               color: ShellitColors.textMuted,
                             ),
@@ -182,9 +188,11 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                             color: ShellitColors.textPrimary,
                           ),
                           items: [
-                            const DropdownMenuItem<String?>(
+                            DropdownMenuItem<String?>(
                               value: null,
-                              child: Text('All Tags'),
+                              child: Text(
+                                context.tr('audit.all_tags', defaultText: 'All Tags'),
+                              ),
                             ),
                             ...state.availableTags.map(
                               (tag) => DropdownMenuItem<String?>(
@@ -203,8 +211,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   // Auto-scroll toggle
                   IconButton(
                     tooltip: state.autoScroll
-                        ? 'Auto-scroll ON'
-                        : 'Auto-scroll OFF',
+                        ? context.tr('audit.tooltip_autoscroll_on', defaultText: 'Auto-scroll ON')
+                        : context.tr('audit.tooltip_autoscroll_off', defaultText: 'Auto-scroll OFF'),
                     icon: Icon(
                       Icons.arrow_downward,
                       size: 18,
@@ -217,7 +225,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
 
                   // Pause/Resume toggle
                   IconButton(
-                    tooltip: state.isPaused ? 'Resume Stream' : 'Pause Stream',
+                    tooltip: state.isPaused
+                        ? context.tr('audit.tooltip_resume_stream', defaultText: 'Resume Stream')
+                        : context.tr('audit.tooltip_pause_stream', defaultText: 'Pause Stream'),
                     icon: Icon(
                       state.isPaused ? Icons.play_arrow : Icons.pause,
                       size: 18,
@@ -230,7 +240,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
 
                   // Copy All
                   IconButton(
-                    tooltip: 'Copy Filtered Logs',
+                    tooltip: context.tr(
+                      'audit.tooltip_copy_filtered',
+                      defaultText: 'Copy Filtered Logs',
+                    ),
                     icon: const Icon(
                       Icons.copy,
                       size: 18,
@@ -240,9 +253,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                       final text = controller.exportLogsText();
                       Clipboard.setData(ClipboardData(text: text));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Logs copied to clipboard'),
-                          duration: Duration(seconds: 2),
+                        SnackBar(
+                          content: Text(
+                            context.tr(
+                              'audit.copied_logs',
+                              defaultText: 'Logs copied to clipboard',
+                            ),
+                          ),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     },
@@ -250,7 +268,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
 
                   // Clear buffer
                   IconButton(
-                    tooltip: 'Clear In-Memory Buffer',
+                    tooltip: context.tr('audit.tooltip_clear_buffer', defaultText: 'Clear In-Memory Buffer'),
                     icon: const Icon(
                       Icons.delete_sweep_outlined,
                       size: 18,
@@ -301,7 +319,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   ),
                   const Spacer(),
                   Text(
-                    '${state.filteredEntries.length} / ${state.allEntries.length} events',
+                    context.tr(
+                      'audit.events_count',
+                      defaultText: '{filtered} / {total} events',
+                    ).replaceAll('{filtered}', state.filteredEntries.length.toString()).replaceAll('{total}', state.allEntries.length.toString()),
                     style: const TextStyle(
                       fontSize: 11,
                       color: ShellitColors.textMuted,
@@ -328,8 +349,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                       const SizedBox(height: 12),
                       Text(
                         state.allEntries.isEmpty
-                            ? 'No logs captured yet'
-                            : 'No logs match current filter',
+                            ? context.tr('audit.empty_logs', defaultText: 'No logs captured yet')
+                            : context.tr('audit.empty_filter', defaultText: 'No logs match current filter'),
                         style: const TextStyle(
                           color: ShellitColors.textMuted,
                           fontSize: 13,
@@ -527,7 +548,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
           title: Row(
             children: [
               Text(
-                'Log Event Details [${entry.level.name.toUpperCase()}]',
+                context.tr('audit.detail_title', defaultText: 'Log Event Details [{level}]').replaceAll('{level}', entry.level.name.toUpperCase()),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -540,7 +561,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   size: 16,
                   color: ShellitColors.textSecondary,
                 ),
-                tooltip: 'Copy event',
+                tooltip: context.tr('audit.tooltip_copy_event', defaultText: 'Copy event'),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: entry.toString()));
                   Navigator.pop(context);
@@ -555,13 +576,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _detailField('Timestamp', entry.timestamp.toIso8601String()),
-                  _detailField('Tag', entry.tag),
-                  _detailField('Level', entry.level.name.toUpperCase()),
+                  _detailField(context.tr('audit.detail_timestamp', defaultText: 'Timestamp'), entry.timestamp.toIso8601String()),
+                  _detailField(context.tr('audit.detail_tag', defaultText: 'Tag'), entry.tag),
+                  _detailField(context.tr('audit.detail_level', defaultText: 'Level'), entry.level.name.toUpperCase()),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Message (Sanitized):',
-                    style: TextStyle(
+                  Text(
+                    context.tr('audit.detail_message', defaultText: 'Message (Sanitized):'),
+                    style: const TextStyle(
                       fontSize: 11,
                       color: ShellitColors.textMuted,
                     ),
@@ -586,9 +607,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   ),
                   if (entry.error != null) ...[
                     const SizedBox(height: 12),
-                    const Text(
-                      'Error:',
-                      style: TextStyle(
+                    Text(
+                      context.tr('audit.detail_error', defaultText: 'Error:'),
+                      style: const TextStyle(
                         fontSize: 11,
                         color: ShellitColors.statusRed,
                       ),
@@ -616,9 +637,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   ],
                   if (entry.stackTrace != null) ...[
                     const SizedBox(height: 12),
-                    const Text(
-                      'Stack Trace:',
-                      style: TextStyle(
+                    Text(
+                      context.tr('audit.detail_stack_trace', defaultText: 'Stack Trace:'),
+                      style: const TextStyle(
                         fontSize: 11,
                         color: ShellitColors.textMuted,
                       ),
@@ -652,7 +673,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
+              child: Text(context.tr('common.close', defaultText: 'Close')),
             ),
           ],
         );
@@ -717,19 +738,34 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
               color: ShellitColors.borderLight,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No recorded SSH sessions found',
-              style: TextStyle(color: ShellitColors.textMuted, fontSize: 13),
+            Text(
+              context.tr(
+                'audit.rec_empty_title',
+                defaultText: 'No recorded SSH sessions found',
+              ),
+              style: const TextStyle(
+                color: ShellitColors.textMuted,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'When terminal sessions run with recording enabled, their logs appear here.',
-              style: TextStyle(color: ShellitColors.textMuted, fontSize: 11),
+            Text(
+              context.tr(
+                'audit.rec_empty_desc',
+                defaultText:
+                    'When terminal sessions run with recording enabled, their logs appear here.',
+              ),
+              style: const TextStyle(
+                color: ShellitColors.textMuted,
+                fontSize: 11,
+              ),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Refresh'),
+              label: Text(
+                context.tr('audit.rec_btn_refresh', defaultText: 'Refresh'),
+              ),
               onPressed: recController.refresh,
             ),
           ],
@@ -767,7 +803,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                             color: ShellitColors.textPrimary,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search session recordings...',
+                            hintText: context.tr(
+                              'audit.rec_search_placeholder',
+                              defaultText: 'Search session recordings...',
+                            ),
                             prefixIcon: const Icon(
                               Icons.search,
                               size: 16,
@@ -796,7 +835,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                         size: 18,
                         color: ShellitColors.textSecondary,
                       ),
-                      tooltip: 'Refresh',
+                      tooltip: context.tr(
+                        'common.refresh',
+                        defaultText: 'Refresh',
+                      ),
                       onPressed: recController.refresh,
                     ),
                   ],
@@ -837,7 +879,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                           size: 16,
                           color: ShellitColors.textMuted,
                         ),
-                        tooltip: 'Delete recording',
+                        tooltip: context.tr(
+                          'audit.rec_delete_tooltip',
+                          defaultText: 'Delete recording',
+                        ),
                         onPressed: () =>
                             _confirmDeleteRecording(context, item.id),
                       ),
@@ -856,10 +901,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
         Expanded(
           flex: 6,
           child: recState.selectedRecording == null
-              ? const Center(
+              ? Center(
                   child: Text(
-                    'Select a session to inspect text output',
-                    style: TextStyle(
+                    context.tr(
+                      'audit.rec_select_hint',
+                      defaultText: 'Select a session to inspect text output',
+                    ),
+                    style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 13,
                     ),
@@ -917,7 +965,15 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                                   ),
                                 ),
                                 child: Text(
-                                  _cleanLogView ? 'Clean Text' : 'Raw VT100',
+                                  _cleanLogView
+                                      ? context.tr(
+                                          'audit.rec_clean_text',
+                                          defaultText: 'Clean Text',
+                                        )
+                                      : context.tr(
+                                          'audit.rec_raw_vt100',
+                                          defaultText: 'Raw VT100',
+                                        ),
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -935,7 +991,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                                 size: 16,
                                 color: ShellitColors.textSecondary,
                               ),
-                              tooltip: 'Copy preview text',
+                              tooltip: context.tr(
+                                'audit.rec_copy_preview_tooltip',
+                                defaultText: 'Copy preview text',
+                              ),
                               onPressed: () {
                                 if (recState.activePreviewText != null) {
                                   final textToCopy = _cleanLogView
@@ -947,9 +1006,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                                     ClipboardData(text: textToCopy),
                                   );
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                        'Session log copied to clipboard',
+                                        context.tr(
+                                          'audit.rec_copied',
+                                          defaultText:
+                                              'Session log copied to clipboard',
+                                        ),
                                       ),
                                     ),
                                   );
@@ -962,7 +1025,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                                 size: 16,
                                 color: ShellitColors.textMuted,
                               ),
-                              tooltip: 'Close preview',
+                              tooltip: context.tr(
+                                'audit.rec_close_preview_tooltip',
+                                defaultText: 'Close preview',
+                              ),
                               onPressed: () =>
                                   recController.selectRecording(null),
                             ),
@@ -984,7 +1050,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                             child: SingleChildScrollView(
                               child: SelectableText(
                                 recState.activePreviewText == null
-                                    ? 'Loading log content...'
+                                    ? context.tr(
+                                        'audit.rec_loading_content',
+                                        defaultText: 'Loading log content...',
+                                      )
                                     : (_cleanLogView
                                           ? AnsiUtils.cleanTerminalOutput(
                                               recState.activePreviewText!,
@@ -1064,14 +1133,23 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
-        title: const Text('Delete Recording?'),
-        content: const Text(
-          'This will delete the asciinema .cast and text log files from disk permanently.',
+        title: Text(
+          context.tr(
+            'audit.rec_delete_dialog_title',
+            defaultText: 'Delete Recording?',
+          ),
+        ),
+        content: Text(
+          context.tr(
+            'audit.rec_delete_dialog_desc',
+            defaultText:
+                'This will delete the asciinema .cast and text log files from disk permanently.',
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -1083,7 +1161,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   .read(sessionRecordingsControllerProvider.notifier)
                   .deleteRecording(id);
             },
-            child: const Text('Delete'),
+            child: Text(context.tr('common.delete', defaultText: 'Delete')),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/hosts_provider.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -77,7 +78,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
     super.dispose();
   }
 
-  List<OmniCommandItem> _buildItems(String query) {
+  List<OmniCommandItem> _buildItems(BuildContext context, String query) {
     final hosts = ref.read(hostsProvider);
     final sessionState = ref.read(sessionManagerProvider);
     final activeTab = sessionState.activeTab;
@@ -110,8 +111,14 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             id: 'tab-${tab.id}',
             title: tab.displayTitle,
             subtitle: isActive
-                ? 'Switch Tab (Active)'
-                : 'Switch Tab (${tab.host?.connectionTarget ?? 'Session'})',
+                ? context.tr('omni.switch_tab_active',
+                    defaultText: 'Switch Tab (Active)')
+                : context.tr('omni.switch_tab_target',
+                        defaultText: 'Switch Tab ({target})')
+                    .replaceAll(
+                        '{target}',
+                        tab.host?.connectionTarget ??
+                            context.tr('omni.session', defaultText: 'Session')),
             icon: tabIcon,
             type: OmniItemType.action,
             onSelect: () {
@@ -133,7 +140,9 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           OmniCommandItem(
             id: 'host-${host.id}',
             title: host.label,
-            subtitle: 'Connect SSH (${host.connectionTarget})',
+            subtitle: context.tr('omni.connect_ssh',
+                    defaultText: 'Connect SSH ({target})')
+                .replaceAll('{target}', host.connectionTarget),
             icon: Icons.dns_outlined,
             type: OmniItemType.host,
             onSelect: () {
@@ -150,8 +159,10 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
       if (activeTab != null) ...[
         OmniCommandItem(
           id: 'action-split-h',
-          title: 'Split Horizontally',
-          subtitle: 'Split active terminal pane horizontally',
+          title: context.tr('splits.split_horizontal',
+              defaultText: 'Split Horizontally'),
+          subtitle: context.tr('omni.split_h_subtitle',
+              defaultText: 'Split active terminal pane horizontally'),
           icon: Icons.view_column_outlined,
           type: OmniItemType.action,
           onSelect: () {
@@ -163,8 +174,10 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         ),
         OmniCommandItem(
           id: 'action-split-v',
-          title: 'Split Vertically',
-          subtitle: 'Split active terminal pane vertically',
+          title: context.tr('splits.split_vertical',
+              defaultText: 'Split Vertically'),
+          subtitle: context.tr('omni.split_v_subtitle',
+              defaultText: 'Split active terminal pane vertically'),
           icon: Icons.table_rows_outlined,
           type: OmniItemType.action,
           onSelect: () {
@@ -176,8 +189,10 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         ),
         OmniCommandItem(
           id: 'action-split-2x2',
-          title: 'Split 2x2 Grid',
-          subtitle: 'Split into 4 terminal panes',
+          title: context.tr('splits.split_grid',
+              defaultText: 'Split 2x2 Grid'),
+          subtitle: context.tr('omni.split_grid_subtitle',
+              defaultText: 'Split into 4 terminal panes'),
           icon: Icons.grid_view_sharp,
           type: OmniItemType.action,
           onSelect: () {
@@ -190,8 +205,9 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
       ],
       OmniCommandItem(
         id: 'action-lock-vault',
-        title: 'Lock Vault',
-        subtitle: 'Secure database and wipe keys from memory',
+        title: context.tr('omni.lock_vault', defaultText: 'Lock Vault'),
+        subtitle: context.tr('omni.lock_vault_subtitle',
+            defaultText: 'Secure database and wipe keys from memory'),
         icon: Icons.lock_outline,
         type: OmniItemType.action,
         onSelect: () {
@@ -220,7 +236,9 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           OmniCommandItem(
             id: 'snippet-${snip.id}',
             title: snip.title,
-            subtitle: 'Run: ${snip.command}',
+            subtitle: context.tr('omni.run_snippet',
+                    defaultText: 'Run: {cmd}')
+                .replaceAll('{cmd}', snip.command),
             icon: Icons.play_arrow_outlined,
             type: OmniItemType.snippet,
             onSelect: () {
@@ -240,8 +258,11 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         items.add(
           OmniCommandItem(
             id: 'theme-$themeName',
-            title: 'Set Terminal Theme: $themeName',
-            subtitle: 'Switch active color scheme',
+            title: context.tr('omni.set_theme',
+                    defaultText: 'Set Terminal Theme: {name}')
+                .replaceAll('{name}', themeName),
+            subtitle: context.tr('omni.set_theme_subtitle',
+                defaultText: 'Switch active color scheme'),
             icon: Icons.palette_outlined,
             type: OmniItemType.theme,
             onSelect: () {
@@ -259,7 +280,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
   void _handleKey(KeyEvent event) {
     if (event is! KeyDownEvent) return;
 
-    final items = _buildItems(_searchController.text);
+    final items = _buildItems(context, _searchController.text);
     if (items.isEmpty) return;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
@@ -278,7 +299,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _buildItems(_searchController.text);
+    final items = _buildItems(context, _searchController.text);
 
     return Dialog(
       alignment: Alignment.topCenter,
@@ -313,9 +334,11 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
                   autofocus: true,
                   style: const TextStyle(
                       fontSize: 15, color: ShellitColors.textPrimary),
-                  decoration: const InputDecoration(
-                    hintText: 'Type a command, host, or action (Ctrl+K)...',
-                    prefixIcon: Icon(Icons.search,
+                  decoration: InputDecoration(
+                    hintText: context.tr('omni.search_hint',
+                        defaultText:
+                            'Type a command, host, or action (Ctrl+K)...'),
+                    prefixIcon: const Icon(Icons.search,
                         color: ShellitColors.accentBlue, size: 20),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -332,11 +355,13 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxHeight: 380),
                 child: items.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(24),
+                    ? Padding(
+                        padding: const EdgeInsets.all(24),
                         child: Text(
-                          'No matching commands or hosts found',
-                          style: TextStyle(
+                          context.tr('omni.no_results',
+                              defaultText:
+                                  'No matching commands or hosts found'),
+                          style: const TextStyle(
                               color: ShellitColors.textMuted, fontSize: 13),
                         ),
                       )
@@ -407,9 +432,10 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
                                     ),
                                   ),
                                   if (isSelected)
-                                    const Text(
-                                      '↵ Enter',
-                                      style: TextStyle(
+                                    Text(
+                                      context.tr('omni.key_enter',
+                                          defaultText: '↵ Enter'),
+                                      style: const TextStyle(
                                         fontSize: 11,
                                         color: ShellitColors.accentBlue,
                                         fontFamily: 'JetBrains Mono',
@@ -429,19 +455,28 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                child: const Row(
+                child: Row(
                   children: [
-                    Text('↑↓ Navigate',
-                        style: TextStyle(
-                            fontSize: 11, color: ShellitColors.textMuted)),
-                    SizedBox(width: 12),
-                    Text('↵ Select',
-                        style: TextStyle(
-                            fontSize: 11, color: ShellitColors.textMuted)),
-                    SizedBox(width: 12),
-                    Text('Esc Close',
-                        style: TextStyle(
-                            fontSize: 11, color: ShellitColors.textMuted)),
+                    Text(
+                      context.tr('omni.footer_navigate',
+                          defaultText: '↑↓ Navigate'),
+                      style: const TextStyle(
+                          fontSize: 11, color: ShellitColors.textMuted),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      context.tr('omni.footer_select',
+                          defaultText: '↵ Select'),
+                      style: const TextStyle(
+                          fontSize: 11, color: ShellitColors.textMuted),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      context.tr('omni.footer_close',
+                          defaultText: 'Esc Close'),
+                      style: const TextStyle(
+                          fontSize: 11, color: ShellitColors.textMuted),
+                    ),
                   ],
                 ),
               ),

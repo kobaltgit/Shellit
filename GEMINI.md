@@ -70,6 +70,9 @@ We use `raw-sources/reference.png` solely as an ergonomic guideline (sidebar lay
 6. **Checklist & Chronicle Protocol:**
    * Mark completed tasks in `docs/CHECKLIST.md`.
    * Invoke `chronicle_writer` or update `docs/CHRONICLE.md` upon completing milestones or major fixes.
+7. **Zero Hardcoded UI Strings & I18n Ready:**
+   * Never hardcode user-visible strings (labels, buttons, tooltips, dialogs, errors) in Flutter widgets.
+   * All UI text must use `context.tr('key')` and support fallback to English and community localization plugins (see `docs/LOCALIZATION_AND_I18N_GUIDE.md`).
 
 ---
 

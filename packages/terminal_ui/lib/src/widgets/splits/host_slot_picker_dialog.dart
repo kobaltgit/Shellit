@@ -1,5 +1,6 @@
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 /// Modal dialog for instantly selecting and connecting a host into a specific split pane slot.
@@ -135,7 +136,9 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                       size: 18, color: ShellitColors.accentBlue),
                   const SizedBox(width: 8),
                   Text(
-                    'Connect Host to Split Pane ${widget.slotIndex + 1}',
+                    context.tr('splits.picker_title',
+                            defaultText: 'Connect Host to Split Pane {slot}')
+                        .replaceAll('{slot}', (widget.slotIndex + 1).toString()),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -163,7 +166,9 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                 style: const TextStyle(
                     fontSize: 13, color: ShellitColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Search hosts by label, IP, username, or tag...',
+                  hintText: context.tr('splits.picker_search_placeholder',
+                      defaultText:
+                          'Search hosts by label, IP, username, or tag...'),
                   hintStyle: const TextStyle(
                       fontSize: 12, color: ShellitColors.textMuted),
                   prefixIcon: const Icon(Icons.search,
@@ -196,18 +201,19 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
             // Host list or empty state
             Flexible(
               child: filtered.isEmpty && quickHost == null
-                  ? const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 36),
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 36),
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.dns_outlined,
+                            const Icon(Icons.dns_outlined,
                                 size: 36, color: ShellitColors.textMuted),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
-                              'No matching hosts found',
-                              style: TextStyle(
+                              context.tr('splits.picker_no_hosts',
+                                  defaultText: 'No matching hosts found'),
+                              style: const TextStyle(
                                   fontSize: 13,
                                   color: ShellitColors.textSecondary),
                             ),
@@ -219,7 +225,8 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       children: [
                         if (filtered.isNotEmpty)
-                          ...filtered.map((host) => _buildHostTile(host)),
+                          ...filtered
+                              .map((host) => _buildHostTile(context, host)),
                         if (quickHost != null &&
                             !filtered.any((h) =>
                                 h.hostname.toLowerCase() ==
@@ -238,7 +245,10 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                                   size: 16, color: ShellitColors.accentBlue),
                             ),
                             title: Text(
-                              'Quick Connect: ${quickHost.connectionTarget}',
+                              context.tr('splits.picker_quick_connect',
+                                      defaultText: 'Quick Connect: {target}')
+                                  .replaceAll(
+                                      '{target}', quickHost.connectionTarget),
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -246,7 +256,11 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                               ),
                             ),
                             subtitle: Text(
-                              'Connect to ${quickHost.username}@${quickHost.hostname}:${quickHost.port} as transient host',
+                              context.tr('splits.picker_quick_connect_desc',
+                                      defaultText:
+                                          'Connect to {target} as transient host')
+                                  .replaceAll('{target}',
+                                      '${quickHost.username}@${quickHost.hostname}:${quickHost.port}'),
                               style: const TextStyle(
                                   fontSize: 11,
                                   color: ShellitColors.textSecondary),
@@ -275,18 +289,18 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
     );
   }
 
-  Widget _buildHostTile(HostEntity host) {
+  Widget _buildHostTile(BuildContext context, HostEntity host) {
     Color? badgeColor;
     String? badgeText;
     if (host.environment == HostEnvironment.production) {
       badgeColor = const Color(0xFFEF4444);
-      badgeText = 'PROD';
+      badgeText = context.tr('hosts.card.env_prod', defaultText: 'PROD');
     } else if (host.environment == HostEnvironment.staging) {
       badgeColor = const Color(0xFFF59E0B);
-      badgeText = 'STAGE';
+      badgeText = context.tr('hosts.card.env_stage', defaultText: 'STAGE');
     } else if (host.environment == HostEnvironment.development) {
       badgeColor = const Color(0xFF3B82F6);
-      badgeText = 'DEV';
+      badgeText = context.tr('hosts.card.env_dev', defaultText: 'DEV');
     }
 
     return Padding(

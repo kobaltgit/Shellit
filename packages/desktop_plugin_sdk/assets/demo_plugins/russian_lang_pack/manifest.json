@@ -1,0 +1,11 @@
+﻿{
+  "id": "com.community.lang.ru",
+  "name": "Русский языковой пакет",
+  "version": "1.0.0",
+  "author": "Shellit Community",
+  "description": "Официальный перевод интерфейса Shellit на русский язык",
+  "entryPoint": "ru.json",
+  "target": "localization",
+  "locale": "ru_RU",
+  "minAppVersion": "1.0.0"
+}

@@ -1,5 +1,6 @@
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 typedef HostFormSaveCallback = void Function(HostEntity host, String? password);
@@ -8,12 +9,16 @@ class HostFormDialog extends StatefulWidget {
   final HostEntity? initialHost;
   final HostFormSaveCallback onSave;
   final List<KeyEntity> availableKeys;
+  final List<FolderEntity> availableFolders;
+  final Future<FolderEntity?> Function(String folderName)? onCreateFolder;
 
   const HostFormDialog({
     super.key,
     this.initialHost,
     required this.onSave,
     this.availableKeys = const [],
+    this.availableFolders = const [],
+    this.onCreateFolder,
   });
 
   @override
@@ -29,7 +34,9 @@ class _HostFormDialogState extends State<HostFormDialog> {
   late TextEditingController _usernameController;
   late TextEditingController _passwordController;
   late TextEditingController _tagsController;
-  late TextEditingController _folderController;
+
+  late List<FolderEntity> _folders;
+  String? _selectedFolderId;
 
   late HostAuthType _authType;
   late HostEnvironment _environment;
@@ -48,7 +55,15 @@ class _HostFormDialogState extends State<HostFormDialog> {
     _usernameController = TextEditingController(text: h?.username ?? 'root');
     _passwordController = TextEditingController();
     _tagsController = TextEditingController(text: h?.tags.join(', ') ?? '');
-    _folderController = TextEditingController(text: h?.folderId ?? '');
+
+    _folders = List.of(widget.availableFolders);
+    final initialFolderId = h?.folderId;
+    if (initialFolderId != null && initialFolderId.isNotEmpty) {
+      if (!_folders.any((f) => f.id == initialFolderId)) {
+        _folders.add(FolderEntity(id: initialFolderId, name: initialFolderId));
+      }
+      _selectedFolderId = initialFolderId;
+    }
 
     _authType = h?.authType ?? HostAuthType.password;
     _environment = h?.environment ?? HostEnvironment.defaultEnv;
@@ -66,8 +81,79 @@ class _HostFormDialogState extends State<HostFormDialog> {
     _usernameController.dispose();
     _passwordController.dispose();
     _tagsController.dispose();
-    _folderController.dispose();
     super.dispose();
+  }
+
+  Future<void> _promptCreateFolder() async {
+    final textCtrl = TextEditingController();
+    final folderName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          context.tr(
+            'hosts.form.dialog_folder_title',
+            defaultText: 'Create New Folder',
+          ),
+        ),
+        content: TextField(
+          controller: textCtrl,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: context.tr(
+              'hosts.form.dialog_folder_name',
+              defaultText: 'Folder Name',
+            ),
+            hintText: context.tr(
+              'hosts.form.dialog_folder_hint',
+              defaultText: 'e.g. EU Datacenter',
+            ),
+          ),
+          onSubmitted: (val) => Navigator.of(ctx).pop(val.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(textCtrl.text.trim()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ShellitColors.accentBlue,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              context.tr(
+                'hosts.form.dialog_folder_btn',
+                defaultText: 'Create',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (folderName != null && folderName.isNotEmpty && mounted) {
+      if (widget.onCreateFolder != null) {
+        final created = await widget.onCreateFolder!(folderName);
+        if (created != null && mounted) {
+          setState(() {
+            if (!_folders.any((f) => f.id == created.id)) {
+              _folders.add(created);
+            }
+            _selectedFolderId = created.id;
+          });
+        }
+      } else {
+        final fallback = FolderEntity(
+          id: 'folder-${DateTime.now().millisecondsSinceEpoch}',
+          name: folderName,
+        );
+        setState(() {
+          _folders.add(fallback);
+          _selectedFolderId = fallback.id;
+        });
+      }
+    }
   }
 
   void _submit() {
@@ -92,9 +178,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
         environment: _environment,
         osType: _osType,
         tags: tags,
-        folderId: _folderController.text.trim().isEmpty
-            ? null
-            : _folderController.text.trim(),
+        folderId: _selectedFolderId,
         dangerousCommandProtection: _dangerousCommandProtection,
         lastPingLatencyMs: widget.initialHost?.lastPingLatencyMs,
         createdAt: widget.initialHost?.createdAt ?? now,
@@ -116,7 +200,9 @@ class _HostFormDialogState extends State<HostFormDialog> {
 
     return AlertDialog(
       title: Text(
-        isEdit ? 'Edit Host' : 'New SSH Host',
+        isEdit
+            ? context.tr('hosts.form.title_edit', defaultText: 'Edit Host')
+            : context.tr('hosts.form.title_new', defaultText: 'New SSH Host'),
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       ),
       content: SizedBox(
@@ -131,12 +217,21 @@ class _HostFormDialogState extends State<HostFormDialog> {
                 // Label
                 TextFormField(
                   controller: _labelController,
-                  decoration: const InputDecoration(
-                    labelText: 'Label / Alias',
-                    hintText: 'e.g. Production Web 01',
+                  decoration: InputDecoration(
+                    labelText: context.tr(
+                      'hosts.form.label_field',
+                      defaultText: 'Label / Alias',
+                    ),
+                    hintText: context.tr(
+                      'hosts.form.label_hint',
+                      defaultText: 'e.g. Production Web 01',
+                    ),
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Label is required'
+                      ? context.tr(
+                          'hosts.form.label_required',
+                          defaultText: 'Label is required',
+                        )
                       : null,
                 ),
                 const SizedBox(height: 12),
@@ -148,12 +243,21 @@ class _HostFormDialogState extends State<HostFormDialog> {
                       flex: 3,
                       child: TextFormField(
                         controller: _hostnameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Hostname / IP',
-                          hintText: '192.168.1.1 or example.com',
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'hosts.form.hostname_field',
+                            defaultText: 'Hostname / IP',
+                          ),
+                          hintText: context.tr(
+                            'hosts.form.hostname_hint',
+                            defaultText: '192.168.1.1 or example.com',
+                          ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Hostname is required'
+                            ? context.tr(
+                                'hosts.form.hostname_required',
+                                defaultText: 'Hostname is required',
+                              )
                             : null,
                       ),
                     ),
@@ -163,13 +267,20 @@ class _HostFormDialogState extends State<HostFormDialog> {
                       child: TextFormField(
                         controller: _portController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Port',
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'hosts.form.port_field',
+                            defaultText: 'Port',
+                          ),
                         ),
                         validator: (v) {
                           final p = int.tryParse(v ?? '');
-                          if (p == null || p <= 0 || p > 65535)
-                            return 'Invalid';
+                          if (p == null || p <= 0 || p > 65535) {
+                            return context.tr(
+                              'hosts.form.port_invalid',
+                              defaultText: 'Invalid',
+                            );
+                          }
                           return null;
                         },
                       ),
@@ -184,21 +295,35 @@ class _HostFormDialogState extends State<HostFormDialog> {
                     Expanded(
                       child: TextFormField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'root, ubuntu, etc.',
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'hosts.form.username_field',
+                            defaultText: 'Username',
+                          ),
+                          hintText: context.tr(
+                            'hosts.form.username_hint',
+                            defaultText: 'root, ubuntu, etc.',
+                          ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Username is required'
+                            ? context.tr(
+                                'hosts.form.username_required',
+                                defaultText: 'Username is required',
+                              )
                             : null,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<HostAuthType>(
+                        isExpanded: true,
                         initialValue: _authType,
-                        decoration:
-                            const InputDecoration(labelText: 'Auth Method'),
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'hosts.form.auth_method',
+                            defaultText: 'Auth Method',
+                          ),
+                        ),
                         items: HostAuthType.values.map((a) {
                           return DropdownMenuItem(
                             value: a,
@@ -220,9 +345,19 @@ class _HostFormDialogState extends State<HostFormDialog> {
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       labelText: isEdit
-                          ? 'SSH Password (leave blank to keep current)'
-                          : 'SSH Password',
-                      hintText: 'Enter server password',
+                          ? context.tr(
+                              'hosts.form.password_edit_hint',
+                              defaultText:
+                                  'SSH Password (leave blank to keep current)',
+                            )
+                          : context.tr(
+                              'hosts.form.password_field',
+                              defaultText: 'SSH Password',
+                            ),
+                      hintText: context.tr(
+                        'hosts.form.password_hint',
+                        defaultText: 'Enter server password',
+                      ),
                       prefixIcon: const Icon(Icons.lock_outline, size: 18),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -240,15 +375,25 @@ class _HostFormDialogState extends State<HostFormDialog> {
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String?>(
                     initialValue: _selectedKeyId,
-                    decoration: const InputDecoration(
-                      labelText: 'SSH Key (from Keychain)',
-                      prefixIcon: Icon(Icons.vpn_key_outlined, size: 18),
+                    decoration: InputDecoration(
+                      labelText: context.tr(
+                        'hosts.form.key_field',
+                        defaultText: 'SSH Key (from Keychain)',
+                      ),
+                      prefixIcon:
+                          const Icon(Icons.vpn_key_outlined, size: 18),
                     ),
                     items: [
-                      const DropdownMenuItem<String?>(
+                      DropdownMenuItem<String?>(
                         value: null,
-                        child: Text('None (Use system agent or prompt)',
-                            style: TextStyle(fontSize: 13)),
+                        child: Text(
+                          context.tr(
+                            'hosts.form.key_none',
+                            defaultText:
+                                'None (Use system agent or prompt)',
+                          ),
+                          style: const TextStyle(fontSize: 13),
+                        ),
                       ),
                       ...widget.availableKeys
                           .map((k) => DropdownMenuItem<String?>(
@@ -266,10 +411,16 @@ class _HostFormDialogState extends State<HostFormDialog> {
                 // Environment (OS is auto-detected upon connection)
                 DropdownButtonFormField<HostEnvironment>(
                   initialValue: _environment,
-                  decoration: const InputDecoration(
-                    labelText: 'Environment',
-                    helperText:
-                        'OS / Distribution is auto-detected upon SSH connection',
+                  decoration: InputDecoration(
+                    labelText: context.tr(
+                      'hosts.form.environment_field',
+                      defaultText: 'Environment',
+                    ),
+                    helperText: context.tr(
+                      'hosts.form.environment_helper',
+                      defaultText:
+                          'OS / Distribution is auto-detected upon SSH connection',
+                    ),
                   ),
                   items: HostEnvironment.values.map((env) {
                     return DropdownMenuItem(
@@ -293,23 +444,81 @@ class _HostFormDialogState extends State<HostFormDialog> {
 
                 // Folder & Tags
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: TextFormField(
-                        controller: _folderController,
-                        decoration: const InputDecoration(
-                          labelText: 'Folder (optional)',
-                          hintText: 'e.g. Datacenter EU',
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String?>(
+                              isExpanded: true,
+                              initialValue: _selectedFolderId,
+                              decoration: InputDecoration(
+                                labelText: context.tr(
+                                  'hosts.form.folder_field',
+                                  defaultText: 'Folder',
+                                ),
+                                prefixIcon: const Icon(
+                                  Icons.folder_outlined,
+                                  size: 18,
+                                ),
+                              ),
+                              items: [
+                                DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text(
+                                    context.tr(
+                                      'hosts.form.folder_root',
+                                      defaultText: 'No Folder (Root)',
+                                    ),
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                                ..._folders
+                                    .map((f) => DropdownMenuItem<String?>(
+                                          value: f.id,
+                                          child: Text(
+                                            f.name,
+                                            style:
+                                                const TextStyle(fontSize: 13),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        )),
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => _selectedFolderId = v),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(
+                              Icons.create_new_folder_outlined,
+                              size: 20,
+                            ),
+                            tooltip: context.tr(
+                              'hosts.form.tooltip_create_folder',
+                              defaultText: 'Create New Folder',
+                            ),
+                            color: ShellitColors.accentBlue,
+                            onPressed: _promptCreateFolder,
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextFormField(
                         controller: _tagsController,
-                        decoration: const InputDecoration(
-                          labelText: 'Tags (comma separated)',
-                          hintText: 'web, db, k8s',
+                        decoration: InputDecoration(
+                          labelText: context.tr(
+                            'hosts.form.tags_field',
+                            defaultText: 'Tags (comma separated)',
+                          ),
+                          hintText: context.tr(
+                            'hosts.form.tags_hint',
+                            defaultText: 'web, db, k8s',
+                          ),
                         ),
                       ),
                     ),
@@ -320,14 +529,26 @@ class _HostFormDialogState extends State<HostFormDialog> {
                 // Dangerous Command Protection switch
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text(
-                    'Production Command Guard',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  title: Text(
+                    context.tr(
+                      'hosts.form.prod_guard_title',
+                      defaultText: 'Production Command Guard',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  subtitle: const Text(
-                    'Intercept destructive commands (rm -rf, reboot, etc.) and require confirmation',
-                    style: TextStyle(
-                        fontSize: 12, color: ShellitColors.textSecondary),
+                  subtitle: Text(
+                    context.tr(
+                      'hosts.form.prod_guard_subtitle',
+                      defaultText:
+                          'Intercept destructive commands (rm -rf, reboot, etc.) and require confirmation',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ShellitColors.textSecondary,
+                    ),
                   ),
                   value: _dangerousCommandProtection,
                   activeThumbColor: ShellitColors.statusRed,
@@ -343,7 +564,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
         ),
         ElevatedButton(
           onPressed: _submit,
@@ -351,7 +572,14 @@ class _HostFormDialogState extends State<HostFormDialog> {
             backgroundColor: ShellitColors.accentBlue,
             foregroundColor: Colors.white,
           ),
-          child: Text(isEdit ? 'Save Changes' : 'Create'),
+          child: Text(
+            isEdit
+                ? context.tr(
+                    'hosts.form.btn_save',
+                    defaultText: 'Save Changes',
+                  )
+                : context.tr('hosts.form.btn_create', defaultText: 'Create'),
+          ),
         ),
       ],
     );

@@ -94,18 +94,35 @@ class SessionConnectController {
   }
 
   /// Connect and return an interactive terminal session
-  Future<ITerminalSession> connectTerminal(HostEntity host) async {
+  Future<ITerminalSession> connectTerminal(
+    HostEntity host, {
+    void Function(String status)? onProgress,
+  }) async {
     String? password;
     List<int>? keyBytes;
 
     if (host.credentialRefId != null) {
+      if (!_ref.read(vaultProvider).isUnlocked) {
+        throw Exception(
+          'Vault is locked. Master password required to decrypt host credentials.',
+        );
+      }
+
+      onProgress?.call('Decrypting credentials...');
       if (host.authType == HostAuthType.password) {
         final passRes = await _keyManager.getDecryptedPassphrase(
           host.credentialRefId!,
         );
         passRes.when(
           success: (pwd) => password = pwd,
-          error: (f) => AppLogger.w('Failed to decrypt password: ${f.message}'),
+          error: (f) {
+            if (f.type == VaultFailureType.locked) {
+              throw Exception(
+                'Vault is locked. Master password required to decrypt host credentials.',
+              );
+            }
+            AppLogger.w('Failed to decrypt password: ${f.message}');
+          },
         );
       } else if (host.authType == HostAuthType.privateKey) {
         final keyRes = await _keyManager.getDecryptedPrivateKey(
@@ -113,7 +130,14 @@ class SessionConnectController {
         );
         keyRes.when(
           success: (bytes) => keyBytes = bytes,
-          error: (f) => AppLogger.w('Failed to decrypt key: ${f.message}'),
+          error: (f) {
+            if (f.type == VaultFailureType.locked) {
+              throw Exception(
+                'Vault is locked. Master password required to decrypt host credentials.',
+              );
+            }
+            AppLogger.w('Failed to decrypt key: ${f.message}');
+          },
         );
       }
     }
@@ -143,6 +167,7 @@ class SessionConnectController {
       password: password,
       privateKeyBytes: keyBytes,
       recorder: recorder,
+      onProgress: onProgress,
     );
 
     return result.when(
@@ -155,18 +180,35 @@ class SessionConnectController {
   }
 
   /// Open and return a dedicated SFTP session
-  Future<ISftpSession> connectSftp(HostEntity host) async {
+  Future<ISftpSession> connectSftp(
+    HostEntity host, {
+    void Function(String status)? onProgress,
+  }) async {
     String? password;
     List<int>? keyBytes;
 
     if (host.credentialRefId != null) {
+      if (!_ref.read(vaultProvider).isUnlocked) {
+        throw Exception(
+          'Vault is locked. Master password required to decrypt host credentials.',
+        );
+      }
+
+      onProgress?.call('Decrypting credentials...');
       if (host.authType == HostAuthType.password) {
         final passRes = await _keyManager.getDecryptedPassphrase(
           host.credentialRefId!,
         );
         passRes.when(
           success: (pwd) => password = pwd,
-          error: (f) => AppLogger.w('Failed to decrypt password: ${f.message}'),
+          error: (f) {
+            if (f.type == VaultFailureType.locked) {
+              throw Exception(
+                'Vault is locked. Master password required to decrypt host credentials.',
+              );
+            }
+            AppLogger.w('Failed to decrypt password: ${f.message}');
+          },
         );
       } else if (host.authType == HostAuthType.privateKey) {
         final keyRes = await _keyManager.getDecryptedPrivateKey(
@@ -174,7 +216,14 @@ class SessionConnectController {
         );
         keyRes.when(
           success: (bytes) => keyBytes = bytes,
-          error: (f) => AppLogger.w('Failed to decrypt key: ${f.message}'),
+          error: (f) {
+            if (f.type == VaultFailureType.locked) {
+              throw Exception(
+                'Vault is locked. Master password required to decrypt host credentials.',
+              );
+            }
+            AppLogger.w('Failed to decrypt key: ${f.message}');
+          },
         );
       }
     }
@@ -183,6 +232,7 @@ class SessionConnectController {
       host: host,
       password: password,
       privateKeyBytes: keyBytes,
+      onProgress: onProgress,
     );
 
     return result.when(

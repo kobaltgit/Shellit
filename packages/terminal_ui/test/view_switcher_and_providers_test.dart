@@ -24,6 +24,53 @@ void main() {
       container.read(vaultProvider.notifier).selectVault('Work Vault');
       expect(container.read(vaultProvider).activeVaultName, 'Work Vault');
     });
+
+    test(
+        'changeMasterPassword updates master password and rejects invalid current password',
+        () async {
+      final fakeRepo = FakeVaultRepository();
+      final container = ProviderContainer(
+        overrides: [
+          vaultRepositoryProvider.overrideWithValue(fakeRepo),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      // Attempt change with incorrect old password
+      final failRes =
+          await container.read(vaultProvider.notifier).changeMasterPassword(
+                currentPassword: 'wrong-password',
+                newPassword: 'new-secret-pwd',
+              );
+      expect(failRes.isError, isTrue);
+      expect(failRes.failureOrNull?.type,
+          equals(VaultFailureType.invalidPassword));
+      expect(fakeRepo.currentMasterPassword, 'old-master-pwd');
+
+      // Successful change
+      final successRes =
+          await container.read(vaultProvider.notifier).changeMasterPassword(
+                currentPassword: 'old-master-pwd',
+                newPassword: 'new-secret-pwd',
+              );
+      expect(successRes.isSuccess, isTrue);
+      expect(fakeRepo.currentMasterPassword, 'new-secret-pwd');
+
+      // Verify lock and unlock with new password
+      container.read(vaultProvider.notifier).lock();
+      expect(container.read(vaultProvider).isUnlocked, isFalse);
+
+      final oldUnlock = await container
+          .read(vaultProvider.notifier)
+          .unlockWithPassword('old-master-pwd');
+      expect(oldUnlock, isFalse);
+
+      final newUnlock = await container
+          .read(vaultProvider.notifier)
+          .unlockWithPassword('new-secret-pwd');
+      expect(newUnlock, isTrue);
+      expect(container.read(vaultProvider).isUnlocked, isTrue);
+    });
   });
 
   group('HostsProvider and Filtering tests', () {

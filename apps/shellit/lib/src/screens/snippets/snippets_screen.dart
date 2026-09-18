@@ -31,9 +31,9 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
-        title: const Text(
-          'Command Snippets Library',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          context.tr('snippets.title', defaultText: 'Command Snippets Library'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
         elevation: 0,
@@ -42,7 +42,9 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('New Snippet'),
+              label: Text(
+                context.tr('snippets.btn_new', defaultText: 'New Snippet'),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentBlue,
                 foregroundColor: Colors.white,
@@ -66,7 +68,10 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                 fontSize: 13,
               ),
               decoration: InputDecoration(
-                hintText: 'Search snippets by title, command, or tags...',
+                hintText: context.tr(
+                  'snippets.search_placeholder',
+                  defaultText: 'Search snippets by title, command, or tags...',
+                ),
                 hintStyle: const TextStyle(color: ShellitColors.textMuted),
                 prefixIcon: const Icon(
                   Icons.search,
@@ -118,17 +123,17 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                         const SizedBox(height: 12),
                         Text(
                           snippets.isEmpty
-                              ? 'No Snippets Saved Yet'
-                              : 'No snippets match "$_searchQuery"',
+                              ? context.tr('snippets.empty_title', defaultText: 'No Snippets Saved Yet')
+                              : context.tr('snippets.empty_match', defaultText: 'No snippets match "{query}"').replaceAll('{query}', _searchQuery),
                           style: const TextStyle(
                             color: ShellitColors.textSecondary,
                             fontSize: 15,
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
-                          'Save frequently used commands for instant 1-click execution.',
-                          style: TextStyle(
+                        Text(
+                          context.tr('snippets.empty_desc', defaultText: 'Save frequently used commands for instant 1-click execution.'),
+                          style: const TextStyle(
                             color: ShellitColors.textMuted,
                             fontSize: 12,
                           ),
@@ -137,7 +142,9 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                           const SizedBox(height: 16),
                           OutlinedButton.icon(
                             icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Add First Snippet'),
+                            label: Text(
+                              context.tr('snippets.btn_add_first', defaultText: 'Add First Snippet'),
+                            ),
                             onPressed: () => _showEditSnippetDialog(context),
                           ),
                         ],
@@ -186,8 +193,10 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                                 ),
                                 if (activeTab?.terminalSession != null)
                                   Tooltip(
-                                    message:
-                                        'Execute in active terminal (${activeTab!.title})',
+                                    message: context.tr(
+                                      'snippets.tooltip_run',
+                                      defaultText: 'Execute in active terminal ({tab})',
+                                    ).replaceAll('{tab}', activeTab!.title),
                                     child: IconButton(
                                       icon: const Icon(
                                         Icons.play_arrow,
@@ -198,7 +207,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                                     ),
                                   ),
                                 Tooltip(
-                                  message: 'Copy to clipboard',
+                                  message: context.tr('snippets.tooltip_copy', defaultText: 'Copy to clipboard'),
                                   child: IconButton(
                                     icon: const Icon(
                                       Icons.copy,
@@ -214,7 +223,10 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            'Copied "${snippet.title}" to clipboard',
+                                            context.tr(
+                                              'snippets.copied_snackbar',
+                                              defaultText: 'Copied "{title}" to clipboard',
+                                            ).replaceAll('{title}', snippet.title),
                                           ),
                                         ),
                                       );
@@ -239,21 +251,21 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                                     }
                                   },
                                   itemBuilder: (_) => [
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'edit',
                                       child: Text(
-                                        'Edit',
-                                        style: TextStyle(
+                                        context.tr('snippets.menu_edit', defaultText: 'Edit'),
+                                        style: const TextStyle(
                                           color: ShellitColors.textPrimary,
                                           fontSize: 13,
                                         ),
                                       ),
                                     ),
-                                    const PopupMenuItem(
+                                    PopupMenuItem(
                                       value: 'delete',
                                       child: Text(
-                                        'Delete',
-                                        style: TextStyle(
+                                        context.tr('snippets.menu_delete', defaultText: 'Delete'),
+                                        style: const TextStyle(
                                           color: ShellitColors.statusRed,
                                           fontSize: 13,
                                         ),
@@ -335,7 +347,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Center(
                 child: Text(
-                  'Error: $err',
+                  '${context.tr('common.error', defaultText: 'Error')}: $err',
                   style: const TextStyle(color: ShellitColors.statusRed),
                 ),
               ),
@@ -357,7 +369,12 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
       );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Executed "${snippet.title}" in ${activeTab.title}'),
+          content: Text(
+            context.tr(
+              'snippets.executed_snackbar',
+              defaultText: 'Executed "{title}" in {tab}',
+            ).replaceAll('{title}', snippet.title).replaceAll('{tab}', activeTab.title),
+          ),
           backgroundColor: ShellitColors.obsidianCard,
         ),
       );
@@ -384,7 +401,9 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
         title: Text(
-          isEditing ? 'Edit Snippet' : 'New Command Snippet',
+          isEditing
+              ? context.tr('snippets.dialog_edit_title', defaultText: 'Edit Snippet')
+              : context.tr('snippets.dialog_new_title', defaultText: 'New Command Snippet'),
           style: const TextStyle(
             color: ShellitColors.textPrimary,
             fontSize: 16,
@@ -402,8 +421,11 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                     color: ShellitColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Snippet Title (e.g. Restart Docker Swarm)',
+                  decoration: InputDecoration(
+                    labelText: context.tr(
+                      'snippets.title_field',
+                      defaultText: 'Snippet Title (e.g. Restart Docker Swarm)',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -415,8 +437,8 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                     fontFamily: 'monospace',
                     fontSize: 12,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Command / Script',
+                  decoration: InputDecoration(
+                    labelText: context.tr('snippets.command_field', defaultText: 'Command / Script'),
                     alignLabelWithHint: true,
                   ),
                 ),
@@ -427,8 +449,8 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                     color: ShellitColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Description (Optional)',
+                  decoration: InputDecoration(
+                    labelText: context.tr('snippets.desc_field', defaultText: 'Description (Optional)'),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -438,9 +460,11 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
                     color: ShellitColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
-                    labelText:
-                        'Tags (comma separated, e.g. docker, prod, logs)',
+                  decoration: InputDecoration(
+                    labelText: context.tr(
+                      'snippets.tags_field',
+                      defaultText: 'Tags (comma separated, e.g. docker, prod, logs)',
+                    ),
                   ),
                 ),
               ],
@@ -450,7 +474,7 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -489,7 +513,9 @@ class _SnippetsScreenState extends ConsumerState<SnippetsScreen> {
               if (ctx.mounted) Navigator.pop(ctx);
             },
             child: Text(
-              isEditing ? 'Save Changes' : 'Create Snippet',
+              isEditing
+                  ? context.tr('snippets.btn_save', defaultText: 'Save Changes')
+                  : context.tr('snippets.btn_create', defaultText: 'Create Snippet'),
               style: const TextStyle(color: Colors.white),
             ),
           ),

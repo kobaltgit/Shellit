@@ -11,6 +11,7 @@ class PluginManifest {
   final String description;
   final String entryPoint;
   final PluginTarget target;
+  final String? locale;
   final List<String> permissions;
   final String minAppVersion;
 
@@ -22,6 +23,7 @@ class PluginManifest {
     required this.description,
     required this.entryPoint,
     required this.target,
+    this.locale,
     this.permissions = const [],
     this.minAppVersion = '1.0.0',
   });
@@ -35,6 +37,7 @@ class PluginManifest {
       description: json['description'] as String? ?? '',
       entryPoint: json['entryPoint'] as String? ?? 'index.html',
       target: _parseTarget(json['target'] as String?),
+      locale: json['locale'] as String?,
       permissions: (json['permissions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -51,6 +54,8 @@ class PluginManifest {
         return PluginTarget.modal;
       case 'headless':
         return PluginTarget.headless;
+      case 'localization':
+        return PluginTarget.localization;
       case 'sidebar':
       default:
         return PluginTarget.sidebar;
@@ -65,12 +70,14 @@ class PluginManifest {
         'description': description,
         'entryPoint': entryPoint,
         'target': target.name,
+        if (locale != null) 'locale': locale,
         'permissions': permissions,
         'minAppVersion': minAppVersion,
       };
 
   @override
-  String toString() => 'PluginManifest($id, v$version, target: ${target.name})';
+  String toString() =>
+      'PluginManifest($id, v$version, target: ${target.name}${locale != null ? ', locale: $locale' : ''})';
 }
 
 /// Represents an installed plugin on disk.

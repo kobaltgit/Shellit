@@ -129,6 +129,40 @@ void main() {
       }
     });
 
+    test('validates localization manifest with json entryPoint and locale', () {
+      final json = {
+        'id': 'com.community.lang.ru',
+        'name': 'Russian Language Pack',
+        'entryPoint': 'ru.json',
+        'target': 'localization',
+        'locale': 'ru_RU',
+      };
+      final result = PluginManifestValidator.validateMap(json);
+      expect(result.isSuccess, isTrue);
+      final manifest = result.getOrThrow();
+      expect(manifest.target, PluginTarget.localization);
+      expect(manifest.locale, 'ru_RU');
+    });
+
+    test('rejects localization manifest without locale or non-json entryPoint', () {
+      final noLocale = {
+        'id': 'com.community.lang.ru',
+        'name': 'Russian Language Pack',
+        'entryPoint': 'ru.json',
+        'target': 'localization',
+      };
+      expect(PluginManifestValidator.validateMap(noLocale).isError, isTrue);
+
+      final nonJson = {
+        'id': 'com.community.lang.ru',
+        'name': 'Russian Language Pack',
+        'entryPoint': 'ru.html',
+        'target': 'localization',
+        'locale': 'ru_RU',
+      };
+      expect(PluginManifestValidator.validateMap(nonJson).isError, isTrue);
+    });
+
     test('rejects invalid target', () {
       final json = {
         'id': 'com.test.plugin',

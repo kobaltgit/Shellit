@@ -38,6 +38,11 @@ abstract class IVaultRepository {
     required String newPassword,
   });
 
+  /// Disables master password protection entirely, migrating stored keys to an open session.
+  Future<Result<void, VaultFailure>> disableMasterPassword({
+    required String currentPassword,
+  });
+
   /// Ensures an open/unprotected vault session is active if no master password has been set.
   /// If the vault has been initialized with a master password, this is a no-op.
   Future<void> ensureOpenSession();

@@ -33,6 +33,10 @@ class SessionTab {
   final bool isBroadcastEnabled;
   final SplitLayoutType splitLayout;
 
+  final bool isConnecting;
+  final String? connectionStatus;
+  final String? connectionError;
+
   const SessionTab({
     required this.id,
     required this.title,
@@ -47,6 +51,9 @@ class SessionTab {
     this.activeSplitIndex = 0,
     this.isBroadcastEnabled = false,
     this.splitLayout = SplitLayoutType.single,
+    this.isConnecting = false,
+    this.connectionStatus,
+    this.connectionError,
   });
 
   String get displayTitle => customTitle ?? title;
@@ -64,11 +71,18 @@ class SessionTab {
     TabType? type,
     HostEntity? host,
     ITerminalSession? terminalSession,
+    bool clearTerminalSession = false,
     ISftpSession? sftpSession,
+    bool clearSftpSession = false,
     List<ITerminalSession>? splitSessions,
     int? activeSplitIndex,
     bool? isBroadcastEnabled,
     SplitLayoutType? splitLayout,
+    bool? isConnecting,
+    String? connectionStatus,
+    bool clearConnectionStatus = false,
+    String? connectionError,
+    bool clearConnectionError = false,
   }) {
     return SessionTab(
       id: id ?? this.id,
@@ -78,12 +92,21 @@ class SessionTab {
       isPinned: isPinned ?? this.isPinned,
       type: type ?? this.type,
       host: host ?? this.host,
-      terminalSession: terminalSession ?? this.terminalSession,
-      sftpSession: sftpSession ?? this.sftpSession,
+      terminalSession: clearTerminalSession
+          ? null
+          : (terminalSession ?? this.terminalSession),
+      sftpSession: clearSftpSession ? null : (sftpSession ?? this.sftpSession),
       splitSessions: splitSessions ?? this.splitSessions,
       activeSplitIndex: activeSplitIndex ?? this.activeSplitIndex,
       isBroadcastEnabled: isBroadcastEnabled ?? this.isBroadcastEnabled,
       splitLayout: splitLayout ?? this.splitLayout,
+      isConnecting: isConnecting ?? this.isConnecting,
+      connectionStatus: clearConnectionStatus
+          ? null
+          : (connectionStatus ?? this.connectionStatus),
+      connectionError: clearConnectionError
+          ? null
+          : (connectionError ?? this.connectionError),
     );
   }
 }
@@ -131,6 +154,107 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
     state = state.copyWith(activeTabId: () => null);
   }
 
+  /// Opens a terminal tab in connecting state immediately with a spinner.
+  String openConnectingTerminalTab({
+    required HostEntity host,
+  }) {
+    final seq = ++_tabCounter;
+    final tabId = 'term-${DateTime.now().millisecondsSinceEpoch}-$seq';
+    final tab = SessionTab(
+      id: tabId,
+      title: host.label,
+      type: TabType.terminal,
+      host: host,
+      isConnecting: true,
+      connectionStatus: 'Connecting...',
+    );
+
+    state = state.copyWith(
+      tabs: [...state.tabs, tab],
+      activeTabId: () => tabId,
+    );
+    return tabId;
+  }
+
+  /// Updates live connection step text (e.g. 'Authenticating as root...')
+  void updateTabConnectingStatus(String tabId, String status) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              isConnecting: true,
+              connectionStatus: status,
+              clearConnectionError: true,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
+  /// Attaches an established terminal session to a connecting tab.
+  void attachTerminalSession({
+    required String tabId,
+    required ITerminalSession session,
+  }) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              terminalSession: session,
+              splitSessions: [session],
+              isConnecting: false,
+              clearConnectionStatus: true,
+              clearConnectionError: true,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
+  /// Marks a tab as failed with a detailed error message and displays Retry/Close options.
+  void setTabConnectionError({
+    required String tabId,
+    required String errorMessage,
+  }) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              isConnecting: false,
+              clearConnectionStatus: true,
+              connectionError: errorMessage,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
+  /// Resets a tab back to connecting state (used when clicking 'Retry').
+  void setTabConnecting({
+    required String tabId,
+    String initialStatus = 'Connecting...',
+  }) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              isConnecting: true,
+              connectionStatus: initialStatus,
+              clearConnectionError: true,
+            )
+          else
+            t,
+      ],
+    );
+  }
+
   String openTerminalTab({
     required HostEntity host,
     required ITerminalSession session,
@@ -152,6 +276,49 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
       activeTabId: () => tabId,
     );
     return tabId;
+  }
+
+  /// Opens an SFTP tab in connecting state immediately.
+  String openConnectingSftpTab({
+    required HostEntity host,
+  }) {
+    final seq = ++_tabCounter;
+    final tabId = 'sftp-${DateTime.now().millisecondsSinceEpoch}-$seq';
+    final tab = SessionTab(
+      id: tabId,
+      title: 'SFTP: ${host.label}',
+      type: TabType.sftp,
+      host: host,
+      isConnecting: true,
+      connectionStatus: 'Opening SFTP...',
+    );
+
+    state = state.copyWith(
+      tabs: [...state.tabs, tab],
+      activeTabId: () => tabId,
+    );
+    return tabId;
+  }
+
+  /// Attaches an established SFTP session to a connecting tab.
+  void attachSftpSession({
+    required String tabId,
+    required ISftpSession session,
+  }) {
+    state = state.copyWith(
+      tabs: [
+        for (final t in state.tabs)
+          if (t.id == tabId)
+            t.copyWith(
+              sftpSession: session,
+              isConnecting: false,
+              clearConnectionStatus: true,
+              clearConnectionError: true,
+            )
+          else
+            t,
+      ],
+    );
   }
 
   String openSftpTab({

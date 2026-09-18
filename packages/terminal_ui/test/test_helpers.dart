@@ -75,3 +75,154 @@ class FakeTerminalSession implements ITerminalSession {
   @override
   ISessionRecorder? recorder;
 }
+
+class FakeVaultRepository implements IVaultRepository {
+  bool _initialized = true;
+  bool _unlocked = true;
+  String currentMasterPassword = 'old-master-pwd';
+  final StreamController<bool> _lockController =
+      StreamController<bool>.broadcast();
+
+  @override
+  bool get isVaultUnlocked => _unlocked;
+
+  @override
+  Stream<bool> watchUnlockStatus() => _lockController.stream;
+
+  @override
+  Future<bool> isVaultInitialized() async => _initialized;
+
+  @override
+  Future<Result<void, VaultFailure>> initializeVault(
+      String masterPassword) async {
+    _initialized = true;
+    _unlocked = true;
+    currentMasterPassword = masterPassword;
+    _lockController.add(true);
+    return const Result.success(null);
+  }
+
+  @override
+  Future<Result<void, VaultFailure>> unlockWithPassword(
+      String masterPassword) async {
+    if (masterPassword == currentMasterPassword) {
+      _unlocked = true;
+      _lockController.add(true);
+      return const Result.success(null);
+    }
+    return Result.error(VaultFailure.invalidMasterPassword());
+  }
+
+  @override
+  Future<Result<void, VaultFailure>> unlockWithBiometrics() async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void, VaultFailure>> unlockWithPin(String pin) async =>
+      const Result.success(null);
+
+  @override
+  void lock() {
+    _unlocked = false;
+    _lockController.add(false);
+  }
+
+  @override
+  Future<Result<void, VaultFailure>> changeMasterPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (currentPassword != currentMasterPassword) {
+      return Result.error(VaultFailure.invalidMasterPassword());
+    }
+    currentMasterPassword = newPassword;
+    _unlocked = true;
+    _lockController.add(true);
+    return const Result.success(null);
+  }
+
+  @override
+  Future<Result<void, VaultFailure>> disableMasterPassword({
+    required String currentPassword,
+  }) async {
+    if (currentPassword != currentMasterPassword) {
+      return Result.error(VaultFailure.invalidMasterPassword());
+    }
+    _initialized = false;
+    _unlocked = true;
+    _lockController.add(true);
+    return const Result.success(null);
+  }
+
+  @override
+  Future<void> ensureOpenSession() async {}
+
+  @override
+  Future<VaultSettingsEntity> getSettings() async =>
+      const VaultSettingsEntity();
+
+  @override
+  Future<Result<void, VaultFailure>> updateSettings(
+          VaultSettingsEntity settings) async =>
+      const Result.success(null);
+}
+
+class FakeSftpSession implements ISftpSession {
+  @override
+  final String id;
+  @override
+  final String hostId;
+
+  FakeSftpSession({
+    this.id = 'fake-sftp-1',
+    this.hostId = 'host-1',
+  });
+
+  @override
+  dynamic get underlyingClient => null;
+
+  @override
+  Future<void> close() async {}
+
+  @override
+  Future<Result<void, SftpFailure>> createDirectory(String remotePath) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void, SftpFailure>> createFile(String remotePath) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void, SftpFailure>> deleteDirectory(String remotePath,
+          {bool recursive = false}) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void, SftpFailure>> deleteFile(String remotePath) async =>
+      const Result.success(null);
+
+  @override
+  Stream<double> downloadFile(
+          {required String remotePath, required String localPath}) =>
+      const Stream.empty();
+
+  @override
+  Future<Result<List<SftpItem>, SftpFailure>> listDirectory(
+          String remotePath) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<void, SftpFailure>> rename(
+          String oldPath, String newPath) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void, SftpFailure>> setPermissions(
+          String remotePath, int permissions) async =>
+      const Result.success(null);
+
+  @override
+  Stream<double> uploadFile(
+          {required String localPath, required String remotePath}) =>
+      const Stream.empty();
+}

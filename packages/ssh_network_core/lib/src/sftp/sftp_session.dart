@@ -34,7 +34,7 @@ class SftpSession implements ISftpSession {
     if (_isClosed) {
       return const Result.error(
         SftpFailure(
-          'SFTP сессия закрыта.',
+          'SFTP session is closed.',
           type: SftpFailureType.unknown,
         ),
       );
@@ -84,7 +84,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка получения списка файлов: $e',
+          'Error listing directory: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -97,7 +97,7 @@ class SftpSession implements ISftpSession {
   Future<Result<void, SftpFailure>> createDirectory(String remotePath) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -110,7 +110,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка создания директории: $e',
+          'Error creating directory: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -123,7 +123,7 @@ class SftpSession implements ISftpSession {
   Future<Result<void, SftpFailure>> deleteFile(String remotePath) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -136,7 +136,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка удаления файла: $e',
+          'Error deleting file: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -152,7 +152,7 @@ class SftpSession implements ISftpSession {
   }) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -181,7 +181,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка удаления директории: $e',
+          'Error deleting directory: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -195,7 +195,7 @@ class SftpSession implements ISftpSession {
       String oldPath, String newPath) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -208,7 +208,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка переименования: $e',
+          'Error renaming: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -222,7 +222,7 @@ class SftpSession implements ISftpSession {
       String remotePath, int permissions) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -238,7 +238,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка изменения прав доступа: $e',
+          'Error setting permissions: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -251,7 +251,7 @@ class SftpSession implements ISftpSession {
   Future<Result<void, SftpFailure>> createFile(String remotePath) async {
     if (_isClosed) {
       return const Result.error(
-        SftpFailure('SFTP сессия закрыта.', type: SftpFailureType.unknown),
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
       );
     }
 
@@ -270,7 +270,7 @@ class SftpSession implements ISftpSession {
     } catch (e, stack) {
       return Result.error(
         SftpFailure(
-          'Ошибка создания файла: $e',
+          'Error creating file: $e',
           type: SftpFailureType.unknown,
           cause: e,
           stackTrace: stack,
@@ -285,7 +285,7 @@ class SftpSession implements ISftpSession {
     required String localPath,
   }) async* {
     if (_isClosed) {
-      throw const SftpFailure('SFTP сессия закрыта.',
+      throw const SftpFailure('SFTP session is closed.',
           type: SftpFailureType.unknown);
     }
 
@@ -339,7 +339,7 @@ class SftpSession implements ISftpSession {
     required String remotePath,
   }) async* {
     if (_isClosed) {
-      throw const SftpFailure('SFTP сессия закрыта.',
+      throw const SftpFailure('SFTP session is closed.',
           type: SftpFailureType.unknown);
     }
 

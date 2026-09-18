@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 import 'controllers/session_connect_controller.dart';
+import 'localization/localization_providers.dart';
 import 'plugins/desktop_plugin_host_view.dart';
 import 'plugins/plugin_manager_provider.dart';
 import 'screens/keychain/keychain_screen.dart';
@@ -18,15 +19,22 @@ class ShellitApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connectController = ref.read(sessionConnectControllerProvider);
     final snippets = ref.watch(snippetsListProvider).valueOrNull ?? [];
+    final localizationService = ref.watch(localizationServiceProvider);
+    final activeLocale = ref.watch(activeLocaleProvider);
 
-    return MaterialApp(
-      title: 'Shellit',
-      debugShowCheckedModeBanner: false,
-      theme: ShellitTheme.obsidianDarkTheme,
-      home: ShellitAppShell(
+    return LocalizationScope(
+      service: localizationService,
+      locale: activeLocale,
+      child: MaterialApp(
+        title: 'Shellit',
+        debugShowCheckedModeBanner: false,
+        theme: ShellitTheme.obsidianDarkTheme,
+        home: ShellitAppShell(
         snippets: snippets,
-        onConnectTerminal: (host) => connectController.connectTerminal(host),
-        onConnectSftp: (host) => connectController.connectSftp(host),
+        onConnectTerminal: (host, {onProgress}) =>
+            connectController.connectTerminal(host, onProgress: onProgress),
+        onConnectSftp: (host, {onProgress}) =>
+            connectController.connectSftp(host, onProgress: onProgress),
         onToggleRecording: (session, host) =>
             connectController.toggleRecording(session, host),
         topBarTrailing: Consumer(
@@ -34,13 +42,15 @@ class ShellitApp extends ConsumerWidget {
             final activePlugin = ref.watch(activeSidebarPluginProvider);
             final pluginsAsync = ref.watch(pluginManagerProvider);
             final installedPlugins = pluginsAsync.valueOrNull ?? [];
-            final enabledPlugins =
-                installedPlugins.where((p) => p.isEnabled).toList();
+            final enabledPlugins = installedPlugins
+                .where((p) => p.isEnabled)
+                .toList();
 
             if (enabledPlugins.isEmpty) return const SizedBox.shrink();
 
-            final isDocker = enabledPlugins
-                .any((p) => p.manifest.id == 'com.shellit.docker-monitor');
+            final isDocker = enabledPlugins.any(
+              (p) => p.manifest.id == 'com.shellit.docker-monitor',
+            );
 
             return Padding(
               padding: const EdgeInsets.only(right: 8),
@@ -84,17 +94,23 @@ class ShellitApp extends ConsumerWidget {
                   },
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: (activePlugin != null &&
-                              ref.watch(sessionManagerProvider).activeTab != null)
+                      color:
+                          (activePlugin != null &&
+                              ref.watch(sessionManagerProvider).activeTab !=
+                                  null)
                           ? ShellitColors.accentCyan.withValues(alpha: 0.15)
                           : ShellitColors.obsidianBackground,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: (activePlugin != null &&
-                                ref.watch(sessionManagerProvider).activeTab != null)
+                        color:
+                            (activePlugin != null &&
+                                ref.watch(sessionManagerProvider).activeTab !=
+                                    null)
                             ? ShellitColors.accentCyan
                             : ShellitColors.border,
                       ),
@@ -112,8 +128,11 @@ class ShellitApp extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: (activePlugin != null &&
-                                    ref.watch(sessionManagerProvider).activeTab !=
+                            color:
+                                (activePlugin != null &&
+                                    ref
+                                            .watch(sessionManagerProvider)
+                                            .activeTab !=
                                         null)
                                 ? ShellitColors.accentCyan
                                 : ShellitColors.textPrimary,
@@ -158,6 +177,7 @@ class ShellitApp extends ConsumerWidget {
           }
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

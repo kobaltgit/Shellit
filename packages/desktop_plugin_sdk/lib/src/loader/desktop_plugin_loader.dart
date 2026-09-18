@@ -334,6 +334,51 @@ class DesktopPluginLoader implements IPluginLoader {
 
     return const Result.success(null);
   }
+
+  /// Reads and parses the JSON dictionary of an installed localization plugin.
+  Future<Result<Map<String, String>, PluginFailure>> loadLanguagePack(
+      InstalledPlugin plugin) async {
+    if (plugin.manifest.target != PluginTarget.localization) {
+      return Result.error(
+        PluginFailure.invalidManifest('Plugin is not a localization pack'),
+      );
+    }
+    final dictFile =
+        File(p.join(plugin.installDirectory, plugin.manifest.entryPoint));
+    if (!await dictFile.exists()) {
+      return Result.error(
+        PluginFailure(
+          'Language pack file not found: ${plugin.manifest.entryPoint}',
+          type: PluginFailureType.runtimeError,
+        ),
+      );
+    }
+    try {
+      final content = await dictFile.readAsString();
+      final decoded = json.decode(content);
+      if (decoded is! Map<String, dynamic>) {
+        return Result.error(
+          PluginFailure.invalidManifest(
+              'Language pack dictionary must be a JSON object'),
+        );
+      }
+      final result = <String, String>{};
+      for (final entry in decoded.entries) {
+        if (entry.value != null) {
+          result[entry.key] = entry.value.toString();
+        }
+      }
+      return Result.success(result);
+    } catch (e) {
+      return Result.error(
+        PluginFailure(
+          'Failed to read or parse language pack: $e',
+          type: PluginFailureType.runtimeError,
+          cause: e,
+        ),
+      );
+    }
+  }
 }
 
 /// Alias for service naming convention

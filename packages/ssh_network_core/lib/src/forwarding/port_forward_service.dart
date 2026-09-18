@@ -150,7 +150,7 @@ class PortForwardService implements IPortForwardService {
 
       return Result.error(
         NetworkFailure(
-          'Не удалось запустить локальный проброс порта $localPort: $e',
+          'Failed to start local forward on port $localPort: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: stack,
@@ -186,7 +186,7 @@ class PortForwardService implements IPortForwardService {
         client.close();
         return const Result.error(
           NetworkFailure(
-            'Сервер отклонил запрос удаленного проброса.',
+            'Server rejected remote forward request.',
             type: NetworkFailureType.channelError,
           ),
         );
@@ -240,7 +240,7 @@ class PortForwardService implements IPortForwardService {
 
       return Result.error(
         NetworkFailure(
-          'Не удалось запустить удаленный проброс порта $remotePort: $e',
+          'Failed to start remote forward on port $remotePort: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: stack,
@@ -307,7 +307,7 @@ class PortForwardService implements IPortForwardService {
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Ошибка подключения к ${host.connectionTarget}: $e',
+          'Failed to connect to ${host.connectionTarget}: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: stack,

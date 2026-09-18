@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../theme/shellit_theme.dart';
 import '../app_shell/tab_drag_payload.dart';
@@ -159,7 +160,12 @@ class _SplitMatrixViewState extends State<SplitMatrixView> {
 
   Widget _buildLayoutPanes() {
     if (widget.sessions.isEmpty) {
-      return const Center(child: Text('No active terminal sessions'));
+      return Center(
+        child: Text(
+          context.tr('splits.no_active_sessions',
+              defaultText: 'No active terminal sessions'),
+        ),
+      );
     }
 
     switch (_layout) {
@@ -361,7 +367,11 @@ class _SplitMatrixViewState extends State<SplitMatrixView> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  isHovering ? 'Drop Tab Here' : 'Empty Split Slot',
+                  isHovering
+                      ? context.tr('splits.drop_tab_here',
+                          defaultText: 'Drop Tab Here')
+                      : context.tr('splits.empty_slot',
+                          defaultText: 'Empty Split Slot'),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -371,9 +381,10 @@ class _SplitMatrixViewState extends State<SplitMatrixView> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Drag an open tab here or select a host',
-                  style: TextStyle(
+                Text(
+                  context.tr('splits.empty_slot_hint',
+                      defaultText: 'Drag an open tab here or select a host'),
+                  style: const TextStyle(
                     fontSize: 11,
                     color: ShellitColors.textMuted,
                   ),
@@ -384,8 +395,11 @@ class _SplitMatrixViewState extends State<SplitMatrixView> {
                   ElevatedButton.icon(
                     onPressed: () => _openHostPickerForSlot(index),
                     icon: const Icon(Icons.add, size: 14),
-                    label: const Text('Connect Host to this Pane',
-                        style: TextStyle(fontSize: 11)),
+                    label: Text(
+                      context.tr('splits.connect_host_btn',
+                          defaultText: 'Connect Host to this Pane'),
+                      style: const TextStyle(fontSize: 11),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ShellitColors.obsidianCard,
                       foregroundColor: Colors.white,

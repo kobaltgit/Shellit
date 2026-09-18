@@ -32,6 +32,9 @@ Future<void> main() async {
         keyManagerProvider.overrideWith(
           (ref) => ref.watch(appKeyManagerProvider),
         ),
+        folderRepositoryProvider.overrideWith(
+          (ref) => ref.watch(appFolderRepositoryProvider),
+        ),
         // Inject SSH Client Service for live telemetry pinging
         sshClientServiceProvider.overrideWith(
           (ref) => ref.watch(appSshClientServiceProvider),

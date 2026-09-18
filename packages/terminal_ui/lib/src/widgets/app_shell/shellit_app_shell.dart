@@ -7,19 +7,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/hosts_provider.dart';
 import '../../providers/ping_monitor_provider.dart';
 import '../../providers/session_manager_provider.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 import '../hosts/host_views_switcher.dart';
 import '../mobile/mobile_accessory_bar.dart';
 import '../omni_bar/omni_search_modal.dart';
 import '../sftp/sftp_tab_view.dart';
 import '../splits/split_matrix_view.dart';
+import '../terminal/terminal_connecting_view.dart';
 import '../terminal/terminal_screen.dart';
+import '../dialogs/unlock_vault_dialog.dart';
 import 'navigation_sidebar.dart';
 import 'top_bar_tabs.dart';
 
 class ShellitAppShell extends ConsumerStatefulWidget {
-  final Future<ITerminalSession> Function(HostEntity host)? onConnectTerminal;
-  final Future<ISftpSession> Function(HostEntity host)? onConnectSftp;
+  final Future<ITerminalSession> Function(
+    HostEntity host, {
+    void Function(String status)? onProgress,
+  })? onConnectTerminal;
+  final Future<ISftpSession> Function(
+    HostEntity host, {
+    void Function(String status)? onProgress,
+  })? onConnectSftp;
   final void Function(String connectionTarget)? onQuickConnectSubmit;
   final Widget Function(BuildContext context, SidebarSection section)?
       sectionBuilder;
@@ -90,20 +99,74 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
     }
   }
 
+  final Set<String> _cancelledTabIds = <String>{};
+
+  void _handleCancelConnection(String tabId) {
+    _cancelledTabIds.add(tabId);
+    ref.read(sessionManagerProvider.notifier).closeTab(tabId);
+  }
+
+  void _handleRetryConnection(SessionTab tab) {
+    if (tab.host == null) return;
+    ref.read(sessionManagerProvider.notifier).setTabConnecting(tabId: tab.id);
+    if (tab.type == TabType.terminal) {
+      _connectTerminalWithStatus(tab.id, tab.host!);
+    } else if (tab.type == TabType.sftp) {
+      _connectSftpWithStatus(tab.id, tab.host!);
+    }
+  }
+
+  Future<void> _handleUnlockVaultForTab(SessionTab tab) async {
+    final unlocked = await showUnlockVaultDialog(context, ref);
+    if (unlocked == true && mounted) {
+      _handleRetryConnection(tab);
+    }
+  }
+
   Future<void> _handleConnectHost(HostEntity host) async {
+    final tabId = ref
+        .read(sessionManagerProvider.notifier)
+        .openConnectingTerminalTab(host: host);
+    await _connectTerminalWithStatus(tabId, host);
+  }
+
+  Future<void> _connectTerminalWithStatus(String tabId, HostEntity host) async {
+    _cancelledTabIds.remove(tabId);
     if (widget.onConnectTerminal != null) {
       try {
-        final session = await widget.onConnectTerminal!(host);
-        ref.read(sessionManagerProvider.notifier).openTerminalTab(
-              host: host,
+        final session = await widget.onConnectTerminal!(
+          host,
+          onProgress: (status) {
+            if (!_cancelledTabIds.contains(tabId) && mounted) {
+              ref
+                  .read(sessionManagerProvider.notifier)
+                  .updateTabConnectingStatus(tabId, status);
+            }
+          },
+        );
+
+        if (_cancelledTabIds.contains(tabId) || !mounted) {
+          await session.terminate();
+          return;
+        }
+
+        final exists =
+            ref.read(sessionManagerProvider).tabs.any((t) => t.id == tabId);
+        if (!exists) {
+          await session.terminate();
+          return;
+        }
+
+        ref.read(sessionManagerProvider.notifier).attachTerminalSession(
+              tabId: tabId,
               session: session,
             );
       } catch (err) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to connect: $err')),
-          );
-        }
+        if (_cancelledTabIds.contains(tabId) || !mounted) return;
+        ref.read(sessionManagerProvider.notifier).setTabConnectionError(
+              tabId: tabId,
+              errorMessage: err.toString().replaceAll('Exception: ', ''),
+            );
       }
     }
   }
@@ -125,7 +188,13 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
       } catch (err) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to connect: $err')),
+            SnackBar(
+              content: Text(context.tr(
+                'hosts.failed_to_connect',
+                defaultText: 'Failed to connect: {err}',
+                namedArgs: {'err': err.toString()},
+              )),
+            ),
           );
         }
       }
@@ -133,19 +202,49 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   }
 
   Future<void> _handleOpenSftp(HostEntity host) async {
+    final tabId = ref
+        .read(sessionManagerProvider.notifier)
+        .openConnectingSftpTab(host: host);
+    await _connectSftpWithStatus(tabId, host);
+  }
+
+  Future<void> _connectSftpWithStatus(String tabId, HostEntity host) async {
+    _cancelledTabIds.remove(tabId);
     if (widget.onConnectSftp != null) {
       try {
-        final session = await widget.onConnectSftp!(host);
-        ref.read(sessionManagerProvider.notifier).openSftpTab(
-              host: host,
+        final session = await widget.onConnectSftp!(
+          host,
+          onProgress: (status) {
+            if (!_cancelledTabIds.contains(tabId) && mounted) {
+              ref
+                  .read(sessionManagerProvider.notifier)
+                  .updateTabConnectingStatus(tabId, status);
+            }
+          },
+        );
+
+        if (_cancelledTabIds.contains(tabId) || !mounted) {
+          await session.close();
+          return;
+        }
+
+        final exists =
+            ref.read(sessionManagerProvider).tabs.any((t) => t.id == tabId);
+        if (!exists) {
+          await session.close();
+          return;
+        }
+
+        ref.read(sessionManagerProvider.notifier).attachSftpSession(
+              tabId: tabId,
               session: session,
             );
       } catch (err) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to open SFTP: $err')),
-          );
-        }
+        if (_cancelledTabIds.contains(tabId) || !mounted) return;
+        ref.read(sessionManagerProvider.notifier).setTabConnectionError(
+              tabId: tabId,
+              errorMessage: err.toString().replaceAll('Exception: ', ''),
+            );
       }
     }
   }
@@ -329,8 +428,33 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   }
 
   Widget _buildSessionTabWidget(SessionTab tab) {
+    if (tab.isConnecting || tab.connectionError != null) {
+      return TerminalConnectingView(
+        key: ValueKey('conn-${tab.id}'),
+        host: tab.host,
+        statusMessage: tab.connectionStatus ?? 'Connecting...',
+        errorMessage: tab.connectionError,
+        isConnecting: tab.isConnecting,
+        onCancel: () => _handleCancelConnection(tab.id),
+        onRetry: () => _handleRetryConnection(tab),
+        onUnlockVault: () => _handleUnlockVaultForTab(tab),
+        onClose: () =>
+            ref.read(sessionManagerProvider.notifier).closeTab(tab.id),
+      );
+    }
+
     switch (tab.type) {
       case TabType.terminal:
+        if (tab.terminalSession == null) {
+          return TerminalConnectingView(
+            key: ValueKey('conn-init-${tab.id}'),
+            host: tab.host,
+            statusMessage: 'Initializing terminal...',
+            onCancel: () => _handleCancelConnection(tab.id),
+            onClose: () =>
+                ref.read(sessionManagerProvider.notifier).closeTab(tab.id),
+          );
+        }
         return TerminalScreen(
           key: ValueKey(tab.id),
           session: tab.terminalSession!,
@@ -394,6 +518,16 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
           },
         );
       case TabType.sftp:
+        if (tab.sftpSession == null) {
+          return TerminalConnectingView(
+            key: ValueKey('conn-init-sftp-${tab.id}'),
+            host: tab.host,
+            statusMessage: 'Initializing SFTP...',
+            onCancel: () => _handleCancelConnection(tab.id),
+            onClose: () =>
+                ref.read(sessionManagerProvider.notifier).closeTab(tab.id),
+          );
+        }
         return SftpTabView(
           key: ValueKey(tab.id),
           host: tab.host!,

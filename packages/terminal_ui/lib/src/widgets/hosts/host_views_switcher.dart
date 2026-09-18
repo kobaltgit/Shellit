@@ -1,6 +1,8 @@
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../localization/localization_scope.dart';
+import '../../providers/folders_provider.dart';
 import '../../providers/hosts_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/shellit_theme.dart';
@@ -10,11 +12,13 @@ import 'host_form_dialog.dart';
 class HostViewsSwitcher extends ConsumerWidget {
   final void Function(HostEntity host)? onConnect;
   final void Function(HostEntity host)? onOpenSftp;
+  final void Function(HostEntity host)? onConnectInSplit;
 
   const HostViewsSwitcher({
     super.key,
     this.onConnect,
     this.onOpenSftp,
+    this.onConnectInSplit,
   });
 
   @override
@@ -43,7 +47,8 @@ class HostViewsSwitcher extends ConsumerWidget {
                     style: const TextStyle(
                         fontSize: 13, color: ShellitColors.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Search hosts by name, IP, or tag...',
+                      hintText: context.tr('hosts.search_placeholder',
+                          defaultText: 'Search hosts by name, IP, or tag...'),
                       prefixIcon: const Icon(Icons.search,
                           size: 18, color: ShellitColors.textMuted),
                       contentPadding: const EdgeInsets.symmetric(
@@ -82,21 +87,24 @@ class HostViewsSwitcher extends ConsumerWidget {
                       ref: ref,
                       icon: Icons.grid_view,
                       mode: HostCatalogViewMode.grid,
-                      tooltip: 'Grid View',
+                      tooltip: context.tr('hosts.view_grid',
+                          defaultText: 'Grid View'),
                       isActive: viewMode == HostCatalogViewMode.grid,
                     ),
                     _buildViewModeButton(
                       ref: ref,
                       icon: Icons.view_headline,
                       mode: HostCatalogViewMode.denseList,
-                      tooltip: 'Dense List View',
+                      tooltip: context.tr('hosts.view_dense',
+                          defaultText: 'Dense List View'),
                       isActive: viewMode == HostCatalogViewMode.denseList,
                     ),
                     _buildViewModeButton(
                       ref: ref,
                       icon: Icons.account_tree_outlined,
                       mode: HostCatalogViewMode.folderTree,
-                      tooltip: 'Folder Tree View',
+                      tooltip: context.tr('hosts.view_tree',
+                          defaultText: 'Folder Tree View'),
                       isActive: viewMode == HostCatalogViewMode.folderTree,
                     ),
                   ],
@@ -109,7 +117,10 @@ class HostViewsSwitcher extends ConsumerWidget {
               ElevatedButton.icon(
                 onPressed: () => _openAddHostDialog(context, ref),
                 icon: const Icon(Icons.add, size: 16),
-                label: const Text('Add Host', style: TextStyle(fontSize: 13)),
+                label: Text(
+                  context.tr('hosts.btn_new_host', defaultText: 'Add Host'),
+                  style: const TextStyle(fontSize: 13),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ShellitColors.accentBlue,
                   foregroundColor: Colors.white,
@@ -172,23 +183,26 @@ class HostViewsSwitcher extends ConsumerWidget {
           const Icon(Icons.dns_outlined,
               size: 48, color: ShellitColors.textMuted),
           const SizedBox(height: 12),
-          const Text(
-            'No hosts found',
-            style: TextStyle(
+          Text(
+            context.tr('hosts.empty_title', defaultText: 'No hosts found'),
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
               color: ShellitColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Create a new host or adjust search filters.',
-            style: TextStyle(fontSize: 13, color: ShellitColors.textSecondary),
+          Text(
+            context.tr('hosts.empty_desc',
+                defaultText: 'Create a new host or adjust search filters.'),
+            style: const TextStyle(
+                fontSize: 13, color: ShellitColors.textSecondary),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => _openAddHostDialog(context, ref),
-            child: const Text('Create Host'),
+            child: Text(
+                context.tr('hosts.btn_new_host', defaultText: 'Create Host')),
           ),
         ],
       ),
@@ -223,7 +237,13 @@ class HostViewsSwitcher extends ConsumerWidget {
                   host: host,
                   onConnect: () => onConnect?.call(host),
                   onOpenSftp: () => onOpenSftp?.call(host),
+                  onConnectInSplit: onConnectInSplit != null
+                      ? () => onConnectInSplit!(host)
+                      : null,
                   onEdit: () => _openEditHostDialog(context, ref, host),
+                  onDuplicate: () => _handleDuplicateHost(context, ref, host),
+                  onMoveToFolder: (folderId) =>
+                      _handleMoveToFolder(context, ref, host, folderId),
                   onDelete: () => _handleDeleteHost(context, ref, host.id),
                 );
               },
@@ -243,7 +263,13 @@ class HostViewsSwitcher extends ConsumerWidget {
               isDense: true,
               onConnect: () => onConnect?.call(host),
               onOpenSftp: () => onOpenSftp?.call(host),
+              onConnectInSplit: onConnectInSplit != null
+                  ? () => onConnectInSplit!(host)
+                  : null,
               onEdit: () => _openEditHostDialog(context, ref, host),
+              onDuplicate: () => _handleDuplicateHost(context, ref, host),
+              onMoveToFolder: (folderId) =>
+                  _handleMoveToFolder(context, ref, host, folderId),
               onDelete: () => _handleDeleteHost(context, ref, host.id),
             );
           },
@@ -256,11 +282,17 @@ class HostViewsSwitcher extends ConsumerWidget {
 
   Widget _buildFolderTreeView(
       BuildContext context, WidgetRef ref, List<HostEntity> hosts) {
-    // Group hosts by folderId or 'Uncategorized'
+    final folders = ref.watch(foldersProvider);
     final Map<String, List<HostEntity>> grouped = {};
     for (final host in hosts) {
-      final key = host.folderId ?? 'Uncategorized';
-      grouped.putIfAbsent(key, () => []).add(host);
+      final folderName = host.folderId != null
+          ? folders.where((f) => f.id == host.folderId).firstOrNull?.name ??
+              host.folderId!
+          : context.tr(
+              'hosts.context_menu.root_folder',
+              defaultText: 'None (Root)',
+            );
+      grouped.putIfAbsent(folderName, () => []).add(host);
     }
 
     return ListView(
@@ -288,7 +320,13 @@ class HostViewsSwitcher extends ConsumerWidget {
                 isDense: true,
                 onConnect: () => onConnect?.call(host),
                 onOpenSftp: () => onOpenSftp?.call(host),
+                onConnectInSplit: onConnectInSplit != null
+                    ? () => onConnectInSplit!(host)
+                    : null,
                 onEdit: () => _openEditHostDialog(context, ref, host),
+                onDuplicate: () => _handleDuplicateHost(context, ref, host),
+                onMoveToFolder: (folderId) =>
+                    _handleMoveToFolder(context, ref, host, folderId),
                 onDelete: () => _handleDeleteHost(context, ref, host.id),
               );
             }).toList(),
@@ -301,6 +339,7 @@ class HostViewsSwitcher extends ConsumerWidget {
   Future<void> _openAddHostDialog(BuildContext context, WidgetRef ref) async {
     final keyManager = ref.read(keyManagerProvider);
     final keys = await keyManager?.getAllKeys() ?? [];
+    final folders = ref.read(foldersProvider);
 
     if (!context.mounted) return;
 
@@ -308,6 +347,12 @@ class HostViewsSwitcher extends ConsumerWidget {
       context: context,
       builder: (ctx) => HostFormDialog(
         availableKeys: keys,
+        availableFolders: folders,
+        onCreateFolder: (name) async {
+          final res =
+              await ref.read(foldersProvider.notifier).createFolder(name: name);
+          return res.valueOrNull;
+        },
         onSave: (newHost, password) async {
           if (password != null && password.isNotEmpty && keyManager != null) {
             final credId = 'cred_${newHost.id}';
@@ -337,6 +382,7 @@ class HostViewsSwitcher extends ConsumerWidget {
       BuildContext context, WidgetRef ref, HostEntity host) async {
     final keyManager = ref.read(keyManagerProvider);
     final keys = await keyManager?.getAllKeys() ?? [];
+    final folders = ref.read(foldersProvider);
 
     if (!context.mounted) return;
 
@@ -345,6 +391,12 @@ class HostViewsSwitcher extends ConsumerWidget {
       builder: (ctx) => HostFormDialog(
         initialHost: host,
         availableKeys: keys,
+        availableFolders: folders,
+        onCreateFolder: (name) async {
+          final res =
+              await ref.read(foldersProvider.notifier).createFolder(name: name);
+          return res.valueOrNull;
+        },
         onSave: (updatedHost, password) async {
           if (password != null && password.isNotEmpty && keyManager != null) {
             final credId =
@@ -370,6 +422,101 @@ class HostViewsSwitcher extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _handleDuplicateHost(
+      BuildContext context, WidgetRef ref, HostEntity host) async {
+    final now = DateTime.now();
+    final copySuffix =
+        context.tr('hosts.context_menu.copy', defaultText: 'Copy');
+    final duplicated = host.copyWith(
+      id: 'host_${now.millisecondsSinceEpoch}',
+      label: '${host.label} ($copySuffix)',
+      createdAt: now,
+      updatedAt: now,
+    );
+    final res = await ref.read(hostsProvider.notifier).addHost(duplicated);
+    if (res.isError && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Failed to duplicate host: ${res.failureOrNull?.message}'),
+          backgroundColor: ShellitColors.statusRed,
+        ),
+      );
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context
+                .tr(
+                  'hosts.context_menu.duplicated_snackbar',
+                  defaultText: 'Duplicated "{label}"',
+                )
+                .replaceAll('{label}', host.label),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          backgroundColor: ShellitColors.obsidianCard,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleMoveToFolder(BuildContext context, WidgetRef ref,
+      HostEntity host, String? folderId) async {
+    final updated = HostEntity(
+      id: host.id,
+      label: host.label,
+      hostname: host.hostname,
+      port: host.port,
+      username: host.username,
+      authType: host.authType,
+      credentialRefId: host.credentialRefId,
+      folderId: folderId,
+      tags: host.tags,
+      environment: host.environment,
+      osType: host.osType,
+      keepAliveIntervalSeconds: host.keepAliveIntervalSeconds,
+      dangerousCommandProtection: host.dangerousCommandProtection,
+      lastPingLatencyMs: host.lastPingLatencyMs,
+      lastConnectedAt: host.lastConnectedAt,
+      createdAt: host.createdAt,
+      updatedAt: DateTime.now(),
+    );
+    final res = await ref.read(hostsProvider.notifier).updateHost(updated);
+    if (res.isError && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to move host: ${res.failureOrNull?.message}'),
+          backgroundColor: ShellitColors.statusRed,
+        ),
+      );
+    } else if (context.mounted) {
+      final folders = ref.read(foldersProvider);
+      final folderName = folderId != null
+          ? folders.where((f) => f.id == folderId).firstOrNull?.name ?? folderId
+          : context.tr(
+              'hosts.context_menu.root_folder',
+              defaultText: 'None (Root)',
+            );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context
+                .tr(
+                  'hosts.context_menu.moved_snackbar',
+                  defaultText: 'Moved "{label}" to {folder}',
+                )
+                .replaceAll('{label}', host.label)
+                .replaceAll('{folder}', folderName),
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          backgroundColor: ShellitColors.obsidianCard,
+        ),
+      );
+    }
   }
 
   Future<void> _handleDeleteHost(

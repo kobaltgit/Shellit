@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 class TerminalContextMenu {
@@ -40,9 +41,13 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.content_copy_rounded,
-            title: hasSelection && selectedText != null && selectedText.trim().isNotEmpty
-                ? 'Copy (${selectedText.trim().length})'
-                : 'Copy',
+            title: hasSelection &&
+                    selectedText != null &&
+                    selectedText.trim().isNotEmpty
+                ? context.tr('terminal.context_menu_copy_count',
+                        defaultText: 'Copy ({count})')
+                    .replaceAll('{count}', selectedText.trim().length.toString())
+                : context.tr('terminal.context_menu_copy', defaultText: 'Copy'),
             shortcut: '$cmdOrCtrl+Shift+C',
             enabled: hasSelection,
           ),
@@ -53,7 +58,8 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.paste_rounded,
-            title: 'Paste',
+            title: context.tr('terminal.context_menu_paste',
+                defaultText: 'Paste'),
             shortcut: '$cmdOrCtrl+Shift+V',
             enabled: true,
           ),
@@ -64,7 +70,8 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.select_all_rounded,
-            title: 'Select All',
+            title: context.tr('terminal.context_menu_select_all',
+                defaultText: 'Select All'),
             shortcut: '$cmdOrCtrl+Shift+A',
             enabled: true,
           ),
@@ -76,7 +83,8 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.cleaning_services_outlined,
-            title: 'Clear Buffer',
+            title: context.tr('terminal.context_menu_clear_buffer',
+                defaultText: 'Clear Buffer'),
             shortcut: '$cmdOrCtrl+Shift+K',
             enabled: true,
           ),
@@ -87,7 +95,8 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.keyboard_outlined,
-            title: 'Keyboard Shortcuts...',
+            title: context.tr('terminal.context_menu_shortcuts',
+                defaultText: 'Keyboard Shortcuts...'),
             shortcut: 'F1',
             enabled: true,
           ),
@@ -123,7 +132,8 @@ class TerminalContextMenu {
     required bool enabled,
   }) {
     final color = enabled ? ShellitColors.textPrimary : ShellitColors.textMuted;
-    final shortcutColor = enabled ? ShellitColors.accentCyan : ShellitColors.textMuted;
+    final shortcutColor =
+        enabled ? ShellitColors.accentCyan : ShellitColors.textMuted;
 
     return Row(
       children: [
@@ -143,9 +153,7 @@ class TerminalContextMenu {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
           decoration: BoxDecoration(
-            color: enabled
-                ? ShellitColors.obsidianSidebar
-                : Colors.transparent,
+            color: enabled ? ShellitColors.obsidianSidebar : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color: enabled ? ShellitColors.borderLight : Colors.transparent,

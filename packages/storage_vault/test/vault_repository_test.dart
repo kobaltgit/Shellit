@@ -147,6 +147,32 @@ void main() {
       expect(vaultRepository.isVaultUnlocked, isTrue);
     });
 
+    test('disableMasterPassword removes master password and leaves vault open', () async {
+      await vaultRepository.initializeVault('MasterSecret123');
+      expect(await vaultRepository.isVaultInitialized(), isTrue);
+      expect(vaultRepository.isVaultUnlocked, isTrue);
+
+      // Wrong password fails
+      final wrongRes = await vaultRepository.disableMasterPassword(
+        currentPassword: 'WrongPassword',
+      );
+      expect(wrongRes.isError, isTrue);
+      expect(wrongRes.failureOrNull?.type, equals(VaultFailureType.invalidPassword));
+      expect(await vaultRepository.isVaultInitialized(), isTrue);
+
+      // Correct password succeeds
+      final okRes = await vaultRepository.disableMasterPassword(
+        currentPassword: 'MasterSecret123',
+      );
+      expect(okRes.isSuccess, isTrue);
+      expect(await vaultRepository.isVaultInitialized(), isFalse);
+      expect(vaultRepository.isVaultUnlocked, isTrue);
+
+      // Ensure open session still works without password
+      await vaultRepository.ensureOpenSession();
+      expect(vaultRepository.isVaultUnlocked, isTrue);
+    });
+
     test('enablePin and unlockWithPin workflow', () async {
       await vaultRepository.initializeVault('MasterPass');
 

@@ -76,5 +76,24 @@ void main() {
       expect(manifest.target, equals(PluginTarget.sidebar));
       expect(manifest.permissions, contains('terminal:execute'));
     });
+
+    test('PluginManifest localization target and locale', () {
+      final manifest = PluginManifest.fromJson({
+        'id': 'com.community.lang.ru',
+        'name': 'Russian Language Pack',
+        'version': '1.0.0',
+        'author': 'Community',
+        'description': 'Russian translations',
+        'entryPoint': 'ru.json',
+        'target': 'localization',
+        'locale': 'ru_RU',
+      });
+
+      expect(manifest.id, equals('com.community.lang.ru'));
+      expect(manifest.target, equals(PluginTarget.localization));
+      expect(manifest.locale, equals('ru_RU'));
+      expect(manifest.toJson()['locale'], equals('ru_RU'));
+      expect(manifest.toJson()['target'], equals('localization'));
+    });
   });
 }

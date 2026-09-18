@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../theme/shellit_theme.dart';
 
@@ -91,7 +92,10 @@ class _TabOverflowMenuState extends ConsumerState<TabOverflowMenu> {
                 autofocus: true,
                 style: const TextStyle(fontSize: 12),
                 decoration: InputDecoration(
-                  hintText: 'Search open tabs...',
+                  hintText: context.tr(
+                    'tabs.overflow_search_placeholder',
+                    defaultText: 'Search open tabs...',
+                  ),
                   prefixIcon: const Icon(Icons.search, size: 16),
                   suffixIcon: _query.isNotEmpty
                       ? IconButton(
@@ -114,11 +118,14 @@ class _TabOverflowMenuState extends ConsumerState<TabOverflowMenu> {
             // Tabs list
             Flexible(
               child: filteredTabs.isEmpty
-                  ? const Padding(
-                      padding: EdgeInsets.all(20),
+                  ? Padding(
+                      padding: const EdgeInsets.all(20),
                       child: Text(
-                        'No matching tabs',
-                        style: TextStyle(
+                        context.tr(
+                          'tabs.overflow_no_matches',
+                          defaultText: 'No matching tabs',
+                        ),
+                        style: const TextStyle(
                             fontSize: 12, color: ShellitColors.textMuted),
                       ),
                     )
@@ -221,9 +228,12 @@ class _TabOverflowMenuState extends ConsumerState<TabOverflowMenu> {
                                                         ShellitColors.statusRed,
                                                     width: 0.5),
                                               ),
-                                              child: const Text(
-                                                'PROD',
-                                                style: TextStyle(
+                                              child: Text(
+                                                context.tr(
+                                                  'hosts.card.env_prod',
+                                                  defaultText: 'PROD',
+                                                ),
+                                                style: const TextStyle(
                                                     fontSize: 8,
                                                     color:
                                                         ShellitColors.statusRed,

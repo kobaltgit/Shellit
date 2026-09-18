@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 import 'pane_reload_controller.dart';
 import 'sftp_dialogs.dart';
@@ -63,8 +64,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
 
   Directory _getInitialDirectory() {
     try {
-      final userProfile = Platform.environment['USERPROFILE'] ??
-          Platform.environment['HOME'];
+      final userProfile =
+          Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
       if (userProfile != null && Directory(userProfile).existsSync()) {
         return Directory(userProfile);
       }
@@ -227,65 +228,65 @@ class LocalFilePaneState extends State<LocalFilePane> {
         side: const BorderSide(color: ShellitColors.border),
       ),
       items: [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'upload',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.upload_file,
+              const Icon(Icons.upload_file,
                   size: 16, color: ShellitColors.accentBlue),
-              SizedBox(width: 8),
-              Text('Upload to Server', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.upload_to_server', defaultText: 'Upload to Server'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'reveal',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.folder_open,
+              const Icon(Icons.folder_open,
                   size: 16, color: ShellitColors.accentCyan),
-              SizedBox(width: 8),
-              Text('Show in File Explorer', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.show_in_explorer', defaultText: 'Show in File Explorer'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'copy_path',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.copy, size: 16, color: ShellitColors.textSecondary),
-              SizedBox(width: 8),
-              Text('Copy Local Path', style: TextStyle(fontSize: 12)),
+              const Icon(Icons.copy, size: 16, color: ShellitColors.textSecondary),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.copy_local_path', defaultText: 'Copy Local Path'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
         const PopupMenuDivider(height: 1),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'rename',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.edit_outlined,
+              const Icon(Icons.edit_outlined,
                   size: 16, color: ShellitColors.accentBlue),
-              SizedBox(width: 8),
-              Text('Rename', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.rename', defaultText: 'Rename'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'delete',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.delete_outline,
+              const Icon(Icons.delete_outline,
                   size: 16, color: ShellitColors.statusRed),
-              SizedBox(width: 8),
-              Text('Delete',
+              const SizedBox(width: 8),
+              Text(context.tr('common.delete', defaultText: 'Delete'),
                   style:
-                      TextStyle(fontSize: 12, color: ShellitColors.statusRed)),
+                      const TextStyle(fontSize: 12, color: ShellitColors.statusRed)),
             ],
           ),
         ),
@@ -306,7 +307,7 @@ class LocalFilePaneState extends State<LocalFilePane> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Copied: ${item.path}'),
+              content: Text(context.tr('sftp.copied_path', defaultText: 'Copied: {path}', namedArgs: {'path': item.path})),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -369,39 +370,39 @@ class LocalFilePaneState extends State<LocalFilePane> {
         side: const BorderSide(color: ShellitColors.border),
       ),
       items: [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'new_folder',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.create_new_folder_outlined,
+              const Icon(Icons.create_new_folder_outlined,
                   size: 16, color: ShellitColors.accentBlue),
-              SizedBox(width: 8),
-              Text('New Directory', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.new_directory', defaultText: 'New Directory'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'new_file',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.note_add_outlined,
+              const Icon(Icons.note_add_outlined,
                   size: 16, color: ShellitColors.accentCyan),
-              SizedBox(width: 8),
-              Text('New File', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Text(context.tr('sftp.new_file', defaultText: 'New File'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
         const PopupMenuDivider(height: 1),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'refresh',
           height: 36,
           child: Row(
             children: [
-              Icon(Icons.refresh, size: 16, color: ShellitColors.textSecondary),
-              SizedBox(width: 8),
-              Text('Refresh', style: TextStyle(fontSize: 12)),
+              const Icon(Icons.refresh, size: 16, color: ShellitColors.textSecondary),
+              const SizedBox(width: 8),
+              Text(context.tr('common.refresh', defaultText: 'Refresh'), style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -415,9 +416,11 @@ class LocalFilePaneState extends State<LocalFilePane> {
                 size: 16,
                 color: ShellitColors.textSecondary,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
-                _showHiddenFiles ? 'Hide Hidden Files' : 'Show Hidden Files',
+                _showHiddenFiles
+                    ? context.tr('sftp.hide_hidden_files', defaultText: 'Hide Hidden Files')
+                    : context.tr('sftp.show_hidden_files', defaultText: 'Show Hidden Files'),
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -470,26 +473,26 @@ class LocalFilePaneState extends State<LocalFilePane> {
                 const Icon(Icons.computer,
                     size: 16, color: ShellitColors.accentBlue),
                 const SizedBox(width: 8),
-                const Text(
-                  'Local',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                Text(
+                  context.tr('sftp.local_title', defaultText: 'Local'),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.arrow_upward, size: 16),
-                  tooltip: 'Go Up',
+                  tooltip: context.tr('sftp.go_up', defaultText: 'Go Up'),
                   onPressed: _navigateUp,
                   visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   icon: const Icon(Icons.home_outlined, size: 16),
-                  tooltip: 'Home Folder',
+                  tooltip: context.tr('sftp.home_folder', defaultText: 'Home Folder'),
                   onPressed: _navigateToHome,
                   visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   icon: const Icon(Icons.refresh, size: 16),
-                  tooltip: 'Refresh',
+                  tooltip: context.tr('common.refresh', defaultText: 'Refresh'),
                   onPressed: reload,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -502,8 +505,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
                         : ShellitColors.textMuted,
                   ),
                   tooltip: _showHiddenFiles
-                      ? 'Hide Hidden Files'
-                      : 'Show Hidden Files',
+                      ? context.tr('sftp.hide_hidden_files', defaultText: 'Hide Hidden Files')
+                      : context.tr('sftp.show_hidden_files', defaultText: 'Show Hidden Files'),
                   onPressed: () {
                     setState(() {
                       _showHiddenFiles = !_showHiddenFiles;
@@ -514,13 +517,13 @@ class LocalFilePaneState extends State<LocalFilePane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.create_new_folder_outlined, size: 16),
-                  tooltip: 'New Directory',
+                  tooltip: context.tr('sftp.new_directory', defaultText: 'New Directory'),
                   onPressed: _createNewDirectory,
                   visualDensity: VisualDensity.compact,
                 ),
                 IconButton(
                   icon: const Icon(Icons.note_add_outlined, size: 16),
-                  tooltip: 'New File',
+                  tooltip: context.tr('sftp.new_file', defaultText: 'New File'),
                   onPressed: _createNewFile,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -551,9 +554,9 @@ class LocalFilePaneState extends State<LocalFilePane> {
                   ElevatedButton.icon(
                     icon: const Icon(Icons.upload_file,
                         size: 14, color: Colors.white),
-                    label: const Text(
-                      'Upload',
-                      style: TextStyle(
+                    label: Text(
+                      context.tr('sftp.upload', defaultText: 'Upload'),
+                      style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -584,8 +587,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
                   ? Center(
                       child: Text(
                         _showHiddenFiles
-                            ? 'Empty folder'
-                            : 'No items (hidden files excluded)',
+                            ? context.tr('sftp.empty_folder', defaultText: 'Empty folder')
+                            : context.tr('sftp.no_items_hidden', defaultText: 'No items (hidden files excluded)'),
                         style: const TextStyle(
                             color: ShellitColors.textMuted, fontSize: 12),
                       ),

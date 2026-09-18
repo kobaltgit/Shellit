@@ -128,6 +128,78 @@ class VaultNotifier extends StateNotifier<VaultState> {
     }
   }
 
+  Future<Result<void, VaultFailure>> changeMasterPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    if (_vaultRepository != null) {
+      final res = await _vaultRepository!.changeMasterPassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return res.when(
+        success: (_) {
+          state = state.copyWith(
+            isUnlocked: true,
+            isInitialized: true,
+            errorMessage: null,
+          );
+          _resetAutoLockTimer();
+          return const Result.success(null);
+        },
+        error: (err) {
+          state = state.copyWith(errorMessage: err.message);
+          return Result.error(err);
+        },
+      );
+    } else {
+      state = state.copyWith(
+        isUnlocked: true,
+        isInitialized: true,
+        errorMessage: null,
+      );
+      _resetAutoLockTimer();
+      return const Result.success(null);
+    }
+  }
+
+  Future<Result<void, VaultFailure>> disableMasterPassword({
+    required String currentPassword,
+  }) async {
+    if (_vaultRepository != null) {
+      final res = await _vaultRepository!.disableMasterPassword(
+        currentPassword: currentPassword,
+      );
+      return res.when(
+        success: (_) {
+          _autoLockTimer?.cancel();
+          _autoLockTimer = null;
+          state = state.copyWith(
+            isUnlocked: true,
+            isInitialized: false,
+            errorMessage: null,
+            autoLockTimeoutMinutes: 0,
+          );
+          return const Result.success(null);
+        },
+        error: (err) {
+          state = state.copyWith(errorMessage: err.message);
+          return Result.error(err);
+        },
+      );
+    } else {
+      _autoLockTimer?.cancel();
+      _autoLockTimer = null;
+      state = state.copyWith(
+        isUnlocked: true,
+        isInitialized: false,
+        errorMessage: null,
+        autoLockTimeoutMinutes: 0,
+      );
+      return const Result.success(null);
+    }
+  }
+
   void lock() {
     _autoLockTimer?.cancel();
     _vaultRepository?.lock();

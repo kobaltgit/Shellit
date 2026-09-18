@@ -36,8 +36,7 @@ void main() {
           Directory.current.path, 'assets', 'demo_plugins', 'docker_monitor');
       expect(Directory(demoPluginDir).existsSync(), isTrue);
 
-      final archivePath =
-          p.join(tempWorkDir.path, 'docker_monitor.shellit');
+      final archivePath = p.join(tempWorkDir.path, 'docker_monitor.shellit');
 
       // Pack
       final packResult = await PluginPacker.packDirectory(
@@ -100,8 +99,7 @@ void main() {
     test('uninstalls plugin cleanly from disk and state', () async {
       final demoPluginDir = p.join(
           Directory.current.path, 'assets', 'demo_plugins', 'docker_monitor');
-      final archivePath =
-          p.join(tempWorkDir.path, 'docker_monitor.shellit');
+      final archivePath = p.join(tempWorkDir.path, 'docker_monitor.shellit');
 
       await PluginPacker.packDirectory(
         sourceDir: demoPluginDir,
@@ -156,6 +154,45 @@ void main() {
       // Verify nothing was installed in plugins directory
       final scanned = await loader.scanInstalledPlugins();
       expect(scanned, isEmpty);
+    });
+
+    test('installs and loads localization language pack dictionary', () async {
+      final pluginDir = Directory(p.join(tempWorkDir.path, 'lang_pack'))..createSync();
+      File(p.join(pluginDir.path, 'manifest.json')).writeAsStringSync('''
+      {
+        "id": "com.community.lang.ru",
+        "name": "Russian Pack",
+        "version": "1.0.0",
+        "entryPoint": "ru.json",
+        "target": "localization",
+        "locale": "ru_RU"
+      }
+      ''');
+      File(p.join(pluginDir.path, 'ru.json')).writeAsStringSync('''
+      {
+        "common.connect": "Подключиться",
+        "common.cancel": "Отмена"
+      }
+      ''');
+
+      final archivePath = p.join(tempWorkDir.path, 'ru.shellit');
+      await PluginPacker.packDirectory(
+        sourceDir: pluginDir.path,
+        outputFilePath: archivePath,
+      );
+
+      final installRes = await loader.installFromArchive(archivePath);
+      expect(installRes.isSuccess, isTrue);
+
+      final installed = installRes.getOrThrow();
+      expect(installed.manifest.target, PluginTarget.localization);
+      expect(installed.manifest.locale, 'ru_RU');
+
+      final dictRes = await loader.loadLanguagePack(installed);
+      expect(dictRes.isSuccess, isTrue);
+      final dict = dictRes.getOrThrow();
+      expect(dict['common.connect'], 'Подключиться');
+      expect(dict['common.cancel'], 'Отмена');
     });
   });
 }

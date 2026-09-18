@@ -115,7 +115,16 @@ class PluginManifestValidator {
       );
     }
     final ext = p.extension(entryPoint).toLowerCase();
-    if (ext != '.html' && ext != '.htm' && ext != '.js') {
+    final targetRaw = (json['target'] as String?)?.trim().toLowerCase();
+    if (targetRaw == 'localization') {
+      if (ext != '.json') {
+        return Result.error(
+          PluginFailure.invalidManifest(
+            "For 'localization' target, field 'entryPoint' must point to a JSON dictionary (.json)",
+          ),
+        );
+      }
+    } else if (ext != '.html' && ext != '.htm' && ext != '.js') {
       return Result.error(
         PluginFailure.invalidManifest(
           "Field 'entryPoint' must point to an HTML or JS file (.html, .htm, .js)",
@@ -128,7 +137,7 @@ class PluginManifestValidator {
     if (targetVal == null || targetVal is! String || targetVal.trim().isEmpty) {
       return Result.error(
         PluginFailure.invalidManifest(
-          "Field 'target' is required and must be one of: 'sidebar', 'statusbar', 'modal', 'headless'",
+          "Field 'target' is required and must be one of: 'sidebar', 'statusbar', 'modal', 'headless', 'localization'",
         ),
       );
     }
@@ -147,12 +156,31 @@ class PluginManifestValidator {
       case 'headless':
         target = PluginTarget.headless;
         break;
+      case 'localization':
+        target = PluginTarget.localization;
+        break;
       default:
         return Result.error(
           PluginFailure.invalidManifest(
-            "Unknown target '$targetStr'. Allowed targets: 'sidebar', 'statusbar', 'modal', 'headless'",
+            "Unknown target '$targetStr'. Allowed targets: 'sidebar', 'statusbar', 'modal', 'headless', 'localization'",
           ),
         );
+    }
+
+    // 5.1 Validate 'locale' for localization target
+    String? locale;
+    if (target == PluginTarget.localization) {
+      final locVal = json['locale'];
+      if (locVal == null || locVal is! String || locVal.trim().isEmpty) {
+        return Result.error(
+          PluginFailure.invalidManifest(
+            "Field 'locale' is required for 'localization' target (e.g. 'ru_RU', 'de_DE')",
+          ),
+        );
+      }
+      locale = locVal.trim();
+    } else if (json.containsKey('locale')) {
+      locale = (json['locale'] as String?)?.trim();
     }
 
     // 6. Validate 'permissions'
@@ -210,6 +238,7 @@ class PluginManifestValidator {
       description: description,
       entryPoint: entryPoint,
       target: target,
+      locale: locale,
       permissions: permissions,
       minAppVersion: minAppVersion,
     );

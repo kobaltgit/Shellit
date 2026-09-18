@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 import 'shellit_logo.dart';
 
@@ -82,40 +83,52 @@ class NavigationSidebar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               children: [
                 _buildNavItem(
+                  context,
                   section: SidebarSection.hosts,
                   icon: Icons.dns_outlined,
                   activeIcon: Icons.dns,
-                  label: 'Hosts',
+                  labelKey: 'sidebar.nav_hosts',
+                  defaultLabel: 'Hosts',
                 ),
                 _buildNavItem(
+                  context,
                   section: SidebarSection.keychain,
                   icon: Icons.key_outlined,
                   activeIcon: Icons.key,
-                  label: 'Keychain',
+                  labelKey: 'sidebar.nav_keychain',
+                  defaultLabel: 'Keychain',
                 ),
                 _buildNavItem(
+                  context,
                   section: SidebarSection.tunnels,
                   icon: Icons.alt_route_outlined,
                   activeIcon: Icons.alt_route,
-                  label: 'Port Forwarding',
+                  labelKey: 'sidebar.nav_tunnels',
+                  defaultLabel: 'Port Forwarding',
                 ),
                 _buildNavItem(
+                  context,
                   section: SidebarSection.snippets,
                   icon: Icons.code_outlined,
                   activeIcon: Icons.code,
-                  label: 'Snippets',
+                  labelKey: 'sidebar.nav_snippets',
+                  defaultLabel: 'Snippets',
                 ),
                 _buildNavItem(
+                  context,
                   section: SidebarSection.logs,
                   icon: Icons.receipt_long_outlined,
                   activeIcon: Icons.receipt_long,
-                  label: 'Logs',
+                  labelKey: 'sidebar.nav_logs',
+                  defaultLabel: 'Logs',
                 ),
                 _buildNavItem(
+                  context,
                   section: SidebarSection.plugins,
                   icon: Icons.extension_outlined,
                   activeIcon: Icons.extension,
-                  label: 'Plugins',
+                  labelKey: 'sidebar.nav_plugins',
+                  defaultLabel: 'Plugins',
                 ),
               ],
             ),
@@ -129,10 +142,12 @@ class NavigationSidebar extends StatelessWidget {
             child: Column(
               children: [
                 _buildNavItem(
+                  context,
                   section: SidebarSection.settings,
                   icon: Icons.settings_outlined,
                   activeIcon: Icons.settings,
-                  label: 'Settings',
+                  labelKey: 'sidebar.nav_settings',
+                  defaultLabel: 'Settings',
                 ),
                 if (onToggleCollapse != null)
                   IconButton(
@@ -141,8 +156,11 @@ class NavigationSidebar extends StatelessWidget {
                       color: ShellitColors.textSecondary,
                     ),
                     onPressed: onToggleCollapse,
-                    tooltip:
-                        isCollapsed ? 'Expand sidebar' : 'Collapse sidebar',
+                    tooltip: isCollapsed
+                        ? context.tr('sidebar.expand',
+                            defaultText: 'Expand sidebar')
+                        : context.tr('sidebar.collapse',
+                            defaultText: 'Collapse sidebar'),
                   ),
               ],
             ),
@@ -152,13 +170,16 @@ class NavigationSidebar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem({
+  Widget _buildNavItem(
+    BuildContext context, {
     required SidebarSection section,
     required IconData icon,
     required IconData activeIcon,
-    required String label,
+    required String labelKey,
+    required String defaultLabel,
   }) {
     final isSelected = currentSection == section;
+    final label = context.tr(labelKey, defaultText: defaultLabel);
 
     return Tooltip(
       message: isCollapsed ? label : '',

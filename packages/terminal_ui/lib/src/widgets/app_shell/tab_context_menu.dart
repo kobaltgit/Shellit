@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../theme/shellit_theme.dart';
 
@@ -43,7 +44,10 @@ class TabContextMenu {
           _buildItem(
             value: 'duplicate',
             icon: Icons.copy_rounded,
-            title: 'Duplicate Session',
+            title: context.tr(
+              'tabs.menu_duplicate',
+              defaultText: 'Duplicate Session',
+            ),
             shortcut: 'Ctrl+D',
           ),
         if (onOpenSftp != null && tab.host != null)
@@ -51,14 +55,23 @@ class TabContextMenu {
             value: 'open_sftp',
             icon: Icons.folder_shared_outlined,
             title: tab.type == TabType.sftp
-                ? 'Open Terminal for Host'
-                : 'Open SFTP for this Host',
+                ? context.tr(
+                    'tabs.menu_open_terminal',
+                    defaultText: 'Open Terminal for Host',
+                  )
+                : context.tr(
+                    'tabs.menu_open_sftp',
+                    defaultText: 'Open SFTP for this Host',
+                  ),
           ),
         if (onReconnect != null)
           _buildItem(
             value: 'reconnect',
             icon: Icons.refresh,
-            title: 'Reconnect Session',
+            title: context.tr(
+              'tabs.menu_reconnect',
+              defaultText: 'Reconnect Session',
+            ),
           ),
 
         const PopupMenuDivider(height: 8),
@@ -67,23 +80,35 @@ class TabContextMenu {
         _buildItem(
           value: 'split_h',
           icon: Icons.view_column_outlined,
-          title: 'Split Horizontally',
+          title: context.tr(
+            'tabs.menu_split_h',
+            defaultText: 'Split Horizontally',
+          ),
         ),
         _buildItem(
           value: 'split_v',
           icon: Icons.table_rows_outlined,
-          title: 'Split Vertically',
+          title: context.tr(
+            'tabs.menu_split_v',
+            defaultText: 'Split Vertically',
+          ),
         ),
         _buildItem(
           value: 'split_2x2',
           icon: Icons.grid_view_sharp,
-          title: 'Split 2x2 Grid',
+          title: context.tr(
+            'tabs.menu_split_2x2',
+            defaultText: 'Split 2x2 Grid',
+          ),
         ),
         if (tab.type == TabType.splitTerminal)
           _buildItem(
             value: 'split_single',
             icon: Icons.crop_square,
-            title: 'Collapse to Single Pane',
+            title: context.tr(
+              'tabs.menu_split_single',
+              defaultText: 'Collapse to Single Pane',
+            ),
           ),
 
         const PopupMenuDivider(height: 8),
@@ -92,17 +117,25 @@ class TabContextMenu {
         _buildItem(
           value: 'rename',
           icon: Icons.drive_file_rename_outline,
-          title: 'Rename Tab...',
+          title: context.tr(
+            'tabs.menu_rename',
+            defaultText: 'Rename Tab...',
+          ),
         ),
         _buildItem(
           value: 'color_tag',
           icon: Icons.palette_outlined,
-          title: 'Set Color Tag...',
+          title: context.tr(
+            'tabs.menu_color_tag',
+            defaultText: 'Set Color Tag...',
+          ),
         ),
         _buildItem(
           value: 'toggle_pin',
           icon: tab.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-          title: tab.isPinned ? 'Unpin Tab' : 'Pin Tab',
+          title: tab.isPinned
+              ? context.tr('tabs.menu_unpin', defaultText: 'Unpin Tab')
+              : context.tr('tabs.menu_pin', defaultText: 'Pin Tab'),
         ),
 
         const PopupMenuDivider(height: 8),
@@ -111,24 +144,36 @@ class TabContextMenu {
         _buildItem(
           value: 'close',
           icon: Icons.close,
-          title: 'Close Tab',
+          title: context.tr(
+            'tabs.menu_close',
+            defaultText: 'Close Tab',
+          ),
           shortcut: 'Ctrl+W',
           isDestructive: true,
         ),
         _buildItem(
           value: 'close_others',
           icon: Icons.tab_unselected,
-          title: 'Close Other Tabs',
+          title: context.tr(
+            'tabs.menu_close_others',
+            defaultText: 'Close Other Tabs',
+          ),
         ),
         _buildItem(
           value: 'close_right',
           icon: Icons.arrow_forward,
-          title: 'Close Tabs to the Right',
+          title: context.tr(
+            'tabs.menu_close_right',
+            defaultText: 'Close Tabs to the Right',
+          ),
         ),
         _buildItem(
           value: 'close_disconnected',
           icon: Icons.cleaning_services_outlined,
-          title: 'Close Disconnected Sessions',
+          title: context.tr(
+            'tabs.menu_close_disconnected',
+            defaultText: 'Close Disconnected Sessions',
+          ),
         ),
       ],
     );
@@ -241,19 +286,28 @@ class TabContextMenu {
           borderRadius: BorderRadius.circular(10),
           side: const BorderSide(color: ShellitColors.border, width: 1),
         ),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.drive_file_rename_outline,
+            const Icon(Icons.drive_file_rename_outline,
                 size: 20, color: ShellitColors.accentBlue),
-            SizedBox(width: 8),
-            Text('Rename Tab', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text(
+              context.tr(
+                'tabs.rename_dialog_title',
+                defaultText: 'Rename Tab',
+              ),
+              style: const TextStyle(fontSize: 16),
+            ),
           ],
         ),
         content: TextField(
           controller: controller,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Enter custom tab name (e.g. Docker Logs)',
+            hintText: context.tr(
+              'tabs.rename_dialog_hint',
+              defaultText: 'Enter custom tab name (e.g. Docker Logs)',
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.clear, size: 16),
               onPressed: () => controller.clear(),
@@ -270,19 +324,24 @@ class TabContextMenu {
               notifier.renameTab(tab.id, null); // Reset
               Navigator.of(ctx).pop();
             },
-            child: const Text('Reset to Default',
-                style: TextStyle(color: ShellitColors.textSecondary)),
+            child: Text(
+              context.tr(
+                'tabs.rename_dialog_reset',
+                defaultText: 'Reset to Default',
+              ),
+              style: const TextStyle(color: ShellitColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
           ),
           ElevatedButton(
             onPressed: () {
               notifier.renameTab(tab.id, controller.text);
               Navigator.of(ctx).pop();
             },
-            child: const Text('Save'),
+            child: Text(context.tr('common.save', defaultText: 'Save')),
           ),
         ],
       ),
@@ -302,12 +361,18 @@ class TabContextMenu {
           borderRadius: BorderRadius.circular(10),
           side: const BorderSide(color: ShellitColors.border, width: 1),
         ),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.palette_outlined,
+            const Icon(Icons.palette_outlined,
                 size: 20, color: ShellitColors.accentBlue),
-            SizedBox(width: 8),
-            Text('Set Tab Color Tag', style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text(
+              context.tr(
+                'tabs.color_dialog_title',
+                defaultText: 'Set Tab Color Tag',
+              ),
+              style: const TextStyle(fontSize: 16),
+            ),
           ],
         ),
         content: Wrap(
@@ -358,7 +423,7 @@ class TabContextMenu {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Close'),
+            child: Text(context.tr('common.close', defaultText: 'Close')),
           ),
         ],
       ),

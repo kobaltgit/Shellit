@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../theme/shellit_theme.dart';
 
@@ -34,25 +35,29 @@ class BroadcastInputBar extends StatelessWidget {
             _buildLayoutButton(
               type: SplitLayoutType.single,
               icon: Icons.crop_square,
-              tooltip: 'Single Terminal',
+              tooltip: context.tr('splits.single',
+                  defaultText: 'Single Terminal'),
             ),
             const SizedBox(width: 4),
             _buildLayoutButton(
               type: SplitLayoutType.horizontal,
               icon: Icons.view_column_outlined,
-              tooltip: 'Split Horizontal (Side by side)',
+              tooltip: context.tr('splits.horizontal_tooltip',
+                  defaultText: 'Split Horizontal (Side by side)'),
             ),
             const SizedBox(width: 4),
             _buildLayoutButton(
               type: SplitLayoutType.vertical,
               icon: Icons.table_rows_outlined,
-              tooltip: 'Split Vertical (Top & bottom)',
+              tooltip: context.tr('splits.vertical_tooltip',
+                  defaultText: 'Split Vertical (Top & bottom)'),
             ),
             const SizedBox(width: 4),
             _buildLayoutButton(
               type: SplitLayoutType.grid2x2,
               icon: Icons.grid_view_sharp,
-              tooltip: '2x2 Matrix Split',
+              tooltip: context.tr('splits.matrix_tooltip',
+                  defaultText: '2x2 Matrix Split'),
             ),
 
             const SizedBox(width: 14),
@@ -72,7 +77,8 @@ class BroadcastInputBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Broadcast Input',
+                  context.tr('splits.broadcast_title',
+                      defaultText: 'Broadcast Input'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: isBroadcastEnabled
@@ -103,9 +109,10 @@ class BroadcastInputBar extends StatelessWidget {
                   border:
                       Border.all(color: ShellitColors.statusRed, width: 0.8),
                 ),
-                child: const Text(
-                  'INPUT SENT TO ALL PANES',
-                  style: TextStyle(
+                child: Text(
+                  context.tr('splits.broadcast_warning',
+                      defaultText: 'INPUT SENT TO ALL PANES'),
+                  style: const TextStyle(
                     color: ShellitColors.statusRed,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -117,9 +124,10 @@ class BroadcastInputBar extends StatelessWidget {
 
             const SizedBox(width: 20),
 
-            const Text(
-              'Alt + Arrows to navigate splits',
-              style: TextStyle(fontSize: 11, color: ShellitColors.textMuted),
+            Text(
+              context.tr('splits.nav_hint',
+                  defaultText: 'Alt + Arrows to navigate splits'),
+              style: const TextStyle(fontSize: 11, color: ShellitColors.textMuted),
             ),
           ],
         ),

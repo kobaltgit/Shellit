@@ -14,12 +14,16 @@ class TestPluginManagerNotifier extends PluginManagerNotifier {
 
   @override
   Future<Result<void, PluginFailure>> togglePlugin(
-      String pluginId, bool enabled) async {
+    String pluginId,
+    bool enabled,
+  ) async {
     state = AsyncData(
       state.valueOrNull
-              ?.map((p) => p.manifest.id == pluginId
-                  ? p.copyWith(isEnabled: enabled)
-                  : p)
+              ?.map(
+                (p) => p.manifest.id == pluginId
+                    ? p.copyWith(isEnabled: enabled)
+                    : p,
+              )
               .toList() ??
           [],
     );
@@ -46,8 +50,9 @@ void main() {
       isEnabled: true,
     );
 
-    testWidgets('renders installed plugins and handles toggling',
-        (tester) async {
+    testWidgets('renders installed plugins and handles toggling', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -55,9 +60,7 @@ void main() {
               () => TestPluginManagerNotifier([samplePlugin]),
             ),
           ],
-          child: const MaterialApp(
-            home: PluginsScreen(),
-          ),
+          child: const MaterialApp(home: PluginsScreen()),
         ),
       );
 
@@ -94,9 +97,7 @@ void main() {
               () => TestPluginManagerNotifier([samplePlugin]),
             ),
           ],
-          child: const MaterialApp(
-            home: PluginsScreen(),
-          ),
+          child: const MaterialApp(home: PluginsScreen()),
         ),
       );
 
@@ -108,9 +109,7 @@ void main() {
 
       expect(find.text('Install Plugin Package'), findsOneWidget);
       expect(
-        find.text(
-          'Enter full file path to .shellit (or .zip) bundle archive:',
-        ),
+        find.text('Enter full file path to .shellit (or .zip) bundle archive:'),
         findsOneWidget,
       );
     });

@@ -57,9 +57,9 @@ class TunnelsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
-        title: const Text(
-          'Port Forwarding & Tunnels',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        title: Text(
+          context.tr('tunnels.title', defaultText: 'Port Forwarding & Tunnels'),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
         elevation: 0,
@@ -68,7 +68,9 @@ class TunnelsScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(right: 16),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.add_circle_outline, size: 16),
-              label: const Text('New Tunnel'),
+              label: Text(
+                context.tr('tunnels.btn_new', defaultText: 'New Tunnel'),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentBlue,
                 foregroundColor: Colors.white,
@@ -83,10 +85,10 @@ class TunnelsScreen extends ConsumerWidget {
         ],
       ),
       body: rules.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No active port forwarding rules',
-                style: TextStyle(color: ShellitColors.textMuted),
+                context.tr('tunnels.empty_title', defaultText: 'No active port forwarding rules'),
+                style: const TextStyle(color: ShellitColors.textMuted),
               ),
             )
           : ListView.separated(
@@ -142,8 +144,8 @@ class TunnelsScreen extends ConsumerWidget {
                           ),
                           child: Text(
                             rule.type == TunnelForwardType.local
-                                ? 'LOCAL (L)'
-                                : 'REMOTE (R)',
+                                ? context.tr('tunnels.type_local', defaultText: 'LOCAL (L)')
+                                : context.tr('tunnels.type_remote', defaultText: 'REMOTE (R)'),
                             style: const TextStyle(
                               color: ShellitColors.accentCyan,
                               fontSize: 10,
@@ -217,9 +219,9 @@ class TunnelsScreen extends ConsumerWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
           backgroundColor: ShellitColors.obsidianCard,
-          title: const Text(
-            'Add Port Forwarding Rule',
-            style: TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+          title: Text(
+            context.tr('tunnels.dialog_title', defaultText: 'Add Port Forwarding Rule'),
+            style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
           ),
           content: SizedBox(
             width: 440,
@@ -232,22 +234,31 @@ class TunnelsScreen extends ConsumerWidget {
                     color: ShellitColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Rule Label (e.g. Redis Dev Tunnel)',
+                  decoration: InputDecoration(
+                    labelText: context.tr(
+                      'tunnels.rule_label',
+                      defaultText: 'Rule Label (e.g. Redis Dev Tunnel)',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<TunnelForwardType>(
                   initialValue: selectedType,
-                  decoration: const InputDecoration(labelText: 'Forward Type'),
-                  items: const [
+                  decoration: InputDecoration(
+                    labelText: context.tr('tunnels.forward_type', defaultText: 'Forward Type'),
+                  ),
+                  items: [
                     DropdownMenuItem(
                       value: TunnelForwardType.local,
-                      child: Text('Local Forward (-L)'),
+                      child: Text(
+                        context.tr('tunnels.forward_local_opt', defaultText: 'Local Forward (-L)'),
+                      ),
                     ),
                     DropdownMenuItem(
                       value: TunnelForwardType.remote,
-                      child: Text('Remote Forward (-R)'),
+                      child: Text(
+                        context.tr('tunnels.forward_remote_opt', defaultText: 'Remote Forward (-R)'),
+                      ),
                     ),
                   ],
                   onChanged: (val) {
@@ -265,8 +276,8 @@ class TunnelsScreen extends ConsumerWidget {
                           color: ShellitColors.textPrimary,
                           fontSize: 13,
                         ),
-                        decoration: const InputDecoration(
-                          labelText: 'Local Port',
+                        decoration: InputDecoration(
+                          labelText: context.tr('tunnels.local_port', defaultText: 'Local Port'),
                         ),
                       ),
                     ),
@@ -279,8 +290,8 @@ class TunnelsScreen extends ConsumerWidget {
                           color: ShellitColors.textPrimary,
                           fontSize: 13,
                         ),
-                        decoration: const InputDecoration(
-                          labelText: 'Remote Port',
+                        decoration: InputDecoration(
+                          labelText: context.tr('tunnels.remote_port', defaultText: 'Remote Port'),
                         ),
                       ),
                     ),
@@ -293,8 +304,8 @@ class TunnelsScreen extends ConsumerWidget {
                     color: ShellitColors.textPrimary,
                     fontSize: 13,
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Remote Target Host',
+                  decoration: InputDecoration(
+                    labelText: context.tr('tunnels.remote_host', defaultText: 'Remote Target Host'),
                   ),
                 ),
               ],
@@ -303,7 +314,7 @@ class TunnelsScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -329,9 +340,9 @@ class TunnelsScreen extends ConsumerWidget {
                   Navigator.pop(ctx);
                 }
               },
-              child: const Text(
-                'Add Rule',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                context.tr('tunnels.btn_add', defaultText: 'Add Rule'),
+                style: const TextStyle(color: Colors.white),
               ),
             ),
           ],

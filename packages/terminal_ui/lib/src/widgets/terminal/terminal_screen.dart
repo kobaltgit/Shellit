@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:xterm/xterm.dart';
 import 'package:flutter/gestures.dart';
+import '../../localization/localization_scope.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/shellit_theme.dart';
 import 'prod_confirmation_dialog.dart';
@@ -191,7 +192,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             content: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.check_circle_outline, size: 14, color: ShellitColors.statusGreen),
+                const Icon(Icons.check_circle_outline,
+                    size: 14, color: ShellitColors.statusGreen),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -228,7 +230,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final height = _terminal.buffer.height;
     _controller.setSelection(
       _terminal.buffer.createAnchor(0, 0),
-      _terminal.buffer.createAnchor(_terminal.viewWidth, height > 0 ? height - 1 : 0),
+      _terminal.buffer
+          .createAnchor(_terminal.viewWidth, height > 0 ? height - 1 : 0),
       mode: SelectionMode.line,
     );
   }
@@ -287,17 +290,27 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // 3. Zoom shortcuts:
     // Ctrl + Plus, Ctrl + =, Ctrl + NumpadAdd
-    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.equal || key == LogicalKeyboardKey.add || key == LogicalKeyboardKey.numpadAdd)) {
+    if (isCmdOrCtrl &&
+        !isAlt &&
+        (key == LogicalKeyboardKey.equal ||
+            key == LogicalKeyboardKey.add ||
+            key == LogicalKeyboardKey.numpadAdd)) {
       if (_fontSize < 28) setState(() => _fontSize += 1);
       return KeyEventResult.handled;
     }
     // Ctrl + Minus, Ctrl + NumpadSubtract
-    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.minus || key == LogicalKeyboardKey.numpadSubtract)) {
+    if (isCmdOrCtrl &&
+        !isAlt &&
+        (key == LogicalKeyboardKey.minus ||
+            key == LogicalKeyboardKey.numpadSubtract)) {
       if (_fontSize > 8) setState(() => _fontSize -= 1);
       return KeyEventResult.handled;
     }
     // Ctrl + 0, Ctrl + Numpad0
-    if (isCmdOrCtrl && !isAlt && (key == LogicalKeyboardKey.digit0 || key == LogicalKeyboardKey.numpad0)) {
+    if (isCmdOrCtrl &&
+        !isAlt &&
+        (key == LogicalKeyboardKey.digit0 ||
+            key == LogicalKeyboardKey.numpad0)) {
       setState(() => _fontSize = 13.0);
       return KeyEventResult.handled;
     }
@@ -306,9 +319,14 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // Ctrl + Shift + C
     // Ctrl + Insert
     // Or Ctrl + C / Cmd + C when there IS an active selection!
-    final isCopyShortcut = (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyC) ||
-        (isCtrl && key == LogicalKeyboardKey.insert);
-    final isSmartCtrlC = isCmdOrCtrl && !isShift && !isAlt && key == LogicalKeyboardKey.keyC && _controller.selection != null;
+    final isCopyShortcut =
+        (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyC) ||
+            (isCtrl && key == LogicalKeyboardKey.insert);
+    final isSmartCtrlC = isCmdOrCtrl &&
+        !isShift &&
+        !isAlt &&
+        key == LogicalKeyboardKey.keyC &&
+        _controller.selection != null;
 
     if (isCopyShortcut || isSmartCtrlC) {
       _copySelection();
@@ -320,9 +338,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // Ctrl + V
     // Shift + Insert
     // Cmd + V
-    final isPasteShortcut = (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyV) ||
-        (isCmdOrCtrl && !isAlt && key == LogicalKeyboardKey.keyV) ||
-        (isShift && key == LogicalKeyboardKey.insert);
+    final isPasteShortcut =
+        (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyV) ||
+            (isCmdOrCtrl && !isAlt && key == LogicalKeyboardKey.keyV) ||
+            (isShift && key == LogicalKeyboardKey.insert);
 
     if (isPasteShortcut) {
       _pasteFromClipboard();
@@ -501,22 +520,24 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Tooltip(
-                      message: 'Keyboard Shortcuts (F1)',
+                      message: context.tr('terminal.shortcuts_tooltip',
+                          defaultText: 'Keyboard Shortcuts (F1)'),
                       child: InkWell(
                         onTap: _showShortcutsHelp,
                         borderRadius: BorderRadius.circular(4),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 4),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.keyboard_outlined,
+                              const Icon(Icons.keyboard_outlined,
                                   size: 13, color: Colors.white70),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
-                                'Keys',
-                                style: TextStyle(
+                                context.tr('terminal.shortcuts_btn',
+                                    defaultText: 'Keys'),
+                                style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white70),
@@ -531,22 +552,24 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     const SizedBox(width: 4),
                     if (widget.onOpenSftp != null) ...[
                       Tooltip(
-                        message: 'Open SFTP for this host',
+                        message: context.tr('terminal.open_sftp_tooltip',
+                            defaultText: 'Open SFTP for this host'),
                         child: InkWell(
                           onTap: widget.onOpenSftp,
                           borderRadius: BorderRadius.circular(4),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 6, vertical: 4),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.folder_shared_outlined,
+                                const Icon(Icons.folder_shared_outlined,
                                     size: 13, color: Colors.white70),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'SFTP',
-                                  style: TextStyle(
+                                  context.tr('terminal.sftp_btn',
+                                      defaultText: 'SFTP'),
+                                  style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white70),
@@ -564,8 +587,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                         (widget.session.recorder?.isRecording ?? false)) ...[
                       Tooltip(
                         message: (widget.session.recorder?.isRecording ?? false)
-                            ? 'Session Recording Active (Click to Stop)'
-                            : 'Start Session Recording',
+                            ? context.tr('terminal.recording_active_tooltip',
+                                defaultText:
+                                    'Session Recording Active (Click to Stop)')
+                            : context.tr('terminal.start_recording_tooltip',
+                                defaultText: 'Start Session Recording'),
                         child: InkWell(
                           onTap: () async {
                             widget.onToggleRecording?.call();
@@ -597,8 +623,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                                 Text(
                                   (widget.session.recorder?.isRecording ??
                                           false)
-                                      ? 'REC ${_formatDuration(_recordDurationSeconds)}'
-                                      : 'REC',
+                                      ? '${context.tr('terminal.rec_badge', defaultText: 'REC')} ${_formatDuration(_recordDurationSeconds)}'
+                                      : context.tr('terminal.rec_badge',
+                                          defaultText: 'REC'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,

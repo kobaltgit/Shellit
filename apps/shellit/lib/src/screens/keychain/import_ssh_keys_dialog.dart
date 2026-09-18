@@ -74,7 +74,7 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Ошибка при сканировании: $e';
+        _errorMessage = 'Scan error: $e';
       });
     }
   }
@@ -85,7 +85,12 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
         .toList();
 
     if (selectedKeys.isEmpty) {
-      setState(() => _errorMessage = 'Выберите хотя бы один ключ для импорта.');
+      setState(
+        () => _errorMessage = context.tr(
+          'keychain.import_dialog_err_none_selected',
+          defaultText: 'Select at least one key to import.',
+        ),
+      );
       return;
     }
 
@@ -115,7 +120,7 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
 
         if (parseRes.isError) {
           throw Exception(
-            'Ключ ${key.fileName}: ${parseRes.failureOrNull?.message ?? "Ошибка расшифровки"}',
+            'Key ${key.fileName}: ${parseRes.failureOrNull?.message ?? "Decryption error"}',
           );
         }
 
@@ -158,7 +163,12 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Успешно импортировано ключей: $importedCount'),
+            content: Text(
+              context.tr(
+                'keychain.import_dialog_success_msg',
+                defaultText: 'Successfully imported keys: {count}',
+              ).replaceAll('{count}', importedCount.toString()),
+            ),
             backgroundColor: ShellitColors.statusGreen,
           ),
         );
@@ -194,9 +204,9 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'Import from ~/.ssh',
-            style: TextStyle(
+          Text(
+            context.tr('keychain.import_dialog_title', defaultText: 'Import from ~/.ssh'),
+            style: const TextStyle(
               color: ShellitColors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -208,9 +218,9 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: ShellitColors.textMuted),
+          child: Text(
+            context.tr('common.cancel', defaultText: 'Cancel'),
+            style: const TextStyle(color: ShellitColors.textMuted),
           ),
         ),
         if (!_isLoading && _discoveredKeys.isNotEmpty)
@@ -229,7 +239,11 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
                     ),
                   )
                 : const Icon(Icons.download, size: 16),
-            label: Text(_isImporting ? 'Importing...' : 'Import Selected'),
+            label: Text(
+              _isImporting
+                  ? context.tr('keychain.import_dialog_btn_importing', defaultText: 'Importing...')
+                  : context.tr('keychain.import_dialog_btn_import_selected', defaultText: 'Import Selected'),
+            ),
             onPressed: _isImporting ? null : _handleImport,
           ),
       ],
@@ -238,16 +252,19 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
 
   Widget _buildContent() {
     if (_isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
             Text(
-              'Scanning ~/.ssh directory...',
-              style: TextStyle(color: ShellitColors.textMuted, fontSize: 13),
+              context.tr(
+                'keychain.import_dialog_scanning',
+                defaultText: 'Scanning ~/.ssh directory...',
+              ),
+              style: const TextStyle(color: ShellitColors.textMuted, fontSize: 13),
             ),
           ],
         ),
@@ -266,9 +283,9 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
               color: ShellitColors.textMuted,
             ),
             const SizedBox(height: 12),
-            const Text(
-              'No SSH Keys Found',
-              style: TextStyle(
+            Text(
+              context.tr('keychain.import_dialog_no_keys_title', defaultText: 'No SSH Keys Found'),
+              style: const TextStyle(
                 color: ShellitColors.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -276,7 +293,10 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Directory: ${_scannedPath ?? "unknown"}',
+              context.tr(
+                'keychain.import_dialog_dir_label',
+                defaultText: 'Directory: {dir}',
+              ).replaceAll('{dir}', _scannedPath ?? 'unknown'),
               style: const TextStyle(
                 color: ShellitColors.textMuted,
                 fontSize: 11,
@@ -329,7 +349,10 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Found ${_discoveredKeys.length} keys in ${_scannedPath ?? "~/.ssh"}',
+              context.tr(
+                'keychain.import_dialog_found_keys',
+                defaultText: 'Found {count} keys in {dir}',
+              ).replaceAll('{count}', _discoveredKeys.length.toString()).replaceAll('{dir}', _scannedPath ?? '~/.ssh'),
               style: const TextStyle(
                 color: ShellitColors.textSecondary,
                 fontSize: 12,
@@ -347,8 +370,8 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
               },
               child: Text(
                 selectedCount == _discoveredKeys.length
-                    ? 'Deselect All'
-                    : 'Select All',
+                    ? context.tr('keychain.import_dialog_deselect_all', defaultText: 'Deselect All')
+                    : context.tr('keychain.import_dialog_select_all', defaultText: 'Select All'),
                 style: const TextStyle(
                   color: ShellitColors.accentBlue,
                   fontSize: 11,
@@ -438,18 +461,21 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
                               ),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.lock,
                                   size: 11,
                                   color: ShellitColors.statusYellow,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'Encrypted',
-                                  style: TextStyle(
+                                  context.tr(
+                                    'keychain.import_dialog_badge_encrypted',
+                                    defaultText: 'Encrypted',
+                                  ),
+                                  style: const TextStyle(
                                     color: ShellitColors.statusYellow,
                                     fontSize: 10,
                                   ),
@@ -487,11 +513,14 @@ class _ImportSshKeysDialogState extends ConsumerState<ImportSshKeysDialog> {
                             color: ShellitColors.textPrimary,
                             fontSize: 12,
                           ),
-                          decoration: const InputDecoration(
-                            labelText: 'Key Passphrase (required to decrypt)',
+                          decoration: InputDecoration(
+                            labelText: context.tr(
+                              'keychain.import_dialog_passphrase_field',
+                              defaultText: 'Key Passphrase (required to decrypt)',
+                            ),
                             isDense: true,
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.key, size: 14),
+                            border: const OutlineInputBorder(),
+                            prefixIcon: const Icon(Icons.key, size: 14),
                           ),
                         ),
                       ),

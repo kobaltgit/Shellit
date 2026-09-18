@@ -57,4 +57,5 @@ enum PluginTarget {
   statusbar,
   modal,
   headless,
+  localization,
 }

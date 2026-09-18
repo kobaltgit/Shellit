@@ -57,8 +57,9 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         }
         _allowInsecure = settings.allowInsecureCertificates;
         if (settings.lastSyncedAt != null) {
-          _statusMessage =
-              'Last synced: ${_formatDate(settings.lastSyncedAt!)}';
+          _statusMessage = context
+              .tr('sync.last_synced', defaultText: 'Last synced: {time}')
+              .replaceAll('{time}', _formatDate(settings.lastSyncedAt!));
           _statusColor = ShellitColors.statusGreen;
         }
       });
@@ -101,7 +102,13 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
   Future<void> _testConnection() async {
     final url = _urlController.text.trim();
     if (url.isEmpty) {
-      _showMessage('Enter a Server URL first', isError: true);
+      _showMessage(
+        context.tr(
+          'sync.err_url_required',
+          defaultText: 'Server URL is required',
+        ),
+        isError: true,
+      );
       return;
     }
 
@@ -109,7 +116,10 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
 
     setState(() {
       _isSyncing = true;
-      _statusMessage = 'Testing connection...';
+      _statusMessage = context.tr(
+        'sync.test_testing',
+        defaultText: 'Testing connection...',
+      );
       _statusColor = ShellitColors.accentCyan;
     });
 
@@ -120,10 +130,18 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
       setState(() {
         _isSyncing = false;
         if (res.isSuccess) {
-          _statusMessage = 'Connection successful! (Server Online)';
+          _statusMessage = context.tr(
+            'sync.test_success',
+            defaultText: 'Connection successful! (Server Online)',
+          );
           _statusColor = ShellitColors.statusGreen;
         } else {
-          _statusMessage = res.failureOrNull?.message ?? 'Connection failed';
+          _statusMessage =
+              res.failureOrNull?.message ??
+              context.tr(
+                'sync.test_failed',
+                defaultText: 'Connection failed',
+              );
           _statusColor = ShellitColors.statusRed;
         }
       });
@@ -137,16 +155,31 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
     final token = _tokenController.text.trim();
 
     if (url.isEmpty) {
-      _showMessage('Server URL is required', isError: true);
+      _showMessage(
+        context.tr(
+          'sync.err_url_required',
+          defaultText: 'Server URL is required',
+        ),
+        isError: true,
+      );
       return;
     }
     if (vaultId.isEmpty) {
-      _showMessage('Vault ID is required', isError: true);
+      _showMessage(
+        context.tr(
+          'sync.err_vault_id_required',
+          defaultText: 'Vault ID is required',
+        ),
+        isError: true,
+      );
       return;
     }
     if (passphrase.isEmpty) {
       _showMessage(
-        'Sync Passphrase is required for E2EE encryption',
+        context.tr(
+          'sync.err_passphrase_required',
+          defaultText: 'Sync Passphrase is required for E2EE encryption',
+        ),
         isError: true,
       );
       return;
@@ -156,7 +189,10 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
 
     setState(() {
       _isSyncing = true;
-      _statusMessage = 'Synchronizing with server...';
+      _statusMessage = context.tr(
+        'sync.syncing',
+        defaultText: 'Synchronizing with server...',
+      );
       _statusColor = ShellitColors.accentCyan;
     });
 
@@ -174,18 +210,38 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         _isSyncing = false;
         if (res.isSuccess) {
           final summary = res.valueOrNull!;
-          _statusMessage =
-              'Synced successfully (Rev ${summary.serverRevision}, Pulled ${summary.pulledCount}, Pushed ${summary.pushedCount})';
+          _statusMessage = context
+              .tr(
+                'sync.sync_success',
+                defaultText:
+                    'Synced successfully (Rev {rev}, Pulled {pulled}, Pushed {pushed})',
+              )
+              .replaceAll('{rev}', summary.serverRevision.toString())
+              .replaceAll('{pulled}', summary.pulledCount.toString())
+              .replaceAll('{pushed}', summary.pushedCount.toString());
           _statusColor = ShellitColors.statusGreen;
           _showMessage(
-            'Sync complete: ${summary.pulledCount} pulled, ${summary.pushedCount} pushed',
+            context
+                .tr(
+                  'sync.sync_complete_msg',
+                  defaultText:
+                      'Sync complete: {pulled} pulled, {pushed} pushed',
+                )
+                .replaceAll('{pulled}', summary.pulledCount.toString())
+                .replaceAll('{pushed}', summary.pushedCount.toString()),
           );
           _saveCurrentSettings(
             lastSyncedAt: DateTime.now(),
             isSyncEnabled: true,
           );
         } else {
-          _statusMessage = 'Sync failed: ${res.failureOrNull?.message}';
+          final errMsg = res.failureOrNull?.message ?? '';
+          _statusMessage = context
+              .tr(
+                'sync.sync_failed',
+                defaultText: 'Sync failed: {error}',
+              )
+              .replaceAll('{error}', errMsg);
           _statusColor = ShellitColors.statusRed;
           _showMessage(_statusMessage!, isError: true);
         }
@@ -226,21 +282,28 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                   size: 22,
                 ),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Self-Hosted Synchronization (E2EE)',
-                        style: TextStyle(
+                        context.tr(
+                          'sync.card_title',
+                          defaultText: 'Self-Hosted Synchronization (E2EE)',
+                        ),
+                        style: const TextStyle(
                           color: ShellitColors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
-                        'Sync across devices via your personal VPS with Zero-Knowledge encryption',
-                        style: TextStyle(
+                        context.tr(
+                          'sync.card_subtitle',
+                          defaultText:
+                              'Sync across devices via your personal VPS with Zero-Knowledge encryption',
+                        ),
+                        style: const TextStyle(
                           color: ShellitColors.textMuted,
                           fontSize: 12,
                         ),
@@ -292,25 +355,31 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Server URL (HTTP / HTTPS)',
-                labelStyle: TextStyle(
+              decoration: InputDecoration(
+                labelText: context.tr(
+                  'sync.server_url_label',
+                  defaultText: 'Server URL (HTTP / HTTPS)',
+                ),
+                labelStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
                 ),
-                hintText:
-                    'e.g. http://192.168.1.50:8080 or https://sync.my-vps.net',
-                hintStyle: TextStyle(
+                hintText: context.tr(
+                  'sync.server_url_hint',
+                  defaultText:
+                      'e.g. http://192.168.1.50:8080 or https://sync.my-vps.net',
+                ),
+                hintStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
                 ),
-                prefixIcon: Icon(
+                prefixIcon: const Icon(
                   Icons.dns_outlined,
                   color: ShellitColors.textMuted,
                   size: 18,
                 ),
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -323,20 +392,26 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Vault ID (Namespace)',
-                labelStyle: TextStyle(
+              decoration: InputDecoration(
+                labelText: context.tr(
+                  'sync.vault_id_label',
+                  defaultText: 'Vault ID (Namespace)',
+                ),
+                labelStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
                 ),
-                hintText: 'e.g. personal-vault',
-                prefixIcon: Icon(
+                hintText: context.tr(
+                  'sync.vault_id_hint',
+                  defaultText: 'e.g. personal-vault',
+                ),
+                prefixIcon: const Icon(
                   Icons.folder_shared_outlined,
                   color: ShellitColors.textMuted,
                   size: 18,
                 ),
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -351,13 +426,19 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 fontSize: 13,
               ),
               decoration: InputDecoration(
-                labelText: 'Sync Passphrase (E2EE Encryption Key)',
+                labelText: context.tr(
+                  'sync.passphrase_label',
+                  defaultText: 'Sync Passphrase (E2EE Encryption Key)',
+                ),
                 labelStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
                 ),
-                helperText:
-                    'Derived on your device via Argon2id. The server NEVER sees this password.',
+                helperText: context.tr(
+                  'sync.passphrase_helper',
+                  defaultText:
+                      'Derived on your device via Argon2id. The server NEVER sees this password.',
+                ),
                 helperStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 11,
@@ -392,25 +473,31 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Registration Token (Optional)',
-                labelStyle: TextStyle(
+              decoration: InputDecoration(
+                labelText: context.tr(
+                  'sync.token_label',
+                  defaultText: 'Registration Token (Optional)',
+                ),
+                labelStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
                 ),
-                helperText:
-                    'Required only when creating a new vault on a token-protected server',
-                helperStyle: TextStyle(
+                helperText: context.tr(
+                  'sync.token_helper',
+                  defaultText:
+                      'Required only when creating a new vault on a token-protected server',
+                ),
+                helperStyle: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 11,
                 ),
-                prefixIcon: Icon(
+                prefixIcon: const Icon(
                   Icons.security_outlined,
                   color: ShellitColors.textMuted,
                   size: 18,
                 ),
                 isDense: true,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 10),
@@ -418,16 +505,27 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             // Allow Insecure / Self-Signed SSL
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text(
-                'Allow Insecure / Self-Signed Certificates & Plain HTTP',
-                style: TextStyle(
+              title: Text(
+                context.tr(
+                  'sync.allow_insecure_title',
+                  defaultText:
+                      'Allow Insecure / Self-Signed Certificates & Plain HTTP',
+                ),
+                style: const TextStyle(
                   color: ShellitColors.textPrimary,
                   fontSize: 13,
                 ),
               ),
-              subtitle: const Text(
-                'Enable for local LAN IP, WireGuard / Tailscale without SSL, or self-signed HTTPS',
-                style: TextStyle(color: ShellitColors.textMuted, fontSize: 11),
+              subtitle: Text(
+                context.tr(
+                  'sync.allow_insecure_subtitle',
+                  defaultText:
+                      'Enable for local LAN IP, WireGuard / Tailscale without SSL, or self-signed HTTPS',
+                ),
+                style: const TextStyle(
+                  color: ShellitColors.textMuted,
+                  fontSize: 11,
+                ),
               ),
               value: _allowInsecure,
               activeThumbColor: ShellitColors.accentCyan,
@@ -444,10 +542,21 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 OutlinedButton.icon(
                   onPressed: () async {
                     await _saveCurrentSettings();
-                    _showMessage('Sync settings saved successfully');
+                    if (!context.mounted) return;
+                    _showMessage(
+                      context.tr(
+                        'sync.saved_success',
+                        defaultText: 'Sync settings saved successfully',
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.save_outlined, size: 16),
-                  label: const Text('Save Settings'),
+                  label: Text(
+                    context.tr(
+                      'sync.btn_save_settings',
+                      defaultText: 'Save Settings',
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ShellitColors.textPrimary,
                     side: const BorderSide(color: ShellitColors.border),
@@ -457,7 +566,12 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                 OutlinedButton.icon(
                   onPressed: _isSyncing ? null : _testConnection,
                   icon: const Icon(Icons.network_check_rounded, size: 16),
-                  label: const Text('Test Connection'),
+                  label: Text(
+                    context.tr(
+                      'sync.btn_test_connection',
+                      defaultText: 'Test Connection',
+                    ),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ShellitColors.textPrimary,
                     side: const BorderSide(color: ShellitColors.border),
@@ -476,7 +590,17 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                           ),
                         )
                       : const Icon(Icons.sync_rounded, size: 16),
-                  label: Text(_isSyncing ? 'Syncing...' : 'Sync Now'),
+                  label: Text(
+                    _isSyncing
+                        ? context.tr(
+                            'sync.btn_syncing',
+                            defaultText: 'Syncing...',
+                          )
+                        : context.tr(
+                            'sync.btn_sync_now',
+                            defaultText: 'Sync Now',
+                          ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ShellitColors.accentCyan,
                     foregroundColor: Colors.black,

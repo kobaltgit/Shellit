@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
 /// Helper to detect destructive and dangerous commands before execution on servers.
@@ -71,21 +72,27 @@ class ProdConfirmationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final warningIntro = context.tr('prod_guard.warning_intro',
+        defaultText:
+            'You are about to execute a dangerous command on {host} (PRODUCTION):');
+    final parts = warningIntro.split('{host}');
+
     return AlertDialog(
       backgroundColor: ShellitColors.obsidianCard,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: const BorderSide(color: ShellitColors.statusRed, width: 2),
       ),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded,
+          const Icon(Icons.warning_amber_rounded,
               color: ShellitColors.statusRed, size: 28),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'PROD GUARD: Destructive Command',
-              style: TextStyle(
+              context.tr('prod_guard.title',
+                  defaultText: 'PROD GUARD: Destructive Command'),
+              style: const TextStyle(
                 color: ShellitColors.statusRed,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -103,8 +110,10 @@ class ProdConfirmationDialog extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 13, color: ShellitColors.textPrimary),
               children: [
-                const TextSpan(
-                    text: 'You are about to execute a dangerous command on '),
+                TextSpan(
+                    text: parts.isNotEmpty
+                        ? parts[0]
+                        : 'You are about to execute a dangerous command on '),
                 TextSpan(
                   text: hostLabel,
                   style: const TextStyle(
@@ -112,7 +121,8 @@ class ProdConfirmationDialog extends StatelessWidget {
                     color: ShellitColors.statusRed,
                   ),
                 ),
-                const TextSpan(text: ' (PRODUCTION):'),
+                TextSpan(
+                    text: parts.length > 1 ? parts[1] : ' (PRODUCTION):'),
               ],
             ),
           ),
@@ -137,9 +147,12 @@ class ProdConfirmationDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'This action may lead to data loss or service unavailability. Are you absolutely sure?',
-            style: TextStyle(fontSize: 12, color: ShellitColors.textSecondary),
+          Text(
+            context.tr('prod_guard.warning_desc',
+                defaultText:
+                    'This action may lead to data loss or service unavailability. Are you absolutely sure?'),
+            style: const TextStyle(
+                fontSize: 12, color: ShellitColors.textSecondary),
           ),
         ],
       ),
@@ -150,7 +163,8 @@ class ProdConfirmationDialog extends StatelessWidget {
             foregroundColor: ShellitColors.textPrimary,
             side: const BorderSide(color: ShellitColors.border),
           ),
-          child: const Text('Cancel (Abort)'),
+          child: Text(context.tr('prod_guard.cancel_btn',
+              defaultText: 'Cancel (Abort)')),
         ),
         ElevatedButton(
           onPressed: () => Navigator.of(context).pop(true),
@@ -158,7 +172,8 @@ class ProdConfirmationDialog extends StatelessWidget {
             backgroundColor: ShellitColors.statusRed,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Execute Anyway'),
+          child: Text(context.tr('prod_guard.execute_btn',
+              defaultText: 'Execute Anyway')),
         ),
       ],
     );

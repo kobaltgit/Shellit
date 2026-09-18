@@ -23,11 +23,13 @@ class SshClientService implements ISshClientService {
     List<int>? privateKeyBytes,
     String? passphrase,
     ISessionRecorder? recorder,
+    void Function(String status)? onProgress,
   }) async {
     try {
       List<SSHKeyPair>? identities;
 
       if (privateKeyBytes != null && privateKeyBytes.isNotEmpty) {
+        onProgress?.call('Parsing SSH private key...');
         final keyRes = _keyParser.parseKeyBytes(
           bytes: privateKeyBytes,
           passphrase: passphrase,
@@ -38,6 +40,7 @@ class SshClientService implements ISshClientService {
         identities = keyRes.getOrThrow().keyPairs;
       }
 
+      onProgress?.call('Connecting socket to ${host.hostname}:${host.port}...');
       AppLogger.d(
         'Connecting SSH socket to ${host.connectionTarget}...',
         tag: 'SshClientService',
@@ -49,6 +52,7 @@ class SshClientService implements ISshClientService {
         timeout: const Duration(seconds: 15),
       );
 
+      onProgress?.call('SSH protocol handshake...');
       final client = SSHClient(
         socket,
         username: host.username,
@@ -59,6 +63,7 @@ class SshClientService implements ISshClientService {
             : null,
       );
 
+      onProgress?.call('Authenticating as ${host.username}...');
       AppLogger.d(
         'Authenticating SSH session for ${host.username}...',
         tag: 'SshClientService',
@@ -66,6 +71,7 @@ class SshClientService implements ISshClientService {
 
       await client.authenticated;
 
+      onProgress?.call('Allocating remote PTY shell...');
       AppLogger.d(
         'Spawning PTY shell (${initialDimensions.cols}x${initialDimensions.rows})...',
         tag: 'SshClientService',
@@ -125,7 +131,7 @@ class SshClientService implements ISshClientService {
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Не удалось установить терминальную SSH сессию: $e',
+          'Failed to establish terminal SSH session: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: stack,
@@ -140,11 +146,13 @@ class SshClientService implements ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    void Function(String status)? onProgress,
   }) async {
     try {
       List<SSHKeyPair>? identities;
 
       if (privateKeyBytes != null && privateKeyBytes.isNotEmpty) {
+        onProgress?.call('Parsing SSH private key...');
         final keyRes = _keyParser.parseKeyBytes(
           bytes: privateKeyBytes,
           passphrase: passphrase,
@@ -155,6 +163,7 @@ class SshClientService implements ISshClientService {
         identities = keyRes.getOrThrow().keyPairs;
       }
 
+      onProgress?.call('Connecting socket to ${host.hostname}:${host.port}...');
       AppLogger.d(
         'Opening SFTP connection to ${host.connectionTarget}...',
         tag: 'SshClientService',
@@ -166,6 +175,7 @@ class SshClientService implements ISshClientService {
         timeout: const Duration(seconds: 15),
       );
 
+      onProgress?.call('SSH protocol handshake...');
       final client = SSHClient(
         socket,
         username: host.username,
@@ -176,8 +186,10 @@ class SshClientService implements ISshClientService {
             : null,
       );
 
+      onProgress?.call('Authenticating as ${host.username}...');
       await client.authenticated;
 
+      onProgress?.call('Initializing SFTP subsystem...');
       AppLogger.d('Initializing SFTP subsystem...', tag: 'SshClientService');
       final sftp = await client.sftp();
 
@@ -207,7 +219,7 @@ class SshClientService implements ISshClientService {
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
-          'Не удалось открыть SFTP сессию: $e',
+          'Failed to open SFTP session: $e',
           type: NetworkFailureType.channelError,
           cause: e,
           stackTrace: stack,
@@ -241,7 +253,7 @@ class SshClientService implements ISshClientService {
       stopwatch.stop();
       return Result.error(
         NetworkFailure(
-          'Ошибка проверки доступности $hostname:$port: $e',
+          'Error checking reachability of $hostname:$port: $e',
           type: NetworkFailureType.hostUnreachable,
           cause: e,
           stackTrace: stack,

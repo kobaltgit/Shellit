@@ -41,7 +41,8 @@ void main() {
       }
     }
 
-    test('serves files with correct MIME types and prevents traversal', () async {
+    test('serves files with correct MIME types and prevents traversal',
+        () async {
       final port = await server.start(tempDir.path);
       expect(port, greaterThan(0));
 

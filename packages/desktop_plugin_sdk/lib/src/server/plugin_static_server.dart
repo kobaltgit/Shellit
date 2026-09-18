@@ -34,7 +34,8 @@ class PluginStaticServer {
         }
 
         final file = File(p.normalize(p.join(pluginDirectory, safePath)));
-        if (!p.isWithin(pluginDirectory, file.path) && file.path != p.normalize(p.join(pluginDirectory, 'index.html'))) {
+        if (!p.isWithin(pluginDirectory, file.path) &&
+            file.path != p.normalize(p.join(pluginDirectory, 'index.html'))) {
           request.response.statusCode = HttpStatus.forbidden;
           request.response.write('Forbidden');
           await request.response.close();
