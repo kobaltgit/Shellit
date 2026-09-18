@@ -43,3 +43,7 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("eu.simonbinder:sqlite3-native-library:3.47.0")
+}
