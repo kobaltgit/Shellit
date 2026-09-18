@@ -1,0 +1,18 @@
+name: desktop_plugin_sdk
+description: Desktop Plugin SDK and extensibility runtime for Shellit SSH client.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  core_foundation:
+    path: ../core_foundation
+  archive: ^3.6.1
+  meta: ^1.11.0
+  path: ^1.9.0
+
+dev_dependencies:
+  test: ^1.24.0
+  lints: ^3.0.0

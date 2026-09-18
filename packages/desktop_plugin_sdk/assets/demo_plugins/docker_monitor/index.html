@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Container Monitor</title>
+  <style>
+    :root {
+      --bg-base: #11111b;
+      --bg-surface: #181825;
+      --bg-card: #1e1e2e;
+      --bg-card-hover: #252538;
+      --text-main: #cdd6f4;
+      --text-dim: #a6adc8;
+      --text-muted: #6c7086;
+      --accent-blue: #89b4fa;
+      --accent-green: #a6e3a1;
+      --accent-red: #f38ba8;
+      --accent-yellow: #f9e2af;
+      --border-color: #313244;
+      --btn-bg: #313244;
+      --btn-hover: #45475a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-surface);
+      color: var(--text-main);
+      font-size: 12px;
+      line-height: 1.4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      font-weight: 600;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    button {
+      background: var(--btn-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    button:hover {
+      background: var(--btn-hover);
+      border-color: var(--accent-blue);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .container-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+
+    .card:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-name {
+      font-weight: 600;
+      color: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-running {
+      background: rgba(166, 227, 161, 0.15);
+      color: var(--accent-green);
+      border: 1px solid var(--accent-green);
+    }
+
+    .badge-exited {
+      background: rgba(243, 139, 168, 0.15);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .badge-paused {
+      background: rgba(249, 226, 175, 0.15);
+      color: var(--accent-yellow);
+      border: 1px solid var(--accent-yellow);
+    }
+
+    .card-meta {
+      font-size: 10px;
+      color: var(--text-dim);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .card-meta span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 6px;
+    }
+
+    .btn-action {
+      flex: 1;
+      justify-content: center;
+      padding: 3px 6px;
+      font-size: 10px;
+    }
+
+    .btn-start {
+      color: var(--accent-green);
+    }
+
+    .btn-stop {
+      color: var(--accent-red);
+    }
+
+    .btn-restart {
+      color: var(--accent-yellow);
+    }
+
+    /* Modal / Drawer */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .modal-header {
+      padding: 10px 12px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .logs-terminal {
+      flex: 1;
+      padding: 10px;
+      font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+      font-size: 11px;
+      color: #a6adc8;
+      background: #0b0b10;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      user-select: text;
+    }
+
+    .status-bar {
+      background: var(--bg-base);
+      border-top: 1px solid var(--border-color);
+      padding: 4px 10px;
+      font-size: 10px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-title">
+      <span>🐳</span>
+      <span>Docker Monitor</span>
+    </div>
+    <div class="header-actions">
+      <button id="btnRefresh" title="Обновить список">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div class="container-list" id="containerList">
+    <!-- Containers populated dynamically -->
+  </div>
+
+  <div class="status-bar">
+    <span id="containerCount">0 containers</span>
+    <span id="bridgeStatus">Connecting...</span>
+  </div>
+
+  <!-- Logs Modal -->
+  <div class="modal" id="logsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="logsTitle">Logs</span>
+        <button id="btnCloseLogs">Close</button>
+      </div>
+      <div class="logs-terminal" id="logsTerminal">Loading logs...</div>
+    </div>
+  </div>
+
+  <script src="plugin.js"></script>
+</body>
+</html>

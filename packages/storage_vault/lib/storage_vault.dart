@@ -1,0 +1,15 @@
+library storage_vault;
+
+export 'src/crypto/crypto_utils.dart';
+export 'src/crypto/vault_crypto_service.dart';
+export 'src/database/database_connection.dart';
+export 'src/database/vault_database.dart';
+export 'src/repositories/folder_repository.dart';
+export 'src/repositories/host_repository.dart';
+export 'src/repositories/key_manager.dart';
+export 'src/repositories/snippet_repository.dart';
+export 'src/repositories/vault_repository.dart';
+export 'src/security/biometric_storage.dart';
+export 'src/security/vault_security_context.dart';
+export 'src/services/vault_backup_service.dart';
+export 'package:drift/drift.dart' show driftRuntimeOptions;

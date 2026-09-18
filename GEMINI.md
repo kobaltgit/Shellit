@@ -1,0 +1,87 @@
+# Shellit — Project Context & Operating Guide for Gemini / Antigravity
+
+Welcome to **Shellit** — a modern, secure, cross-platform SSH client, SFTP manager, and server management tool built entirely with Flutter & Dart, inspired by the best ergonomics of Termius but developed as an independent, extensible, and feature-rich developer tool.
+
+---
+
+## 1. Project Architecture (Monorepo on Packages)
+
+The project is structured as a multi-package monorepo to allow fully isolated parallel development across agents:
+
+```text
+Shellit/
+├── GEMINI.md                       # This project guide and entry point for AI agents
+├── system-context.md               # Product high-level vision
+├── .antigravity/
+│   └── rules.md                    # Antigravity session-level rules
+├── raw-sources/
+│   └── reference.png               # Ergonomic reference layout (not for direct cloning!)
+├── docs/                           # Project Operations & Coordination Center
+│   ├── AGENTS_MASTER_GUIDE.md      # Master Operating Guide for all agents
+│   ├── ROADMAP.md                  # Milestone & Phase roadmap
+│   ├── CHECKLIST.md                # Interactive development checklist
+│   ├── BUGS_AND_ISSUES.md          # Realtime bug tracker and issue log
+│   ├── IDEAS_AND_BACKLOG.md        # Feature ideas and improvements backlog
+│   ├── CHRONICLE.md                # Development chronicle (author's devlog style)
+│   └── agents/                     # Dedicated agent instructions
+│       ├── AGENT_1_STORAGE.md      # Storage & Security Team (Drift/SQLCipher, Argon2id)
+│       ├── AGENT_2_NETWORK.md      # Network & SSH Team (dartssh2, PTY streams, SFTP)
+│       ├── AGENT_3_TERMINAL_UI.md  # UI & Terminal Cross-Platform Team (xterm.dart, UI Shell)
+│       ├── AGENT_4_PLUGINS.md      # Desktop Plugin Ecosystem Team (manifest, IPC bridge)
+│       └── AGENT_CHRONICLE_WRITER.md # Chronicle & Devlog Writer Agent
+├── packages/
+│   ├── core_foundation/            # Pure domain entities, contracts/interfaces, Result/Failure, logger
+│   ├── storage_vault/              # Encrypted DB, master-password, hosts/keys repositories
+│   ├── ssh_network_core/           # SSH sessions, PTY pipes, SFTP client, port forwarding
+│   ├── terminal_ui/                # Terminal emulator widget, tabs, tiling splits, mobile accessory bar
+│   └── desktop_plugin_sdk/         # Plugin loader, manifest validator, WebView IPC (desktop only)
+└── apps/
+    └── shellit/                    # Main Flutter application (DI, routing, native runners)
+```
+
+---
+
+## 2. Shellit Identity vs. Reference
+
+We use `raw-sources/reference.png` solely as an ergonomic guideline (sidebar layout, clean top bar, host cards). **Shellit is NOT a Termius clone:**
+1. **Live Host Telemetry:** Visual RTT ping latency dot (<50ms green, <200ms yellow, offline grey) directly on cards.
+2. **Environment Protection:** Colored environment badges (`PROD` alert red, `STAGE` yellow, `DEV` blue) with optional warnings against destructive commands on production.
+3. **Multi-View Catalog:** Quick toggle between Grid View, Dense List View (for 50+ servers), and Hierarchical Folder Tree View.
+4. **Omni-Bar (`Ctrl+K` / `Cmd+K`):** Raycast-style command palette for instant host connect, snippets execution, split layout management, and theme switching.
+5. **Matrix Tiling Splits:** 2x2, horizontal and vertical splits inside tabs with Broadcast Input mode.
+6. **Open Desktop Plugin SDK:** User-extendable plugins (`.shell-plugin` / `.pkit`) via sandboxed WebView IPC.
+
+---
+
+## 3. Strict Rules for All Agents
+
+1. **Context7 Rule:** Always fetch and adhere to up-to-date documentation for any library or API (`dartssh2`, `xterm.dart`, `drift`, `sqlcipher`, `flutter_riverpod`, `go_router`).
+2. **Package Isolation & Contract-First:** 
+   * Modifying packages must depend ONLY on abstractions from `packages/core_foundation/`.
+   * No direct cross-package dependencies between feature packages.
+3. **Zero Credentials Leakage:**
+   * Never output private keys, passwords, or tokens in logs or error messages.
+   * Ensure memory zeroization of decrypted keys after use.
+4. **Desktop vs. Mobile Hygiene:**
+   * Never import desktop-only dependencies (WebView2, FFI plugin loaders) into code compiled for mobile (Android/iOS). Use no-op stubs or conditional exports.
+5. **Realtime Bug Tracker Protocol:**
+   * Any detected bug or breaking issue must be immediately registered in `docs/BUGS_AND_ISSUES.md`.
+   * When resolved, update status to `RESOLVED`, add regression unit test, and describe root cause and fix.
+6. **Checklist & Chronicle Protocol:**
+   * Mark completed tasks in `docs/CHECKLIST.md`.
+   * Invoke `chronicle_writer` or update `docs/CHRONICLE.md` upon completing milestones or major fixes.
+
+---
+
+## 4. Key Commands
+
+```bash
+# Analyze all packages
+flutter analyze
+
+# Run unit tests across packages
+flutter test
+
+# Format code
+dart format .
+```

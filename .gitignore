@@ -1,0 +1,148 @@
+# ==============================================================================
+# Shellit — Git Ignore Configuration (Flutter & Dart Monorepo)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Dart & Flutter Build Artifacts and Caches
+# ------------------------------------------------------------------------------
+**/.dart_tool/
+**/build/
+**/.pub/
+**/.pub-cache/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/coverage/
+**/doc/api/
+**/.packages
+
+# Symbolication & Obfuscation
+**/app.*.symbols
+**/app.*.map.json
+
+# ------------------------------------------------------------------------------
+# Operating System & File System Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+*$*
+*~
+
+# ------------------------------------------------------------------------------
+# IDEs, Editors & Tooling
+# ------------------------------------------------------------------------------
+# JetBrains / Android Studio
+.idea/
+**/.idea/
+*.iml
+**/*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+**/.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Editors miscellaneous
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.atom/
+
+# ------------------------------------------------------------------------------
+# Android Platform Artifacts
+# ------------------------------------------------------------------------------
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/**/build/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/*.apk
+**/*.aab
+
+# Keystores & Signing
+**/*.keystore
+**/*.jks
+
+# ------------------------------------------------------------------------------
+# iOS & macOS Platform Artifacts
+# ------------------------------------------------------------------------------
+**/ios/Flutter/.last_build_id
+**/macos/Flutter/ephemeral/
+**/ios/Pods/
+**/macos/Pods/
+**/.symlinks/
+**/profile
+**/xcuserdata/
+**/*.xcworkspace/xcuserdata/
+**/DerivedData/
+**/*.moved-aside
+**/*.ipa
+**/*.xcuserstate
+
+# CocoaPods
+Pods/
+**/Pods/
+
+# ------------------------------------------------------------------------------
+# Windows Platform Artifacts
+# ------------------------------------------------------------------------------
+**/windows/flutter/ephemeral/
+**/*.vcxproj.user
+**/*.vcxproj.filters
+**/*.vcxproj.idb
+**/*.vcxproj.pdb
+
+# ------------------------------------------------------------------------------
+# Linux Platform Artifacts
+# ------------------------------------------------------------------------------
+**/linux/flutter/ephemeral/
+
+# ------------------------------------------------------------------------------
+# Security, Secrets & Sensitive Credentials
+# Zero Credentials Leakage Protocol
+# ------------------------------------------------------------------------------
+*.env
+*.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+known_hosts
+authorized_keys
+
+# Local Databases and SQLCipher Test Dumps
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Log Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ------------------------------------------------------------------------------
+# Agent / Scratch Directories
+# ------------------------------------------------------------------------------
+.antigravity/scratch/
+.gemini/

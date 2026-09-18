@@ -1,0 +1,23 @@
+name: terminal_ui
+description: Cross-platform Terminal UI, renderer, design system and responsive app shell for Shellit.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core_foundation:
+    path: ../core_foundation
+  flutter_riverpod: ^2.5.1
+  xterm: ^4.0.0
+  flutter_svg: ^2.0.17
+  meta: ^1.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0

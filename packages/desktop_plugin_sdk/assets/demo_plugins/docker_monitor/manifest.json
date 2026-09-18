@@ -1,0 +1,14 @@
+{
+  "id": "com.shellit.docker-monitor",
+  "name": "Docker Container Monitor",
+  "version": "1.0.0",
+  "author": "Shellit Team",
+  "description": "Отображает статус контейнеров на удаленном хосте в боковой панели, позволяет запускать, останавливать, перезапускать и просматривать логи",
+  "entryPoint": "index.html",
+  "target": "sidebar",
+  "permissions": [
+    "terminal:execute",
+    "notifications:show"
+  ],
+  "minAppVersion": "1.0.0"
+}

@@ -1,0 +1,22 @@
+name: storage_vault
+description: Secure storage, vault encryption (Argon2id, SQLCipher/AES), and database repositories for Shellit.
+version: 0.1.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  core_foundation:
+    path: ../core_foundation
+  cryptography: ^2.7.0
+  drift: ^2.20.0
+  sqlite3: ^2.4.0
+  path: ^1.9.0
+  meta: ^1.11.0
+
+dev_dependencies:
+  build_runner: ^2.4.8
+  drift_dev: ^2.20.0
+  lints: ^3.0.0
+  test: ^1.24.0
