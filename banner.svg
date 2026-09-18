@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <defs>
+    <!-- Background Radial Gradient -->
+    <radialGradient id="bgGlow" cx="80%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#141933"/>
+      <stop offset="45%" stop-color="#0b0e1e"/>
+      <stop offset="100%" stop-color="#06050b"/>
+    </radialGradient>
+
+    <!-- Project Accent Gradient (Electric Cyan -> Indigo -> Cosmic Violet) -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#c084fc"/>
+    </linearGradient>
+
+    <!-- Glassmorphic Card Background Gradient -->
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#161b2e" stop-opacity="0.90"/>
+      <stop offset="100%" stop-color="#0d1120" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Non-fading Card Border Gradient (min opacity >= 0.65) -->
+    <linearGradient id="cardBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.90"/>
+      <stop offset="50%" stop-color="#818cf8" stop-opacity="0.80"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.70"/>
+    </linearGradient>
+
+    <!-- Subtle Badge Border Gradient -->
+    <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.80"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.65"/>
+    </linearGradient>
+
+    <!-- Button Gradient -->
+    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+
+    <!-- Ambient Glow Blurs -->
+    <filter id="ambientBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="80"/>
+    </filter>
+
+    <filter id="btnGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="dotGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Clip Path for Interactive UI Card -->
+    <clipPath id="cardClip">
+      <rect width="470" height="410" rx="16"/>
+    </clipPath>
+  </defs>
+
+  <!-- 1. Background Fill -->
+  <rect width="1280" height="640" fill="url(#bgGlow)"/>
+
+  <!-- 2. Ambient Atmosphere Blobs -->
+  <circle cx="980" cy="200" r="180" fill="#38bdf8" opacity="0.12" filter="url(#ambientBlur)"/>
+  <circle cx="1080" cy="420" r="150" fill="#a855f7" opacity="0.10" filter="url(#ambientBlur)"/>
+
+  <!-- 3. Precise Guide Lines (Grid) -->
+  <line x1="80" y1="0" x2="80" y2="640" stroke="#334155" stroke-opacity="0.35" stroke-dasharray="4 4" stroke-width="1"/>
+  <line x1="1200" y1="0" x2="1200" y2="640" stroke="#334155" stroke-opacity="0.35" stroke-dasharray="4 4" stroke-width="1"/>
+  <line x1="0" y1="100" x2="1280" y2="100" stroke="#334155" stroke-opacity="0.35" stroke-dasharray="4 4" stroke-width="1"/>
+  <line x1="0" y1="540" x2="1280" y2="540" stroke="#334155" stroke-opacity="0.35" stroke-dasharray="4 4" stroke-width="1"/>
+
+  <!-- ================================================================= -->
+  <!-- 4. LEFT COLUMN: Content & Typography (translate: 100, 145)         -->
+  <!-- ================================================================= -->
+  <g transform="translate(100, 145)">
+    <!-- Category / Top Badge -->
+    <g transform="translate(0, 0)">
+      <rect width="288" height="34" rx="17" fill="#161e31" fill-opacity="0.75" stroke="url(#badgeBorder)" stroke-width="1"/>
+      <circle cx="20" cy="17" r="4" fill="#38bdf8" filter="url(#dotGlow)"/>
+      <text x="154" y="21.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#38bdf8" text-anchor="middle" letter-spacing="1">NEXT-GEN SSH &amp; SFTP CLIENT</text>
+    </g>
+
+    <!-- Main Project Title -->
+    <text x="0" y="98" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="64" font-weight="900" letter-spacing="-1.5" fill="url(#accentGrad)">Shellit</text>
+
+    <!-- Primary Slogan -->
+    <text x="0" y="148" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="600" fill="#f8fafc">Modern SSH, SFTP &amp; Server Management</text>
+
+    <!-- Secondary Explanatory Slogan -->
+    <text x="0" y="178" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="400" fill="#94a3b8">Live telemetry, environment protection &amp; zero-leak vault</text>
+
+    <!-- Metrics / Feature Pills Row (y = 222) -->
+    <!-- Pill 1: Live RTT -->
+    <g transform="translate(0, 222)">
+      <rect width="144" height="36" rx="8" fill="#111625" stroke="#334155" stroke-opacity="0.75" stroke-width="1"/>
+      <circle cx="22" cy="18" r="4" fill="#34d399" filter="url(#dotGlow)"/>
+      <text x="82" y="22.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#34d399" text-anchor="middle">18ms Live RTT</text>
+    </g>
+
+    <!-- Pill 2: PROD Guard -->
+    <g transform="translate(154, 222)">
+      <rect width="144" height="36" rx="8" fill="#111625" stroke="#334155" stroke-opacity="0.75" stroke-width="1"/>
+      <text x="72" y="22.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#f87171" text-anchor="middle">🛡️ PROD Guard</text>
+    </g>
+
+    <!-- Pill 3: AES-256 Vault -->
+    <g transform="translate(308, 222)">
+      <rect width="144" height="36" rx="8" fill="#111625" stroke="#334155" stroke-opacity="0.75" stroke-width="1"/>
+      <text x="72" y="22.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="700" fill="#a78bfa" text-anchor="middle">🔐 AES-256 Vault</text>
+    </g>
+
+    <!-- Tech Stack Tags Row (y = 278) -->
+    <!-- Tag 1: Flutter 3 -->
+    <g transform="translate(0, 278)">
+      <rect width="94" height="32" rx="6" fill="#0f172a" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+      <text x="47" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#cbd5e1" text-anchor="middle">Flutter 3</text>
+    </g>
+
+    <!-- Tag 2: DartSSH2 -->
+    <g transform="translate(104, 278)">
+      <rect width="102" height="32" rx="6" fill="#0f172a" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+      <text x="51" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#cbd5e1" text-anchor="middle">DartSSH2</text>
+    </g>
+
+    <!-- Tag 3: SQLCipher -->
+    <g transform="translate(216, 278)">
+      <rect width="108" height="32" rx="6" fill="#0f172a" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+      <text x="54" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#cbd5e1" text-anchor="middle">SQLCipher</text>
+    </g>
+
+    <!-- Tag 4: Win/macOS/Linux -->
+    <g transform="translate(334, 278)">
+      <rect width="118" height="32" rx="6" fill="#0f172a" fill-opacity="0.8" stroke="#1e293b" stroke-width="1"/>
+      <text x="59" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="600" fill="#cbd5e1" text-anchor="middle">Cross-Platform</text>
+    </g>
+  </g>
+
+  <!-- ================================================================= -->
+  <!-- 5. RIGHT COLUMN: Interactive UI Mockup (translate: 700, 95)       -->
+  <!-- ================================================================= -->
+  <g transform="translate(700, 95)">
+    <!-- Clipped Content Group (Painter's Model protection) -->
+    <g clip-path="url(#cardClip)">
+      <!-- Main Card Window Canvas -->
+      <rect width="470" height="410" fill="url(#cardBg)"/>
+
+      <!-- Window Titlebar / Navigation Tabs (height: 44) -->
+      <rect width="470" height="44" fill="#0b0f1a" fill-opacity="0.95"/>
+      <line x1="0" y1="44" x2="470" y2="44" stroke="#1e293b" stroke-width="1"/>
+
+      <!-- Window Controls (Traffic Lights) -->
+      <circle cx="24" cy="22" r="5" fill="#ef4444" fill-opacity="0.85"/>
+      <circle cx="40" cy="22" r="5" fill="#f59e0b" fill-opacity="0.85"/>
+      <circle cx="56" cy="22" r="5" fill="#10b981" fill-opacity="0.85"/>
+
+      <!-- Active Tab: prod-cluster-01 [PROD] -->
+      <g transform="translate(76, 7)">
+        <rect width="176" height="30" rx="6" fill="#151b2e" stroke="#334155" stroke-opacity="0.7" stroke-width="1"/>
+        <text x="14" y="19" font-family="monospace" font-size="11" font-weight="600" fill="#38bdf8">prod-edge-01</text>
+        <!-- Environment Badge in Tab -->
+        <g transform="translate(118, 5)">
+          <rect width="46" height="20" rx="4" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444" stroke-opacity="0.8" stroke-width="0.8"/>
+          <text x="23" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="800" fill="#fca5a5" text-anchor="middle">PROD</text>
+        </g>
+      </g>
+
+      <!-- Inactive Tab: stage-api-eu [STG] -->
+      <g transform="translate(260, 7)">
+        <rect width="138" height="30" rx="6" fill="#0f1422" fill-opacity="0.5"/>
+        <text x="14" y="19" font-family="monospace" font-size="11" font-weight="500" fill="#64748b">stage-api-eu</text>
+        <g transform="translate(92, 5)">
+          <rect width="36" height="20" rx="4" fill="#eab308" fill-opacity="0.15"/>
+          <text x="18" y="14" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="700" fill="#fde047" text-anchor="middle">STG</text>
+        </g>
+      </g>
+
+      <!-- Layout Split Button (2x2 Matrix indicator) -->
+      <g transform="translate(426, 12)">
+        <rect width="28" height="20" rx="4" fill="#1e293b" fill-opacity="0.75"/>
+        <rect x="5" y="4" width="7" height="5" rx="1" fill="#94a3b8"/>
+        <rect x="15" y="4" width="7" height="5" rx="1" fill="#94a3b8"/>
+        <rect x="5" y="11" width="7" height="5" rx="1" fill="#94a3b8"/>
+        <rect x="15" y="11" width="7" height="5" rx="1" fill="#94a3b8"/>
+      </g>
+
+      <!-- Host Telemetry & Connection Header Panel (y = 56) -->
+      <g transform="translate(18, 56)">
+        <rect width="434" height="64" rx="10" fill="#0f1424" stroke="#1e293b" stroke-width="1"/>
+
+        <!-- Server Label & Host Address -->
+        <text x="16" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#f8fafc">cloud-edge-frankfurt-01</text>
+        <text x="16" y="47" font-family="monospace" font-size="11" font-weight="500" fill="#64748b">ssh admin@10.0.4.128:22  [AES-256]</text>
+
+        <!-- Live RTT Ping Badge -->
+        <g transform="translate(242, 19)">
+          <rect width="88" height="26" rx="6" fill="#064e3b" fill-opacity="0.45" stroke="#059669" stroke-opacity="0.7" stroke-width="1"/>
+          <circle cx="14" cy="13" r="3.5" fill="#34d399" filter="url(#dotGlow)"/>
+          <text x="50" y="17" font-family="monospace" font-size="10.5" font-weight="700" fill="#34d399" text-anchor="middle">18ms RTT</text>
+        </g>
+
+        <!-- Guard Badge -->
+        <g transform="translate(338, 19)">
+          <rect width="82" height="26" rx="6" fill="#7f1d1d" fill-opacity="0.45" stroke="#ef4444" stroke-opacity="0.8" stroke-width="1"/>
+          <text x="41" y="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="800" fill="#fca5a5" text-anchor="middle">PROD LOCK</text>
+        </g>
+      </g>
+
+      <!-- Terminal Session Output Viewport (y = 130) -->
+      <g transform="translate(18, 130)">
+        <rect width="434" height="194" rx="10" fill="#070a13" stroke="#161f33" stroke-width="1"/>
+
+        <!-- Terminal Command 1 -->
+        <text x="16" y="28" font-family="monospace" font-size="11" fill="#34d399">root@edge-fra01<tspan fill="#64748b">:</tspan><tspan fill="#38bdf8">~#</tspan> <tspan fill="#f8fafc" font-weight="600">systemctl status cluster-gateway</tspan></text>
+
+        <!-- Service Output -->
+        <text x="16" y="52" font-family="monospace" font-size="10.5" fill="#94a3b8">● cluster-gateway.service - Shellit High-Speed Tunnel</text>
+        <text x="16" y="72" font-family="monospace" font-size="10.5" fill="#94a3b8">  Loaded: active (<tspan fill="#34d399" font-weight="700">running</tspan>) | Uptime: 42d 11h</text>
+        <text x="16" y="92" font-family="monospace" font-size="10.5" fill="#94a3b8">  CPU: <tspan fill="#38bdf8" font-weight="600">12.4%</tspan>  Mem: <tspan fill="#38bdf8" font-weight="600">1.8G / 16G</tspan>  SFTP: <tspan fill="#34d399" font-weight="600">Ready</tspan></text>
+
+        <!-- Inner Guard Alert Notification -->
+        <g transform="translate(16, 108)">
+          <rect width="402" height="30" rx="6" fill="#450a0a" fill-opacity="0.5" stroke="#ef4444" stroke-opacity="0.6" stroke-width="0.8"/>
+          <text x="12" y="19" font-family="monospace" font-size="10" fill="#fca5a5">🛡️ Guard: Destructive command confirmation active</text>
+        </g>
+
+        <!-- Next Active Terminal Prompt with Cursor -->
+        <text x="16" y="166" font-family="monospace" font-size="11" fill="#34d399">root@edge-fra01<tspan fill="#64748b">:</tspan><tspan fill="#38bdf8">~#</tspan> <tspan fill="#e2e8f0">docker stats --no-stream</tspan><tspan fill="#38bdf8" font-weight="900">_</tspan></text>
+      </g>
+
+      <!-- Bottom Interactive Action / Omni-Bar Button (y = 336) -->
+      <g transform="translate(18, 336)">
+        <!-- Neon Glow Backing -->
+        <rect width="434" height="48" rx="10" fill="url(#btnGrad)" opacity="0.4" filter="url(#btnGlow)"/>
+        <!-- Solid Button -->
+        <rect width="434" height="48" rx="10" fill="url(#btnGrad)"/>
+        <!-- Centered Button Label with Strict text-anchor="middle" & x="217" -->
+        <text x="217" y="29.5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13.5" font-weight="800" fill="#070a12" text-anchor="middle" letter-spacing="0.5">⚡ QUICK CONNECT &amp; OMNI-BAR  (Ctrl + K)</text>
+      </g>
+    </g>
+
+    <!-- CRITICAL RULE 1: Outer Stroke rendered AS THE LAST TAG to protect rounded corners -->
+    <rect x="0.75" y="0.75" width="468.5" height="408.5" rx="16" fill="none" stroke="url(#cardBorder)" stroke-width="1.5"/>
+  </g>
+</svg>

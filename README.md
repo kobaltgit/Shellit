@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.svg" alt="Shellit — Modern SSH, SFTP &amp; Server Hub" width="100%">
+</p>
+
 # Shellit ⚡
 
 > **Современный, безопасный и кроссплатформенный SSH-клиент, SFTP-менеджер и центр управления серверами нового поколения, созданный на Flutter & Dart.**
