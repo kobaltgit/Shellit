@@ -393,9 +393,11 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                 if (ok) {
                   Navigator.of(dialogCtx).pop();
                 } else {
+                  final err = ref.read(vaultProvider).errorMessage ??
+                      'Invalid master password';
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Invalid master password'),
+                    SnackBar(
+                      content: Text(err),
                       backgroundColor: ShellitColors.statusRed,
                     ),
                   );
@@ -417,9 +419,11 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   if (ok) {
                     Navigator.of(dialogCtx).pop();
                   } else {
+                    final err = ref.read(vaultProvider).errorMessage ??
+                        'Invalid master password';
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Invalid master password'),
+                      SnackBar(
+                        content: Text(err),
                         backgroundColor: ShellitColors.statusRed,
                       ),
                     );

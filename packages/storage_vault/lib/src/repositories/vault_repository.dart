@@ -608,6 +608,8 @@ class VaultRepository implements IVaultRepository {
               allowInsecureCertificates:
                   Value(settings.allowInsecureCertificates),
               lastSyncedAt: Value(settings.lastSyncedAt),
+              syncPassphrase: Value(settings.syncPassphrase),
+              registrationToken: Value(settings.registrationToken),
             ),
           );
       _cachedSettings = settings;
@@ -624,12 +626,16 @@ class VaultRepository implements IVaultRepository {
 
     if (!_securityContext.isUnlocked) return;
 
-    final settings = await getSettings();
-    if (settings.idleLockTimeoutMinutes > 0) {
-      _idleTimer = Timer(
-        Duration(minutes: settings.idleLockTimeoutMinutes),
-        () => lock(),
-      );
+    try {
+      final settings = await getSettings();
+      if (settings.idleLockTimeoutMinutes > 0) {
+        _idleTimer = Timer(
+          Duration(minutes: settings.idleLockTimeoutMinutes),
+          () => lock(),
+        );
+      }
+    } catch (_) {
+      // Non-critical: failure to read settings should not crash or prevent unlocking
     }
   }
 

@@ -63,9 +63,13 @@ class KeyManager implements IKeyManager {
               updatedAt: Value(key.updatedAt),
             ),
           );
-      await (_db.delete(_db.syncTombstonesTable)
-            ..where((t) => t.entityId.equals(key.id)))
-          .go();
+      try {
+        await (_db.delete(_db.syncTombstonesTable)
+              ..where((t) => t.entityId.equals(key.id)))
+            .go();
+      } catch (_) {
+        // Non-critical: tombstone deletion error should not fail key saving
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));
@@ -134,13 +138,17 @@ class KeyManager implements IKeyManager {
 
     try {
       await (_db.delete(_db.keysTable)..where((t) => t.id.equals(id))).go();
-      await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
-            SyncTombstonesTableCompanion(
-              entityId: Value(id),
-              entityType: const Value('key'),
-              deletedAt: Value(DateTime.now()),
-            ),
-          );
+      try {
+        await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
+              SyncTombstonesTableCompanion(
+                entityId: Value(id),
+                entityType: const Value('key'),
+                deletedAt: Value(DateTime.now()),
+              ),
+            );
+      } catch (_) {
+        // Non-critical: tombstone insertion error should not fail key deletion
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));

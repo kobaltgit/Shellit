@@ -113,3 +113,20 @@ final appSyncManagerProvider = Provider<SyncManager>((ref) {
   final syncCrypto = ref.watch(appSyncCryptoProvider);
   return SyncManager(db: db, syncCrypto: syncCrypto);
 });
+
+/// Key Generator Service Provider
+final appKeyGeneratorServiceProvider = Provider<KeyGeneratorService>((ref) {
+  return const KeyGeneratorService();
+});
+
+/// SSH Directory Discovery Service Provider
+final appSshDiscoveryServiceProvider = Provider<SshDirectoryDiscoveryService>((
+  ref,
+) {
+  return const SshDirectoryDiscoveryService();
+});
+
+/// SSH Key Deploy Service Provider (ssh-copy-id)
+final appSshKeyDeployServiceProvider = Provider<SshKeyDeployService>((ref) {
+  return const SshKeyDeployService();
+});

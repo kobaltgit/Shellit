@@ -54,9 +54,13 @@ class FolderRepository implements IFolderRepository {
               sortOrder: Value(folder.sortOrder),
             ),
           );
-      await (_db.delete(_db.syncTombstonesTable)
-            ..where((t) => t.entityId.equals(folder.id)))
-          .go();
+      try {
+        await (_db.delete(_db.syncTombstonesTable)
+              ..where((t) => t.entityId.equals(folder.id)))
+            .go();
+      } catch (_) {
+        // Non-critical: tombstone deletion error should not fail folder saving
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));
@@ -71,13 +75,17 @@ class FolderRepository implements IFolderRepository {
 
     try {
       await (_db.delete(_db.foldersTable)..where((t) => t.id.equals(id))).go();
-      await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
-            SyncTombstonesTableCompanion(
-              entityId: Value(id),
-              entityType: const Value('folder'),
-              deletedAt: Value(DateTime.now()),
-            ),
-          );
+      try {
+        await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
+              SyncTombstonesTableCompanion(
+                entityId: Value(id),
+                entityType: const Value('folder'),
+                deletedAt: Value(DateTime.now()),
+              ),
+            );
+      } catch (_) {
+        // Non-critical: tombstone insertion error should not fail folder deletion
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));

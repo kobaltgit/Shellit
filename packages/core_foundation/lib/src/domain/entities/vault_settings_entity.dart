@@ -18,6 +18,8 @@ class VaultSettingsEntity {
   final String? syncVaultId;
   final bool allowInsecureCertificates;
   final DateTime? lastSyncedAt;
+  final String? syncPassphrase;
+  final String? registrationToken;
 
   const VaultSettingsEntity({
     this.idleLockTimeoutMinutes = 15,
@@ -33,6 +35,8 @@ class VaultSettingsEntity {
     this.syncVaultId,
     this.allowInsecureCertificates = false,
     this.lastSyncedAt,
+    this.syncPassphrase,
+    this.registrationToken,
   });
 
   VaultSettingsEntity copyWith({
@@ -49,6 +53,8 @@ class VaultSettingsEntity {
     String? syncVaultId,
     bool? allowInsecureCertificates,
     DateTime? lastSyncedAt,
+    String? syncPassphrase,
+    String? registrationToken,
   }) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes:
@@ -67,6 +73,8 @@ class VaultSettingsEntity {
       allowInsecureCertificates:
           allowInsecureCertificates ?? this.allowInsecureCertificates,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      syncPassphrase: syncPassphrase ?? this.syncPassphrase,
+      registrationToken: registrationToken ?? this.registrationToken,
     );
   }
 
@@ -83,7 +91,9 @@ class VaultSettingsEntity {
           isSyncEnabled == other.isSyncEnabled &&
           syncVaultId == other.syncVaultId &&
           allowInsecureCertificates == other.allowInsecureCertificates &&
-          lastSyncedAt == other.lastSyncedAt;
+          lastSyncedAt == other.lastSyncedAt &&
+          syncPassphrase == other.syncPassphrase &&
+          registrationToken == other.registrationToken;
 
   @override
   int get hashCode => Object.hash(
@@ -96,5 +106,7 @@ class VaultSettingsEntity {
         syncVaultId,
         allowInsecureCertificates,
         lastSyncedAt,
+        syncPassphrase,
+        registrationToken,
       );
 }

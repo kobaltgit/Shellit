@@ -47,6 +47,14 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         if (settings.syncVaultId != null && settings.syncVaultId!.isNotEmpty) {
           _vaultIdController.text = settings.syncVaultId!;
         }
+        if (settings.syncPassphrase != null &&
+            settings.syncPassphrase!.isNotEmpty) {
+          _passphraseController.text = settings.syncPassphrase!;
+        }
+        if (settings.registrationToken != null &&
+            settings.registrationToken!.isNotEmpty) {
+          _tokenController.text = settings.registrationToken!;
+        }
         _allowInsecure = settings.allowInsecureCertificates;
         if (settings.lastSyncedAt != null) {
           _statusMessage =
@@ -55,6 +63,26 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         }
       });
     }
+  }
+
+  Future<void> _saveCurrentSettings({
+    DateTime? lastSyncedAt,
+    bool? isSyncEnabled,
+  }) async {
+    try {
+      final vaultRepo = ref.read(appVaultRepositoryProvider);
+      final current = await vaultRepo.getSettings();
+      final updated = current.copyWith(
+        syncServerUrl: _urlController.text.trim(),
+        syncVaultId: _vaultIdController.text.trim(),
+        syncPassphrase: _passphraseController.text,
+        registrationToken: _tokenController.text.trim(),
+        allowInsecureCertificates: _allowInsecure,
+        lastSyncedAt: lastSyncedAt ?? current.lastSyncedAt,
+        isSyncEnabled: isSyncEnabled ?? current.isSyncEnabled,
+      );
+      await vaultRepo.updateSettings(updated);
+    } catch (_) {}
   }
 
   String _formatDate(DateTime dt) {
@@ -76,6 +104,8 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
       _showMessage('Enter a Server URL first', isError: true);
       return;
     }
+
+    await _saveCurrentSettings();
 
     setState(() {
       _isSyncing = true;
@@ -122,6 +152,8 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
       return;
     }
 
+    await _saveCurrentSettings();
+
     setState(() {
       _isSyncing = true;
       _statusMessage = 'Synchronizing with server...';
@@ -147,6 +179,10 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
           _statusColor = ShellitColors.statusGreen;
           _showMessage(
             'Sync complete: ${summary.pulledCount} pulled, ${summary.pushedCount} pushed',
+          );
+          _saveCurrentSettings(
+            lastSyncedAt: DateTime.now(),
+            isSyncEnabled: true,
           );
         } else {
           _statusMessage = 'Sync failed: ${res.failureOrNull?.message}';
@@ -251,6 +287,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             // Server URL Field
             TextFormField(
               controller: _urlController,
+              onChanged: (_) => _saveCurrentSettings(),
               style: const TextStyle(
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
@@ -281,6 +318,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             // Vault ID Field
             TextFormField(
               controller: _vaultIdController,
+              onChanged: (_) => _saveCurrentSettings(),
               style: const TextStyle(
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
@@ -306,6 +344,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             // Sync Passphrase Field (Zero-Knowledge)
             TextFormField(
               controller: _passphraseController,
+              onChanged: (_) => _saveCurrentSettings(),
               obscureText: _obscurePassphrase,
               style: const TextStyle(
                 color: ShellitColors.textPrimary,
@@ -348,6 +387,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             // Optional Registration Token
             TextFormField(
               controller: _tokenController,
+              onChanged: (_) => _saveCurrentSettings(),
               style: const TextStyle(
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
@@ -391,13 +431,29 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
               ),
               value: _allowInsecure,
               activeThumbColor: ShellitColors.accentCyan,
-              onChanged: (val) => setState(() => _allowInsecure = val),
+              onChanged: (val) {
+                setState(() => _allowInsecure = val);
+                _saveCurrentSettings();
+              },
             ),
             const SizedBox(height: 14),
 
             // Actions
             Row(
               children: [
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await _saveCurrentSettings();
+                    _showMessage('Sync settings saved successfully');
+                  },
+                  icon: const Icon(Icons.save_outlined, size: 16),
+                  label: const Text('Save Settings'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ShellitColors.textPrimary,
+                    side: const BorderSide(color: ShellitColors.border),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: _isSyncing ? null : _testConnection,
                   icon: const Icon(Icons.network_check_rounded, size: 16),

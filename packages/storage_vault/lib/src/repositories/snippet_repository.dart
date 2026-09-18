@@ -51,9 +51,13 @@ class SnippetRepository implements ISnippetRepository {
               updatedAt: Value(snippet.updatedAt),
             ),
           );
-      await (_db.delete(_db.syncTombstonesTable)
-            ..where((t) => t.entityId.equals(snippet.id)))
-          .go();
+      try {
+        await (_db.delete(_db.syncTombstonesTable)
+              ..where((t) => t.entityId.equals(snippet.id)))
+            .go();
+      } catch (_) {
+        // Non-critical: tombstone deletion error should not fail snippet saving
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));
@@ -68,13 +72,17 @@ class SnippetRepository implements ISnippetRepository {
 
     try {
       await (_db.delete(_db.snippetsTable)..where((t) => t.id.equals(id))).go();
-      await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
-            SyncTombstonesTableCompanion(
-              entityId: Value(id),
-              entityType: const Value('snippet'),
-              deletedAt: Value(DateTime.now()),
-            ),
-          );
+      try {
+        await _db.into(_db.syncTombstonesTable).insertOnConflictUpdate(
+              SyncTombstonesTableCompanion(
+                entityId: Value(id),
+                entityType: const Value('snippet'),
+                deletedAt: Value(DateTime.now()),
+              ),
+            );
+      } catch (_) {
+        // Non-critical: tombstone insertion error should not fail snippet deletion
+      }
       return const Result.success(null);
     } catch (e) {
       return Result.error(VaultFailure.corrupted(e));

@@ -97,6 +97,8 @@ class VaultSettingsTable extends Table {
   BoolColumn get allowInsecureCertificates =>
       boolean().withDefault(const Constant(false))();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  TextColumn get syncPassphrase => text().nullable()();
+  TextColumn get registrationToken => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -134,7 +136,7 @@ class VaultDatabase extends _$VaultDatabase {
   VaultDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -157,6 +159,76 @@ class VaultDatabase extends _$VaultDatabase {
             ),
             mode: InsertMode.insertOrIgnore,
           );
+        },
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(syncTombstonesTable);
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.syncServerUrl);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.isSyncEnabled);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.syncVaultId);
+            } catch (_) {}
+            try {
+              await m.addColumn(vaultSettingsTable,
+                  vaultSettingsTable.allowInsecureCertificates);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.lastSyncedAt);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.syncPassphrase);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.registrationToken);
+            } catch (_) {}
+          }
+        },
+        beforeOpen: (details) async {
+          await customStatement('''
+            CREATE TABLE IF NOT EXISTS "sync_tombstones_table" (
+              "entity_id" TEXT NOT NULL PRIMARY KEY,
+              "entity_type" TEXT NOT NULL,
+              "deleted_at" INTEGER NOT NULL
+            );
+          ''');
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "sync_server_url" TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "is_sync_enabled" INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "sync_vault_id" TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "allow_insecure_certificates" INTEGER NOT NULL DEFAULT 0;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "last_synced_at" INTEGER;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "sync_passphrase" TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "registration_token" TEXT;');
+          } catch (_) {}
         },
       );
 }
@@ -282,6 +354,8 @@ extension VaultSettingsRecordMapper on VaultSettingsRecord {
       syncVaultId: syncVaultId,
       allowInsecureCertificates: allowInsecureCertificates,
       lastSyncedAt: lastSyncedAt,
+      syncPassphrase: syncPassphrase,
+      registrationToken: registrationToken,
     );
   }
 }
