@@ -337,6 +337,14 @@
   - [x] Полная изоляция от мобильной версии (Android/iOS не содержат плагинов и лишних UI-элементов).
   - [x] Соответствие принципу Zero Hardcoded Strings (`context.tr('plugins.mcp_short_name')`, `defaultEnglishStrings`, `ru.json`).
   - [x] Размещение готового архива `mcp_server.shellit` в корневом каталоге `plugins/` и документация в `plugins/README.md` и `README.md`.
-  - [x] Полное прохождение тестов (`flutter test` 140+ тестов, `flutter analyze` 0 предупреждений).
+  - [x] Фаза 12.1: Мультимониторный режим, Pop-out Window, Antigravity и эргономика (Релиз v0.7.1):
+  - [x] Независимое всплывающее окно логов активности ИИ (`logs.html`, `logs.js`) через запуск процесса `--app=http://127.0.0.1:<port>/logs.html` (Edge/Chrome) без браузерных рамок.
+  - [x] Прямые HTTP REST эндпоинты ядра: `GET /logs` (список аудитов JSON) и `POST /api/logs/clear` (очистка логов) в `McpServerService`.
+  - [x] Интерактивный ресайз боковой панели плагина мышкой (ручка drag handle 280–950px) и быстрое переключение 380px ⟷ 640px в `DesktopPluginHostView`.
+  - [x] Устранение залипания прокрутки колесика мыши над блоком `#logList` внутри WebView.
+  - [x] Экспорт и сохранение отчетов: кнопка «📥 Save Logs» (`.log` файл) и «📋 Copy All» (буфер обмена).
+  - [x] 1-клик генерация конфигурации для Google Antigravity (`~/.gemini/config/mcp_config.json`).
+  - [x] Обновление брендинга: официальный центрированный векторный логотип `icon.svg` и оформление шапки в `README.md`.
+  - [x] Релиз v0.7.1: успешный прогон всех тестов и статического анализа.
 
 

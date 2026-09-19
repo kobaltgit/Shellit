@@ -151,5 +151,27 @@ void main() {
 
       client.close();
     });
+
+    test('serves audit logs at /logs and clears them at /api/logs/clear', () async {
+      final client = HttpClient();
+
+      // 1. Fetch /logs
+      final getReq = await client.getUrl(Uri.parse('http://127.0.0.1:$testPort/logs'));
+      final getRes = await getReq.close();
+      expect(getRes.statusCode, equals(HttpStatus.ok));
+      final getBody = await utf8.decoder.bind(getRes).join();
+      final getJson = json.decode(getBody) as Map<String, dynamic>;
+      expect(getJson.containsKey('logs'), isTrue);
+
+      // 2. Clear via /api/logs/clear
+      final postReq = await client.postUrl(Uri.parse('http://127.0.0.1:$testPort/api/logs/clear'));
+      final postRes = await postReq.close();
+      expect(postRes.statusCode, equals(HttpStatus.ok));
+
+      // 3. Verify cleared
+      expect(server.auditLogs.isEmpty, isTrue);
+
+      client.close();
+    });
   });
 }

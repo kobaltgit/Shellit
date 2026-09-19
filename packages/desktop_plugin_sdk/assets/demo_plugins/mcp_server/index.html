@@ -254,12 +254,22 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      max-height: 220px;
+      min-height: 140px;
+      height: 240px;
+      resize: vertical;
       overflow-y: auto;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px;
+    }
+
+    .log-list.expanded {
+      height: 480px;
     }
 
     .log-item {
-      background: var(--bg-base);
+      background: var(--bg-card);
       border-left: 3px solid var(--accent-cyan);
       border-radius: 0 4px 4px 0;
       padding: 6px 8px;
@@ -347,14 +357,18 @@
     <div class="card">
       <div class="card-title">1-Click Client Configuration</div>
       <div class="row-split">
-        <button id="copyCursorBtn" class="btn btn-primary" style="flex: 1;">⚡ Copy Cursor Config</button>
-        <button id="copyClaudeBtn" class="btn" style="flex: 1;">🟣 Claude Config</button>
+        <button id="copyAntigravityBtn" class="btn btn-primary" style="flex: 1.2;" title="Copy configuration for Google Antigravity (~/.gemini/config/mcp_config.json)">⚡ Antigravity Config</button>
+        <button id="copyClaudeBtn" class="btn" style="flex: 0.8;" title="Copy configuration for Claude Desktop">🟣 Claude Config</button>
+      </div>
+      <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">
+        Snippet for <code>~/.gemini/config/mcp_config.json</code>:
       </div>
       <pre id="configCode" class="config-code">{
   "mcpServers": {
     "shellit": {
       "type": "sse",
-      "url": "http://127.0.0.1:4422/sse"
+      "url": "http://127.0.0.1:4422/sse",
+      "serverUrl": "http://127.0.0.1:4422/sse"
     }
   }
 }</pre>
@@ -377,10 +391,15 @@
     <div class="card">
       <div class="card-title">
         <span>Live AI Activity Log</span>
-        <button id="clearLogsBtn" style="background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer;">Clear</button>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <button id="popoutLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Open detached log monitor on second monitor">⤢ Pop-out</button>
+          <button id="exportLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px;" title="Save logs to .log file">📥 Save</button>
+          <button id="copyLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px;" title="Copy all logs">📋 Copy</button>
+          <button id="clearLogsBtn" style="background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 4px;">Clear</button>
+        </div>
       </div>
       <div id="logList" class="log-list">
-        <div class="empty-logs">Waiting for incoming tool calls from Cursor, Windsurf, or Claude...</div>
+        <div class="empty-logs">Waiting for incoming tool calls from Antigravity, Claude, Cursor...</div>
       </div>
     </div>
   </div>

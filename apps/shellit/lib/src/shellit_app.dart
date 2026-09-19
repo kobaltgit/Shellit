@@ -6,6 +6,7 @@ import 'package:terminal_ui/terminal_ui.dart';
 import 'controllers/session_connect_controller.dart';
 import 'localization/localization_providers.dart';
 import 'mcp/mcp_icon.dart';
+import 'mcp/mcp_provider.dart';
 import 'plugins/desktop_plugin_host_view.dart';
 import 'plugins/plugin_manager_provider.dart';
 import 'screens/keychain/keychain_screen.dart';
@@ -28,6 +29,11 @@ class ShellitApp extends ConsumerWidget {
     final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
     final effectiveLocale = isMobilePlatform ? 'en' : activeLocale;
+
+    // Automatically start MCP Server on desktop platforms
+    if (!isMobilePlatform) {
+      ref.watch(mcpServerServiceProvider);
+    }
 
     return LocalizationScope(
       service: localizationService,

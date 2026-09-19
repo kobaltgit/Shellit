@@ -1,6 +1,6 @@
 name: desktop_plugin_sdk
 description: Desktop Plugin SDK and extensibility runtime for Shellit SSH client.
-version: 0.1.0
+version: 0.1.1
 publish_to: 'none'
 
 environment:

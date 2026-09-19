@@ -16,13 +16,18 @@
   const portInput = document.getElementById('portInput');
   const toggleBtn = document.getElementById('toggleBtn');
   const clientsCount = document.getElementById('clientsCount');
-  const copyCursorBtn = document.getElementById('copyCursorBtn');
+  const copyAntigravityBtn = document.getElementById('copyAntigravityBtn');
   const copyClaudeBtn = document.getElementById('copyClaudeBtn');
   const configCode = document.getElementById('configCode');
   const protectProdCheck = document.getElementById('protectProdCheck');
   const notifyCallsCheck = document.getElementById('notifyCallsCheck');
+  const popoutLogsBtn = document.getElementById('popoutLogsBtn');
+  const exportLogsBtn = document.getElementById('exportLogsBtn');
+  const copyLogsBtn = document.getElementById('copyLogsBtn');
   const clearLogsBtn = document.getElementById('clearLogsBtn');
   const logList = document.getElementById('logList');
+
+  let currentAuditLogs = [];
 
   // JSON-RPC 2.0 Call Helper
   function callRpc(method, params = {}) {
@@ -104,6 +109,7 @@
           shellit: {
             type: 'sse',
             url: sseUrl,
+            serverUrl: sseUrl,
           },
         },
       },
@@ -131,19 +137,20 @@
     try {
       const res = await callRpc('mcp.getAuditLogs');
       if (res && Array.isArray(res.logs)) {
-        renderLogs(res.logs);
+        currentAuditLogs = res.logs;
+        renderLogs(currentAuditLogs);
       }
     } catch (_) {}
   }
 
   function renderLogs(logs) {
     if (!logs || logs.length === 0) {
-      logList.innerHTML = '<div class="empty-logs">Waiting for incoming tool calls from Cursor, Windsurf, or Claude...</div>';
+      logList.innerHTML = '<div class="empty-logs">Waiting for incoming tool calls from Antigravity, Claude, Cursor...</div>';
       return;
     }
 
     logList.innerHTML = '';
-    logs.slice(0, 30).forEach((entry) => {
+    logs.slice(0, 50).forEach((entry) => {
       const item = document.createElement('div');
       item.className = 'log-item' + (entry.isSuccess ? '' : ' error');
 
@@ -175,6 +182,29 @@
       .replace(/"/g, '&quot;');
   }
 
+  function formatLogsAsText(logs) {
+    return logs
+      .map((entry) => {
+        const time = entry.timestamp ? new Date(entry.timestamp).toISOString() : '';
+        const status = entry.isSuccess ? 'SUCCESS' : 'FAILED';
+        const client = entry.clientName || 'AI Client';
+        const tool = entry.toolName || 'tool';
+        const args = JSON.stringify(entry.arguments || {}, null, 2);
+        const result = entry.errorMessage || entry.resultSnippet || '';
+
+        return [
+          `================================================================================`,
+          `[${time}] [${status}] [${client}] TOOL: ${tool}`,
+          `ARGUMENTS:`,
+          args,
+          `RESULT / OUTPUT:`,
+          result,
+          `================================================================================\n`,
+        ].join('\n');
+      })
+      .join('\n');
+  }
+
   function copyToClipboard(text, notice) {
     navigator.clipboard.writeText(text).then(() => {
       callRpc('notifications.show', {
@@ -201,8 +231,8 @@
     copyToClipboard(`http://127.0.0.1:${currentPort}/sse`, 'Copied MCP SSE URL to clipboard');
   });
 
-  copyCursorBtn.addEventListener('click', () => {
-    copyToClipboard(configCode.textContent, 'Copied Cursor MCP configuration');
+  copyAntigravityBtn.addEventListener('click', () => {
+    copyToClipboard(configCode.textContent, 'Copied Antigravity MCP configuration');
   });
 
   copyClaudeBtn.addEventListener('click', () => {
@@ -219,6 +249,56 @@
     );
     copyToClipboard(claudeJson, 'Copied Claude Desktop configuration');
   });
+
+  popoutLogsBtn.addEventListener('click', () => {
+    callRpc('mcp.openDetachedLogs').catch(() => {
+      window.open('logs.html', 'ShellitMcpLogs', 'width=1020,height=740');
+    });
+  });
+
+  exportLogsBtn.addEventListener('click', () => {
+    if (currentAuditLogs.length === 0) {
+      callRpc('notifications.show', {
+        title: 'Shellit MCP Server',
+        message: 'No logs to export',
+      });
+      return;
+    }
+    const logText = formatLogsAsText(currentAuditLogs);
+    const blob = new Blob([logText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    a.href = url;
+    a.download = `shellit-ai-activity-${timestamp}.log`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    callRpc('notifications.show', {
+      title: 'Shellit MCP Server',
+      message: 'Saved logs to file',
+    });
+  });
+
+  copyLogsBtn.addEventListener('click', () => {
+    if (currentAuditLogs.length === 0) {
+      callRpc('notifications.show', {
+        title: 'Shellit MCP Server',
+        message: 'No logs to copy',
+      });
+      return;
+    }
+    const logText = formatLogsAsText(currentAuditLogs);
+    copyToClipboard(logText, `Copied ${currentAuditLogs.length} log entries`);
+  });
+
+  if (logList) {
+    logList.addEventListener('wheel', (e) => {
+      e.stopPropagation();
+      logList.scrollTop += e.deltaY;
+    }, { passive: false });
+  }
 
   toggleBtn.addEventListener('click', async () => {
     const desiredRunning = !isRunning;
@@ -240,6 +320,7 @@
 
   clearLogsBtn.addEventListener('click', () => {
     callRpc('mcp.clearLogs');
+    currentAuditLogs = [];
     renderLogs([]);
   });
 

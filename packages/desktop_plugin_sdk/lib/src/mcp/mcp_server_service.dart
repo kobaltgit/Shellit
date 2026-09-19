@@ -124,6 +124,20 @@ class McpServerService {
         'activeClients': _connectedSseClients.length,
       }));
       await response.close();
+    } else if (request.method == 'GET' &&
+        (path == '/logs' || path == '/api/logs')) {
+      response.statusCode = HttpStatus.ok;
+      response.headers.contentType = ContentType.json;
+      response.write(json.encode({
+        'logs': _auditLogs.map((e) => e.toJson()).toList(),
+      }));
+      await response.close();
+    } else if (request.method == 'POST' && path == '/api/logs/clear') {
+      clearAuditLogs();
+      response.statusCode = HttpStatus.ok;
+      response.headers.contentType = ContentType.json;
+      response.write(json.encode({'status': 'cleared'}));
+      await response.close();
     } else {
       response.statusCode = HttpStatus.notFound;
       response.write('Not found: $path');

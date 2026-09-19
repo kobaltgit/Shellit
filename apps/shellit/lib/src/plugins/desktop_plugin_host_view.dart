@@ -203,6 +203,46 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
       mcp.clearAuditLogs();
       return {'status': 'cleared'};
     });
+
+    // 7. mcp.openDetachedLogs
+    bridge.registerHandler('mcp.openDetachedLogs', (pluginId, params) async {
+      final staticPort = _staticServer.port;
+      if (staticPort == null) {
+        return {'error': 'Plugin static server is not running'};
+      }
+      final url = 'http://127.0.0.1:$staticPort/logs.html';
+
+      if (Platform.isWindows) {
+        // Launch in standalone app mode via Edge or Chrome (borderless window, draggable to other monitors)
+        const browserPaths = [
+          r'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe',
+          r'C:\Program Files\Microsoft\Edge\Application\msedge.exe',
+          r'C:\Program Files\Google\Chrome\Application\chrome.exe',
+        ];
+
+        for (final exe in browserPaths) {
+          if (File(exe).existsSync()) {
+            try {
+              await Process.start(exe, [
+                '--app=$url',
+                '--window-size=1020,740',
+              ]);
+              return {'status': 'opened', 'mode': 'app', 'browser': exe};
+            } catch (_) {}
+          }
+        }
+
+        // Fallback to system default browser
+        Process.run('cmd', ['/c', 'start', '', url]);
+        return {'status': 'opened', 'mode': 'browser'};
+      } else if (Platform.isMacOS) {
+        Process.run('open', [url]);
+        return {'status': 'opened', 'mode': 'browser'};
+      } else {
+        Process.run('xdg-open', [url]);
+        return {'status': 'opened', 'mode': 'browser'};
+      }
+    });
   }
 
   void _handleIncomingFromPlugin(dynamic raw) {
@@ -225,23 +265,38 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
     }
   }
 
+  double _sidebarWidth = 380.0;
+  bool _isExpanded = false;
+
   void _handlePointerScroll(double deltaY) {
     if (!_isInitialized) return;
     try {
       _controller.executeScript('''
         (() => {
-          const modal = document.querySelector('.modal.active');
-          if (modal) {
-            const logs = document.getElementById('logsTerminal');
-            if (logs) logs.scrollTop += $deltaY;
-            return;
+          // 1. Try hovered element or its closest scrollable parent
+          let el = document.querySelector(':hover');
+          while (el && el !== document.body && el !== document.documentElement) {
+            const style = window.getComputedStyle(el);
+            const oy = style.overflowY;
+            if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) {
+              el.scrollTop += $deltaY;
+              return;
+            }
+            el = el.parentElement;
           }
-          const list = document.getElementById('containerList');
-          if (list) {
-            list.scrollTop += $deltaY;
-          } else {
-            window.scrollBy({ top: $deltaY, behavior: 'auto' });
+
+          // 2. Specific check for logList if hover was inside it
+          const hoveredLog = document.querySelector('#logList:hover, #logList *:hover');
+          if (hoveredLog) {
+            const logList = document.getElementById('logList');
+            if (logList) {
+              logList.scrollTop += $deltaY;
+              return;
+            }
           }
+
+          // 3. Main window scroll
+          window.scrollBy({ top: $deltaY, behavior: 'auto' });
         })();
       ''');
     } catch (_) {}
@@ -301,121 +356,176 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
     final activeTab = ref.watch(sessionManagerProvider).activeTab;
     final hostLabel = activeTab?.host?.label ?? defaultNoSession;
 
-    return Container(
-      width: 340,
-      decoration: const BoxDecoration(
-        color: ShellitColors.obsidianBackground,
-        border: Border(left: BorderSide(color: ShellitColors.border)),
-      ),
-      child: Column(
+    return SizedBox(
+      width: _sidebarWidth,
+      child: Stack(
         children: [
-          // Sub-header showing which server the plugin is bound to
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: const BoxDecoration(
-              color: ShellitColors.obsidianCard,
-              border: Border(bottom: BorderSide(color: ShellitColors.border)),
+              color: ShellitColors.obsidianBackground,
+              border: Border(left: BorderSide(color: ShellitColors.border)),
             ),
-            child: Row(
+            child: Column(
               children: [
+                // Sub-header showing which server the plugin is bound to
                 Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: ShellitColors.accentCyan.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: ShellitColors.obsidianCard,
+                    border:
+                        Border(bottom: BorderSide(color: ShellitColors.border)),
                   ),
-                  child: const Icon(
-                    Icons.developer_board_outlined,
-                    color: ShellitColors.accentCyan,
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        widget.plugin.manifest.name,
-                        style: const TextStyle(
-                          color: ShellitColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color:
+                              ShellitColors.accentCyan.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        context.tr(
-                          'plugins.target_host',
-                          defaultText: 'Target: {host}',
-                          params: {'host': hostLabel},
-                        ),
-                        style: const TextStyle(
+                        child: const Icon(
+                          Icons.developer_board_outlined,
                           color: ShellitColors.accentCyan,
-                          fontSize: 10,
+                          size: 14,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.plugin.manifest.name,
+                              style: const TextStyle(
+                                color: ShellitColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              context.tr(
+                                'plugins.target_host',
+                                defaultText: 'Target: {host}',
+                                params: {'host': hostLabel},
+                              ),
+                              style: const TextStyle(
+                                color: ShellitColors.accentCyan,
+                                fontSize: 10,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isExpanded
+                              ? Icons.fullscreen_exit
+                              : Icons.open_in_full,
+                          size: 14,
+                        ),
+                        color: ShellitColors.textMuted,
+                        tooltip: _isExpanded ? 'Collapse' : 'Expand width',
+                        splashRadius: 16,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 24,
+                          minHeight: 24,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isExpanded = !_isExpanded;
+                            _sidebarWidth = _isExpanded ? 640.0 : 380.0;
+                          });
+                        },
+                      ),
+                      if (widget.onClose != null)
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          color: ShellitColors.textMuted,
+                          splashRadius: 16,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 24,
+                            minHeight: 24,
+                          ),
+                          onPressed: widget.onClose,
+                        ),
                     ],
                   ),
                 ),
-                if (widget.onClose != null)
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 16),
-                    color: ShellitColors.textMuted,
-                    splashRadius: 16,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(
-                      minWidth: 24,
-                      minHeight: 24,
-                    ),
-                    onPressed: widget.onClose,
-                  ),
+
+                // Main WebView Body with mouse wheel scrolling support
+                Expanded(
+                  child: _errorMessage != null
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              _errorKey != null
+                                  ? context.tr(
+                                      _errorKey!,
+                                      defaultText: _errorMessage,
+                                      params: _errorParam != null
+                                          ? {'error': _errorParam!}
+                                          : null,
+                                    )
+                                  : _errorMessage!,
+                              style: const TextStyle(
+                                color: ShellitColors.textSecondary,
+                                fontSize: 12,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      : !_isInitialized
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: ShellitColors.accentCyan,
+                          ),
+                        )
+                      : Listener(
+                          onPointerSignal: (event) {
+                            if (event is PointerScrollEvent) {
+                              _handlePointerScroll(event.scrollDelta.dy);
+                            }
+                          },
+                          child: Webview(_controller),
+                        ),
+                ),
               ],
             ),
           ),
 
-          // Main WebView Body with mouse wheel scrolling support
-          Expanded(
-            child: _errorMessage != null
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        _errorKey != null
-                            ? context.tr(
-                                _errorKey!,
-                                defaultText: _errorMessage,
-                                params: _errorParam != null
-                                    ? {'error': _errorParam!}
-                                    : null,
-                              )
-                            : _errorMessage!,
-                        style: const TextStyle(
-                          color: ShellitColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                : !_isInitialized
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: ShellitColors.accentCyan,
-                    ),
-                  )
-                : Listener(
-                    onPointerSignal: (event) {
-                      if (event is PointerScrollEvent) {
-                        _handlePointerScroll(event.scrollDelta.dy);
-                      }
-                    },
-                    child: Webview(_controller),
-                  ),
+          // Left-side horizontal resize drag handle
+          Positioned(
+            left: 0,
+            top: 0,
+            bottom: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onHorizontalDragUpdate: (details) {
+                setState(() {
+                  _sidebarWidth =
+                      (_sidebarWidth - details.delta.dx).clamp(280.0, 950.0);
+                  _isExpanded = _sidebarWidth > 500.0;
+                });
+              },
+              child: MouseRegion(
+                cursor: SystemMouseCursors.resizeLeftRight,
+                child: Container(
+                  width: 6,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
           ),
         ],
       ),
