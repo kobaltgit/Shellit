@@ -2,15 +2,23 @@
   <img src="banner.svg" alt="Shellit — Modern SSH, SFTP &amp; Server Hub" width="100%">
 </p>
 
-# Shellit ⚡
+<p align="center">
+  <img src="icon.svg" alt="Shellit Logo" width="100" height="100">
+</p>
 
-> **Современный, безопасный и кроссплатформенный SSH-клиент, SFTP-менеджер и центр управления серверами нового поколения, созданный на Flutter & Dart.**
+<h1 align="center">Shellit</h1>
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.12%2B-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Dart](https://img.shields.io/badge/Dart-3.12%2B-0175C2?logo=dart&logoColor=white)](https://dart.dev)
-[![Security](https://img.shields.io/badge/Security-AES--256%20%7C%20Argon2id-critical)](docs/AGENTS_MASTER_GUIDE.md)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-informational)](system-context.md)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+<p align="center">
+  <strong>Современный, безопасный и кроссплатформенный SSH-клиент, SFTP-менеджер и центр управления серверами нового поколения, созданный на Flutter &amp; Dart.</strong>
+</p>
+
+<p align="center">
+  <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.12%2B-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
+  <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.12%2B-0175C2?logo=dart&logoColor=white" alt="Dart"></a>
+  <a href="docs/AGENTS_MASTER_GUIDE.md"><img src="https://img.shields.io/badge/Security-AES--256%20%7C%20Argon2id-critical" alt="Security"></a>
+  <a href="system-context.md"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-informational" alt="Platform"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
+</p>
 
 ---
 
@@ -70,11 +78,13 @@
 Shellit поддерживает динамическую установку плагинов и языковых пакетов (`.shellit`) на лету без перезагрузки приложения.
 
 ### 📦 Каталог расширений:
-* 🤖 **[MCP Server Plugin (`plugins/mcp_server.shellit`)](plugins/mcp_server.shellit)** — встроенный AI Gateway для Cursor, Claude и Windsurf со шлюзом безопасности PROD Guard *(поставляется «из коробки»)*.
-* 🐳 **[Docker Monitor (`plugins/docker_monitor.shellit`)](plugins/docker_monitor.shellit)** — мониторинг контейнеров и логов в реальном времени *(поставляется «из коробки»)*.
-* 🌐 **[Russian Language Pack (`plugins/russian_lang_pack.shellit`)](plugins/russian_lang_pack.shellit)** — 100% русский перевод интерфейса (527+ ключей).
+
+- 🤖 **[MCP Server Plugin (`plugins/mcp_server.shellit`)](plugins/mcp_server.shellit)** — встроенный AI Gateway для Cursor, Claude и Windsurf со шлюзом безопасности PROD Guard _(поставляется «из коробки»)_.
+- 🐳 **[Docker Monitor (`plugins/docker_monitor.shellit`)](plugins/docker_monitor.shellit)** — мониторинг контейнеров и логов в реальном времени _(поставляется «из коробки»)_.
+- 🌐 **[Russian Language Pack (`plugins/russian_lang_pack.shellit`)](plugins/russian_lang_pack.shellit)** — 100% русский перевод интерфейса (527+ ключей).
 
 #### Инструкция по установке:
+
 1. Скачайте нужный `.shellit` файл из папки [**`plugins/`**](plugins/).
 2. В приложении Shellit откройте боковое меню **«Плагины»** (Plugins).
 3. Нажмите кнопку **«Установить .shellit»** (Install .shellit) в правом верхнем углу и выберите файл.
@@ -105,16 +115,17 @@ Shellit/
 └── docs/                           # Центр координации и документации проекта
 ```
 
-> **Правило изоляции:** Любой пакет зависит *только* от абстракций `packages/core_foundation/`. Прямые перекрестные зависимости между фича-пакетами запрещены.
+> **Правило изоляции:** Любой пакет зависит _только_ от абстракций `packages/core_foundation/`. Прямые перекрестные зависимости между фича-пакетами запрещены.
 
 ---
 
 ## 🚀 Быстрый старт
 
 ### Требования
-* **Flutter SDK**: `>= 3.12.0`
-* **Dart SDK**: `>= 3.12.0`
-* Поддерживаемые десктопные среды: Windows 10/11, macOS (12+), Linux (Ubuntu 22.04+ / Debian / Fedora)
+
+- **Flutter SDK**: `>= 3.12.0`
+- **Dart SDK**: `>= 3.12.0`
+- Поддерживаемые десктопные среды: Windows 10/11, macOS (12+), Linux (Ubuntu 22.04+ / Debian / Fedora)
 
 ### 1. Клонирование и получение зависимостей
 
@@ -158,17 +169,18 @@ flutter test
 Shellit не привязывает вас к проприетарным платным облакам. Вы можете развернуть собственный легковесный сервер синхронизации на любом домашнем сервере или VPS всего за 60 секунд.
 
 ### 🛡️ Архитектура Zero-Knowledge
-* **Клиентское шифрование:** Все хосты, приватные ключи, сниппеты и папки шифруются алгоритмом **AES-256-GCM**. Ключ деривируется из вашей кодовой фразы (Passphrase) через **Argon2id**.
-* **Слепой сервер:** На сервер отправляется только слепой хэш `authHash` и зашифрованные бинарные строки. Владелец сервера не может прочитать даже названия хостов.
-* **Tombstones & LWW:** Удаления отслеживаются «надгробиями», а конфликты разрешаются по правилу Last-Write-Wins (Pull-Then-Push).
-* **Свобода транспорта:** Сервер работает как по чистому `http://` (внутри WireGuard, Tailscale или домашней сети без возни с доменами и SSL), так и по `https://` (включая самоподписанные сертификаты).
+
+- **Клиентское шифрование:** Все хосты, приватные ключи, сниппеты и папки шифруются алгоритмом **AES-256-GCM**. Ключ деривируется из вашей кодовой фразы (Passphrase) через **Argon2id**.
+- **Слепой сервер:** На сервер отправляется только слепой хэш `authHash` и зашифрованные бинарные строки. Владелец сервера не может прочитать даже названия хостов.
+- **Tombstones & LWW:** Удаления отслеживаются «надгробиями», а конфликты разрешаются по правилу Last-Write-Wins (Pull-Then-Push).
+- **Свобода транспорта:** Сервер работает как по чистому `http://` (внутри WireGuard, Tailscale или домашней сети без возни с доменами и SSL), так и по `https://` (включая самоподписанные сертификаты).
 
 ### 🚀 Запуск на сервере через Docker Compose
 
 1. Скопируйте папку сервера или создайте `docker-compose.yml` на вашем VPS:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   shellit-sync:
@@ -187,6 +199,7 @@ services:
 ```
 
 2. Запустите:
+
 ```bash
 docker compose up -d
 ```
@@ -195,11 +208,11 @@ docker compose up -d
 
 1. Перейдите в **Settings → Sync & Cloud**.
 2. Укажите:
-   * **Server URL:** `http://<ip-вашего-vps>:8080` или `https://sync.your-domain.com`.
-   * **Vault ID:** Идентификатор хранилища (например, `my-servers`).
-   * **Sync Passphrase:** Кодовая фраза шифрования (запомните её для других устройств).
-   * **Registration Token:** Токен регистрации (если задан в `REGISTRATION_TOKEN` на сервере).
-   * При использовании самоподписанного сертификата включите **«Allow self-signed SSL / insecure HTTP»**.
+   - **Server URL:** `http://<ip-вашего-vps>:8080` или `https://sync.your-domain.com`.
+   - **Vault ID:** Идентификатор хранилища (например, `my-servers`).
+   - **Sync Passphrase:** Кодовая фраза шифрования (запомните её для других устройств).
+   - **Registration Token:** Токен регистрации (если задан в `REGISTRATION_TOKEN` на сервере).
+   - При использовании самоподписанного сертификата включите **«Allow self-signed SSL / insecure HTTP»**.
 3. Нажмите **Test Connection**, затем **Sync Now**.
 4. Повторите шаг на телефоне или втором компьютере — и ваша инфраструктура синхронизирована!
 
@@ -211,20 +224,20 @@ docker compose up -d
 
 Все процессы разработки, спецификации и задачи зафиксированы в директории [`docs/`](docs/):
 
-* [`docs/AGENTS_MASTER_GUIDE.md`](docs/AGENTS_MASTER_GUIDE.md) — Мастер-руководство по архитектуре и стандартам кода.
-* [`docs/ROADMAP.md`](docs/ROADMAP.md) — Дорожная карта и контрольные точки (Milestones).
-* [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — Интерактивный трекер задач по пакетам.
-* [`docs/BUGS_AND_ISSUES.md`](docs/BUGS_AND_ISSUES.md) — Реестр инцидентов и баг-трекер.
-* [`docs/CHRONICLE.md`](docs/CHRONICLE.md) — Летопись разработки и инженерный дневник проекта.
-* [`GEMINI.md`](GEMINI.md) — Системные инструкции для AI-ассистентов.
+- [`docs/AGENTS_MASTER_GUIDE.md`](docs/AGENTS_MASTER_GUIDE.md) — Мастер-руководство по архитектуре и стандартам кода.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Дорожная карта и контрольные точки (Milestones).
+- [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — Интерактивный трекер задач по пакетам.
+- [`docs/BUGS_AND_ISSUES.md`](docs/BUGS_AND_ISSUES.md) — Реестр инцидентов и баг-трекер.
+- [`docs/CHRONICLE.md`](docs/CHRONICLE.md) — Летопись разработки и инженерный дневник проекта.
+- [`GEMINI.md`](GEMINI.md) — Системные инструкции для AI-ассистентов.
 
 ---
 
 ## 🔒 Безопасность
 
-* **Zero Hardcoded Secrets**: Никогда не сохраняйте учетные данные или приватные ключи в кодовой базе.
-* **Master Vault**: Приватные ключи и пароли шифруются локально. Без мастер-пароля расшифровка базы математически невозможна.
-* **Memory Hygiene**: Чувствительные данные обнуляются (`zeroize`) сразу после использования в сессии.
+- **Zero Hardcoded Secrets**: Никогда не сохраняйте учетные данные или приватные ключи в кодовой базе.
+- **Master Vault**: Приватные ключи и пароли шифруются локально. Без мастер-пароля расшифровка базы математически невозможна.
+- **Memory Hygiene**: Чувствительные данные обнуляются (`zeroize`) сразу после использования в сессии.
 
 ---
 
@@ -233,9 +246,10 @@ docker compose up -d
 Проект распространяется под свободной копилефтной лицензией **[GNU General Public License v3.0 (GPLv3)](LICENSE)**.
 
 ### Что это означает (свобода с ограничениями):
-* ✅ **Свобода использования:** вы можете бесплатно запускать и использовать Shellit для любых целей, включая личные и коммерческие задачи администрирования серверов.
-* ✅ **Свобода изучения и доработки:** исходный код полностью открыт, доступен для аудита, изменения и расширения.
-* ⚠️ **Ключевые ограничения (Строгий Copyleft):**
-  * **Обязательное сохранение свободы:** любые форки, модификации или производные продукты обязаны распространяться под той же лицензией GPLv3 и с полностью открытым исходным кодом.
-  * **Запрет на закрытие кода:** запрещено включать компоненты ядра Shellit в закрытые проприетарные продукты без раскрытия исходного кода.
-  * **Сохранение авторства:** обязательно сохранение всех уведомлений об авторских правах и текста лицензии.
+
+- ✅ **Свобода использования:** вы можете бесплатно запускать и использовать Shellit для любых целей, включая личные и коммерческие задачи администрирования серверов.
+- ✅ **Свобода изучения и доработки:** исходный код полностью открыт, доступен для аудита, изменения и расширения.
+- ⚠️ **Ключевые ограничения (Строгий Copyleft):**
+  - **Обязательное сохранение свободы:** любые форки, модификации или производные продукты обязаны распространяться под той же лицензией GPLv3 и с полностью открытым исходным кодом.
+  - **Запрет на закрытие кода:** запрещено включать компоненты ядра Shellit в закрытые проприетарные продукты без раскрытия исходного кода.
+  - **Сохранение авторства:** обязательно сохранение всех уведомлений об авторских правах и текста лицензии.
