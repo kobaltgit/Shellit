@@ -317,4 +317,26 @@
   - [x] Сквозные смоук-тесты мобильного приложения (`mobile_smoke_test.dart`).
   - [x] `flutter analyze` по всему репозиторию: 0 ошибок, 0 предупреждений.
 
+---
+
+## Фаза 12: Встроенный шлюз Model Context Protocol (MCP Server Plugin)
+- [x] Реализация ядра MCP Server (`packages/desktop_plugin_sdk`):
+  - [x] Сервис `McpServerService` на чистом Dart: поддержка спецификации MCP 2024-11-05 (HTTP GET `/sse`, POST `/message?sessionId=...`).
+  - [x] Стандартизированные схемы инструментов (`mcp_tool_definitions.dart`): `shellit_list_servers`, `shellit_list_active_sessions`, `shellit_exec_command`, `shellit_get_terminal_buffer`, `shellit_read_remote_file`.
+  - [x] Структурированное логирование действий ИИ (`McpAuditLogEntry`) и потоковая трансляция в UI.
+  - [x] 100% покрытие юнит-тестами (`mcp_server_test.dart`: 5/5 тестов).
+- [x] Разработка плагина `com.shellit.mcp-server` (`mcp_server.shellit`):
+  - [x] Стильная векторная SVG-иконка нейросети (`icon.svg`) в палитре Cyber/Obsidian (`#00F0FF`/`#A855F7`) без эмодзи.
+  - [x] Манифест `manifest.json` с правами `terminal:execute`, `vault:read_hosts`, `notifications:show`.
+  - [x] Веб-интерфейс `index.html` + `plugin.js`: переключатель сервера, выбор порта (по умолч. 8181), кнопки копирования SSE URL и конфигов для Cursor / Claude Desktop / Windsurf, тумблер защиты PROD Guard, живой журнал аудита запросов нейросети.
+- [x] Интеграция в основное приложение (`apps/shellit`):
+  - [x] Riverpod-провайдер `mcpServerServiceProvider` связывающий MCP с хранилищем хостов, сессиями и защитой PROD Guard.
+  - [x] Нативный виджет векторной иконки `McpVectorIcon` для сайдбара и тулбара без растровых артефактов и эмодзи.
+  - [x] Автоматическая установка из коробки при старте через `_ensureBundledPlugins` в `plugin_manager_provider.dart`.
+  - [x] Отдельная кнопка `[⚡ MCP AI]` в верхней панели рядом с `[🐳 Docker]` для мгновенного доступа к панели управления нейросетью.
+  - [x] Полная изоляция от мобильной версии (Android/iOS не содержат плагинов и лишних UI-элементов).
+  - [x] Соответствие принципу Zero Hardcoded Strings (`context.tr('plugins.mcp_short_name')`, `defaultEnglishStrings`, `ru.json`).
+  - [x] Размещение готового архива `mcp_server.shellit` в корневом каталоге `plugins/` и документация в `plugins/README.md` и `README.md`.
+  - [x] Полное прохождение тестов (`flutter test` 140+ тестов, `flutter analyze` 0 предупреждений).
+
 

@@ -54,8 +54,34 @@
 - 🔐 **Zero Credentials Leakage & SQLCipher Vault:**
   Локальная база данных зашифрована через **AES-256 (SQLCipher)**. Мастер-пароль защищен деривацией ключа **Argon2id**. Строгий протокол очистки оперативной памяти (Zeroize) после закрытия сессий и санитизация логов.
 
+- 🤖 **Model Context Protocol (MCP Server Plugin):**
+  Встроенный шлюз MCP (спецификация 2024-11-05, Server-Sent Events / SSE) для безопасного подключения современных ИИ-ассистентов (Cursor, Claude Desktop, Windsurf) напрямую к вашим серверам и терминалам. Предоставляет стандартизированные инструменты вызова команд, чтения терминального буфера и SFTP-файлов под защитой шлюза **PROD Guard** и аудита действий нейросети.
+
 - 🧩 **Open Desktop Plugin SDK:**
   Расширение возможностей приложения кастомными плагинами (`.shellit`) через изолированный WebView IPC-мост на десктопных платформах.
+
+- 🌐 **Community Language Packs (Плагины локализации):**
+  Интерфейс на 100% готов к локализации (Zero Hardcoded Strings). Базовый язык — английский, а для перехода на русский язык доступен официальный языковой пакет: [**Скачать `russian_lang_pack.shellit`**](plugins/russian_lang_pack.shellit).
+
+---
+
+## 🧩 Плагины и языковые пакеты (Plugins & Extensions)
+
+Shellit поддерживает динамическую установку плагинов и языковых пакетов (`.shellit`) на лету без перезагрузки приложения.
+
+### 📦 Каталог расширений:
+* 🤖 **[MCP Server Plugin (`plugins/mcp_server.shellit`)](plugins/mcp_server.shellit)** — встроенный AI Gateway для Cursor, Claude и Windsurf со шлюзом безопасности PROD Guard *(поставляется «из коробки»)*.
+* 🐳 **[Docker Monitor (`plugins/docker_monitor.shellit`)](plugins/docker_monitor.shellit)** — мониторинг контейнеров и логов в реальном времени *(поставляется «из коробки»)*.
+* 🌐 **[Russian Language Pack (`plugins/russian_lang_pack.shellit`)](plugins/russian_lang_pack.shellit)** — 100% русский перевод интерфейса (527+ ключей).
+
+#### Инструкция по установке:
+1. Скачайте нужный `.shellit` файл из папки [**`plugins/`**](plugins/).
+2. В приложении Shellit откройте боковое меню **«Плагины»** (Plugins).
+3. Нажмите кнопку **«Установить .shellit»** (Install .shellit) в правом верхнем углу и выберите файл.
+4. Для языковых пакетов: перейдите в **«Настройки» → «Язык и локализация»** и выберите нужный язык!
+
+> Подробнее о каталоге плагинов: [`plugins/README.md`](plugins/README.md).  
+> Руководство по созданию переводов: [`docs/LOCALIZATION_AND_I18N_GUIDE.md`](docs/LOCALIZATION_AND_I18N_GUIDE.md).
 
 ---
 
@@ -73,6 +99,7 @@ Shellit/
 │   ├── ssh_network_core/           # Сетевое ядро (dartssh2, PTY-потоки, SFTP-клиент, туннели, рекордер)
 │   ├── terminal_ui/                # Эмулятор терминала (xterm.dart, табы, сплиты, мобильная панель)
 │   └── desktop_plugin_sdk/         # Спецификация манифестов плагинов, валидатор и песочница IPC
+├── plugins/                        # Готовые плагины и языковые пакеты (.shellit)
 ├── servers/
 │   └── sync_server/                # Легковесный сервер синхронизации (Dart + SQLite, Docker, <20MB RAM)
 └── docs/                           # Центр координации и документации проекта

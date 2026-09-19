@@ -14,27 +14,33 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
   Future<List<InstalledPlugin>> build() async {
     final loader = ref.watch(appPluginLoaderProvider);
 
-    // Auto-install bundled docker_monitor.shellit if plugins directory is empty
-    await _ensureBundledDemoPlugin(loader);
+    // Auto-install bundled plugins (Docker Monitor & MCP Server) if missing
+    await _ensureBundledPlugins(loader);
 
     final plugins = await loader.scanInstalledPlugins();
     await _syncLocalizationPlugins(plugins, loader);
     return plugins;
   }
 
-  Future<void> _ensureBundledDemoPlugin(IPluginLoader loader) async {
+  Future<void> _ensureBundledPlugins(IPluginLoader loader) async {
     try {
       final existing = await loader.scanInstalledPlugins();
-      if (existing.isNotEmpty) return;
+      final installedIds = existing.map((p) => p.manifest.id).toSet();
 
-      final pluginsDir = (loader is DesktopPluginLoader)
-          ? loader.pluginsDirectory
-          : DesktopPluginLoader.defaultPluginsDirectory();
+      final pluginsToEnsure = [
+        (
+          id: 'com.shellit.docker-monitor',
+          fileName: 'docker_monitor.shellit',
+        ),
+        (
+          id: 'com.shellit.mcp-server',
+          fileName: 'mcp_server.shellit',
+        ),
+      ];
 
-      final targetDir = Directory(
-        p.join(pluginsDir, 'com.shellit.docker-monitor'),
-      );
-      if (!targetDir.existsSync()) {
+      for (final item in pluginsToEnsure) {
+        if (installedIds.contains(item.id)) continue;
+
         final candidates = [
           p.join(
             Directory.current.path,
@@ -42,7 +48,7 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
             'desktop_plugin_sdk',
             'assets',
             'demo_plugins',
-            'docker_monitor.shellit',
+            item.fileName,
           ),
           p.join(
             Directory.current.path,
@@ -52,13 +58,25 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
             'desktop_plugin_sdk',
             'assets',
             'demo_plugins',
-            'docker_monitor.shellit',
+            item.fileName,
+          ),
+          p.join(
+            Directory.current.path,
+            'plugins',
+            item.fileName,
+          ),
+          p.join(
+            Directory.current.path,
+            '..',
+            '..',
+            'plugins',
+            item.fileName,
           ),
           p.join(
             Directory.current.path,
             'assets',
             'demo_plugins',
-            'docker_monitor.shellit',
+            item.fileName,
           ),
         ];
 
@@ -71,9 +89,10 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
         }
       }
     } catch (e) {
-      AppLogger.w('Failed to auto-install bundled demo plugin: $e');
+      AppLogger.w('Failed to auto-install bundled plugins: $e');
     }
   }
+
 
   Future<void> _syncLocalizationPlugins(
     List<InstalledPlugin> plugins,

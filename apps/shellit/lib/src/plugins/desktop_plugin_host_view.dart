@@ -12,6 +12,7 @@ import 'package:terminal_ui/terminal_ui.dart';
 import 'package:webview_windows/webview_windows.dart';
 
 import '../di/app_providers.dart';
+import '../mcp/mcp_provider.dart';
 
 /// Desktop host container that renders a `.shellit` plugin in an isolated WebView2 sandbox
 /// and establishes a two-way JSON-RPC bridge with Shellit's active SSH terminal session.
@@ -32,6 +33,8 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
 
   bool _isInitialized = false;
   String? _errorMessage;
+  String? _errorKey;
+  String? _errorParam;
   StreamSubscription<dynamic>? _webMessageSub;
   StreamSubscription<Map<String, dynamic>>? _outgoingSub;
 
@@ -44,6 +47,7 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
   Future<void> _initPluginHost() async {
     if (kIsWeb || !Platform.isWindows) {
       setState(() {
+        _errorKey = 'plugins.unsupported_platform';
         _errorMessage =
             'Desktop plugins are currently supported on Windows (WebView2).';
       });
@@ -101,6 +105,8 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
       );
       if (mounted) {
         setState(() {
+          _errorKey = 'plugins.launch_failed';
+          _errorParam = e.toString();
           _errorMessage = 'Failed to launch plugin: $e';
         });
       }
@@ -152,6 +158,50 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
         ),
       );
       return {'status': 'shown'};
+    });
+
+    // 3. mcp.getStatus
+    bridge.registerHandler('mcp.getStatus', (pluginId, params) async {
+      final mcp = ref.read(mcpServerServiceProvider);
+      return {
+        'running': mcp.isRunning,
+        'port': mcp.port,
+        'activeClients': mcp.activeClientsCount,
+      };
+    });
+
+    // 4. mcp.toggleServer
+    bridge.registerHandler('mcp.toggleServer', (pluginId, params) async {
+      final mcp = ref.read(mcpServerServiceProvider);
+      final shouldRun =
+          params is Map ? params['running'] == true : !mcp.isRunning;
+      final port =
+          params is Map ? (params['port'] as int? ?? mcp.port) : mcp.port;
+      if (shouldRun) {
+        await mcp.start(port: port);
+      } else {
+        await mcp.stop();
+      }
+      return {
+        'running': mcp.isRunning,
+        'port': mcp.port,
+        'activeClients': mcp.activeClientsCount,
+      };
+    });
+
+    // 5. mcp.getAuditLogs
+    bridge.registerHandler('mcp.getAuditLogs', (pluginId, params) async {
+      final mcp = ref.read(mcpServerServiceProvider);
+      return {
+        'logs': mcp.auditLogs.map((e) => e.toJson()).toList(),
+      };
+    });
+
+    // 6. mcp.clearLogs
+    bridge.registerHandler('mcp.clearLogs', (pluginId, params) async {
+      final mcp = ref.read(mcpServerServiceProvider);
+      mcp.clearAuditLogs();
+      return {'status': 'cleared'};
     });
   }
 
@@ -244,8 +294,12 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
       }
     });
 
+    final defaultNoSession = context.tr(
+      'plugins.no_active_session',
+      defaultText: 'No Active Session',
+    );
     final activeTab = ref.watch(sessionManagerProvider).activeTab;
-    final hostLabel = activeTab?.host?.label ?? 'No Active Session';
+    final hostLabel = activeTab?.host?.label ?? defaultNoSession;
 
     return Container(
       width: 340,
@@ -292,7 +346,11 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'Target: $hostLabel',
+                        context.tr(
+                          'plugins.target_host',
+                          defaultText: 'Target: {host}',
+                          params: {'host': hostLabel},
+                        ),
                         style: const TextStyle(
                           color: ShellitColors.accentCyan,
                           fontSize: 10,
@@ -326,7 +384,15 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Text(
-                        _errorMessage!,
+                        _errorKey != null
+                            ? context.tr(
+                                _errorKey!,
+                                defaultText: _errorMessage,
+                                params: _errorParam != null
+                                    ? {'error': _errorParam!}
+                                    : null,
+                              )
+                            : _errorMessage!,
                         style: const TextStyle(
                           color: ShellitColors.textSecondary,
                           fontSize: 12,

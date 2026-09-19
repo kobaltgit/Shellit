@@ -37,3 +37,7 @@ export 'src/platform/plugin_platform.dart';
 
 // Server
 export 'src/server/plugin_static_server.dart';
+
+// Model Context Protocol (MCP)
+export 'src/mcp/mcp_tool_definitions.dart';
+export 'src/mcp/mcp_server_service.dart';

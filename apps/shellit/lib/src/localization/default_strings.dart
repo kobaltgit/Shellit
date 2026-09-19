@@ -301,6 +301,17 @@ const Map<String, String> defaultEnglishStrings = {
   'plugins.install_dialog_success':
       'Plugin "{name}" installed safely!',
   'plugins.install_dialog_failed': 'Failed: {error}',
+  'plugins.mcp_short_name': 'MCP AI',
+  'plugins.docker_short_name': 'Docker',
+  'plugins.open_plugin': 'Open {name}',
+  'plugins.close_plugin': 'Close {name}',
+  'plugins.docker_connect_ssh_first':
+      'Connect to an SSH host first to use Docker plugin',
+  'plugins.target_host': 'Target: {host}',
+  'plugins.no_active_session': 'No Active Session',
+  'plugins.unsupported_platform':
+      'Desktop plugins are currently supported on Windows (WebView2).',
+  'plugins.launch_failed': 'Failed to launch plugin: {error}',
 
   // Snippets
   'snippets.title': 'Command Snippets Library',

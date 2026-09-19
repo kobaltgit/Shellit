@@ -1,0 +1,15 @@
+{
+  "id": "com.shellit.mcp-server",
+  "name": "Model Context Protocol Server",
+  "version": "1.0.0",
+  "author": "Shellit Core Team",
+  "description": "Встроенный шлюз Model Context Protocol (MCP) для безопасного подключения ИИ-ассистентов (Cursor, Claude, Windsurf) к серверам и терминалам Shellit",
+  "entryPoint": "index.html",
+  "target": "sidebar",
+  "permissions": [
+    "terminal:execute",
+    "vault:read_hosts",
+    "notifications:show"
+  ],
+  "minAppVersion": "1.0.0"
+}

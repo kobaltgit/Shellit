@@ -1,9 +1,11 @@
+import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 import 'controllers/session_connect_controller.dart';
 import 'localization/localization_providers.dart';
+import 'mcp/mcp_icon.dart';
 import 'plugins/desktop_plugin_host_view.dart';
 import 'plugins/plugin_manager_provider.dart';
 import 'screens/keychain/keychain_screen.dart';
@@ -51,118 +53,162 @@ class ShellitApp extends ConsumerWidget {
             final activePlugin = ref.watch(activeSidebarPluginProvider);
             final pluginsAsync = ref.watch(pluginManagerProvider);
             final installedPlugins = pluginsAsync.valueOrNull ?? [];
-            final enabledPlugins = installedPlugins
-                .where((p) => p.isEnabled)
+            final enabledSidebarPlugins = installedPlugins
+                .where((p) =>
+                    p.isEnabled &&
+                    p.manifest.target == PluginTarget.sidebar)
                 .toList();
 
-            if (enabledPlugins.isEmpty) return const SizedBox.shrink();
+            if (enabledSidebarPlugins.isEmpty) return const SizedBox.shrink();
 
-            final isDocker = enabledPlugins.any(
-              (p) => p.manifest.id == 'com.shellit.docker-monitor',
-            );
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: enabledSidebarPlugins.map((plugin) {
+                final isSelected =
+                    activePlugin?.manifest.id == plugin.manifest.id;
+                final isMcp = plugin.manifest.id == 'com.shellit.mcp-server';
+                final isDocker =
+                    plugin.manifest.id == 'com.shellit.docker-monitor';
+                final label = isMcp
+                    ? context.tr(
+                        'plugins.mcp_short_name',
+                        defaultText: 'MCP AI',
+                      )
+                    : (isDocker
+                        ? context.tr(
+                            'plugins.docker_short_name',
+                            defaultText: 'Docker',
+                          )
+                        : plugin.manifest.name);
 
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Tooltip(
-                message: activePlugin != null
-                    ? 'Close ${activePlugin.manifest.name}'
-                    : 'Toggle ${enabledPlugins.first.manifest.name}',
-                child: InkWell(
-                  onTap: () {
-                    final sessionState = ref.read(sessionManagerProvider);
-                    // If on hosts catalog, switch to active tab or show hint
-                    if (sessionState.activeTab == null) {
-                      if (sessionState.tabs.isNotEmpty) {
-                        ref
-                            .read(sessionManagerProvider.notifier)
-                            .setActiveTab(sessionState.tabs.last.id);
-                        ref.read(activeSidebarPluginProvider.notifier).state =
-                            enabledPlugins.first;
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Connect to an SSH host first to use Docker plugin',
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                            duration: Duration(seconds: 2),
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Tooltip(
+                    message: isSelected
+                        ? context.tr(
+                            'plugins.close_plugin',
+                            defaultText: 'Close {name}',
+                            params: {'name': label},
+                          )
+                        : context.tr(
+                            'plugins.open_plugin',
+                            defaultText: 'Open {name}',
+                            params: {'name': label},
                           ),
-                        );
-                      }
-                      return;
-                    }
+                    child: InkWell(
+                      onTap: () {
+                        // If plugin is already open, clicking toggles it closed
+                        if (isSelected) {
+                          ref.read(activeSidebarPluginProvider.notifier).state =
+                              null;
+                          return;
+                        }
 
-                    final current = ref.read(activeSidebarPluginProvider);
-                    if (current != null) {
-                      ref.read(activeSidebarPluginProvider.notifier).state =
-                          null;
-                    } else {
-                      ref.read(activeSidebarPluginProvider.notifier).state =
-                          enabledPlugins.first;
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          (activePlugin != null &&
-                              ref.watch(sessionManagerProvider).activeTab !=
-                                  null)
-                          ? ShellitColors.accentCyan.withValues(alpha: 0.15)
-                          : ShellitColors.obsidianBackground,
+                        // For Docker, check if an active tab exists or switch to one
+                        if (isDocker) {
+                          final sessionState = ref.read(sessionManagerProvider);
+                          if (sessionState.activeTab == null) {
+                            if (sessionState.tabs.isNotEmpty) {
+                              ref
+                                  .read(sessionManagerProvider.notifier)
+                                  .setActiveTab(sessionState.tabs.last.id);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.tr(
+                                      'plugins.docker_connect_ssh_first',
+                                      defaultText:
+                                          'Connect to an SSH host first to use Docker plugin',
+                                    ),
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                              return;
+                            }
+                          }
+                        }
+
+                        ref.read(activeSidebarPluginProvider.notifier).state =
+                            plugin;
+                      },
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color:
-                            (activePlugin != null &&
-                                ref.watch(sessionManagerProvider).activeTab !=
-                                    null)
-                            ? ShellitColors.accentCyan
-                            : ShellitColors.border,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? (isMcp
+                                  ? ShellitColors.accentPurple
+                                      .withValues(alpha: 0.18)
+                                  : ShellitColors.accentCyan
+                                      .withValues(alpha: 0.15))
+                              : ShellitColors.obsidianBackground,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: isSelected
+                                ? (isMcp
+                                    ? ShellitColors.accentPurple
+                                    : ShellitColors.accentCyan)
+                                : ShellitColors.border,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isMcp)
+                              McpVectorIcon(
+                                size: 13,
+                                color: isSelected
+                                    ? ShellitColors.accentPurple
+                                    : ShellitColors.accentCyan,
+                              )
+                            else
+                              Text(
+                                isDocker ? '🐳' : '🧩',
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            const SizedBox(width: 5),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? (isMcp
+                                        ? ShellitColors.accentPurple
+                                        : ShellitColors.accentCyan)
+                                    : ShellitColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isDocker ? '🐳' : '🧩',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          isDocker ? 'Docker' : 'Plugins',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                (activePlugin != null &&
-                                    ref
-                                            .watch(sessionManagerProvider)
-                                            .activeTab !=
-                                        null)
-                                ? ShellitColors.accentCyan
-                                : ShellitColors.textPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
-              ),
+                );
+              }).toList(),
             );
           },
         ),
         pluginSidebarBuilder: isMobilePlatform
             ? null
             : (context) {
-                final activeTab = ref.watch(sessionManagerProvider).activeTab;
-                if (activeTab == null) return const SizedBox.shrink();
 
                 final activePlugin = ref.watch(activeSidebarPluginProvider);
                 if (activePlugin == null) return const SizedBox.shrink();
+
+                final activeTab = ref.watch(sessionManagerProvider).activeTab;
+                // Docker monitor requires an active tab to query container stats
+                if (activePlugin.manifest.id == 'com.shellit.docker-monitor' &&
+                    activeTab == null) {
+                  return const SizedBox.shrink();
+                }
+
                 return DesktopPluginHostView(
                   plugin: activePlugin,
                   onClose: () =>

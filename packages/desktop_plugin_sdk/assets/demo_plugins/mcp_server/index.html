@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shellit MCP Server</title>
+  <style>
+    :root {
+      --bg-base: #0B0D14;
+      --bg-surface: #121520;
+      --bg-card: #181C2B;
+      --bg-card-hover: #202538;
+      --border: #262B3F;
+      --border-accent: rgba(0, 240, 255, 0.4);
+      --text-main: #E2E8F0;
+      --text-muted: #717C9B;
+      --accent-cyan: #00F0FF;
+      --accent-purple: #A855F7;
+      --accent-green: #10B981;
+      --accent-red: #EF4444;
+      --accent-amber: #F59E0B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-surface);
+      color: var(--text-main);
+      font-size: 12px;
+      line-height: 1.4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--text-main);
+      letter-spacing: 0.2px;
+    }
+
+    .header-sub {
+      font-size: 10px;
+      color: var(--accent-cyan);
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge.stopped {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--accent-red);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Content Area */
+    .content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .row-split {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .endpoint-box {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .endpoint-box:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .btn {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .btn:hover {
+      background: var(--border);
+      border-color: var(--text-muted);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(168, 85, 247, 0.2));
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(168, 85, 247, 0.3));
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-danger {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .config-code {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      word-break: break-all;
+      user-select: text;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .checkbox-label input {
+      accent-color: var(--accent-cyan);
+      cursor: pointer;
+    }
+
+    /* Logs List */
+    .log-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .log-item {
+      background: var(--bg-base);
+      border-left: 3px solid var(--accent-cyan);
+      border-radius: 0 4px 4px 0;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 10px;
+    }
+
+    .log-item.error {
+      border-left-color: var(--accent-red);
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+    }
+
+    .log-tool {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .log-tool.error {
+      color: var(--accent-red);
+    }
+
+    .log-snippet {
+      font-family: monospace;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty-logs {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <img src="icon.svg" class="header-icon" alt="MCP">
+      <div class="header-titles">
+        <span class="header-title">Model Context Protocol</span>
+        <span class="header-sub">SHELLIT AI GATEWAY</span>
+      </div>
+    </div>
+    <div id="statusBadge" class="status-badge">
+      <div class="status-dot"></div>
+      <span id="statusText">ACTIVE</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- Server Status Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Server Transport (SSE)</span>
+        <span id="clientsCount" style="color: var(--accent-cyan); font-weight: normal;">0 clients</span>
+      </div>
+
+      <div id="endpointBox" class="endpoint-box" title="Click to copy SSE URL">
+        <span id="endpointUrl">http://127.0.0.1:4422/sse</span>
+        <span style="font-size: 9px; opacity: 0.7;">[COPY]</span>
+      </div>
+
+      <div class="row-split">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span style="color: var(--text-muted); font-size: 11px;">Port:</span>
+          <input type="number" id="portInput" value="4422" min="1024" max="65535" style="width: 65px; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-main); border-radius: 4px; padding: 4px 6px; font-family: monospace; font-size: 11px;">
+        </div>
+        <button id="toggleBtn" class="btn btn-danger">Stop Server</button>
+      </div>
+    </div>
+
+    <!-- AI Client Integration Card -->
+    <div class="card">
+      <div class="card-title">1-Click Client Configuration</div>
+      <div class="row-split">
+        <button id="copyCursorBtn" class="btn btn-primary" style="flex: 1;">⚡ Copy Cursor Config</button>
+        <button id="copyClaudeBtn" class="btn" style="flex: 1;">🟣 Claude Config</button>
+      </div>
+      <pre id="configCode" class="config-code">{
+  "mcpServers": {
+    "shellit": {
+      "type": "sse",
+      "url": "http://127.0.0.1:4422/sse"
+    }
+  }
+}</pre>
+    </div>
+
+    <!-- Security & Safety Card -->
+    <div class="card">
+      <div class="card-title">Security Policies</div>
+      <label class="checkbox-label">
+        <input type="checkbox" id="protectProdCheck" checked>
+        <span>Block destructive commands on <b>PROD</b> hosts</span>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="notifyCallsCheck" checked>
+        <span>Show desktop notification on AI tool execution</span>
+      </label>
+    </div>
+
+    <!-- Live Activity Log Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Live AI Activity Log</span>
+        <button id="clearLogsBtn" style="background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer;">Clear</button>
+      </div>
+      <div id="logList" class="log-list">
+        <div class="empty-logs">Waiting for incoming tool calls from Cursor, Windsurf, or Claude...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="plugin.js"></script>
+</body>
+</html>
