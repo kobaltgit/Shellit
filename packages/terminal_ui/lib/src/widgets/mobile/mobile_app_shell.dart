@@ -391,8 +391,13 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, VaultState vaultState) {
-    if (_isSearching && _currentNavIndex == 0) {
+  PreferredSizeWidget? _buildAppBar(
+      BuildContext context, VaultState vaultState) {
+    if (_currentNavIndex != 0) {
+      return null;
+    }
+
+    if (_isSearching) {
       return AppBar(
         backgroundColor: ShellitColors.obsidianHeader,
         elevation: 0,
@@ -438,47 +443,31 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
       );
     }
 
-    String title;
-    switch (_currentNavIndex) {
-      case 0:
-        title = 'Shellit';
-        break;
-      case 1:
-        title = context.tr('sidebar.nav_keychain', defaultText: 'Keychain');
-        break;
-      case 2:
-      default:
-        title = context.tr('sidebar.nav_settings', defaultText: 'Settings');
-        break;
-    }
-
     return AppBar(
       backgroundColor: ShellitColors.obsidianHeader,
       elevation: 0,
-      title: Text(
-        title,
-        style: const TextStyle(
+      title: const Text(
+        'Shellit',
+        style: TextStyle(
           color: ShellitColors.textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.bold,
         ),
       ),
       actions: [
-        if (_currentNavIndex == 0) ...[
-          IconButton(
-            icon: const Icon(Icons.search, color: ShellitColors.textSecondary),
-            tooltip: context.tr('common.search', defaultText: 'Search'),
-            onPressed: () {
-              setState(() => _isSearching = true);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.bolt, color: ShellitColors.accentCyan),
-            tooltip: context.tr('omni.quick_connect',
-                defaultText: 'Quick Connect'),
-            onPressed: () => _showQuickConnectBottomSheet(context),
-          ),
-        ],
+        IconButton(
+          icon: const Icon(Icons.search, color: ShellitColors.textSecondary),
+          tooltip: context.tr('common.search', defaultText: 'Search'),
+          onPressed: () {
+            setState(() => _isSearching = true);
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.bolt, color: ShellitColors.accentCyan),
+          tooltip: context.tr('omni.quick_connect',
+              defaultText: 'Quick Connect'),
+          onPressed: () => _showQuickConnectBottomSheet(context),
+        ),
         IconButton(
           icon: Icon(
             !vaultState.isUnlocked ? Icons.lock : Icons.lock_open,

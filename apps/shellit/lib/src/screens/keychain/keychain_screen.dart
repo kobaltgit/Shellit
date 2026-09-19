@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,41 +25,34 @@ class KeychainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final keysAsync = ref.watch(keychainListProvider);
+    final vaultState = ref.watch(vaultProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 700 ||
+        ((defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS) &&
+            screenWidth < 900);
 
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
         title: Text(
-          context.tr(
-            'keychain.title',
-            defaultText: 'SSH Keychain & Certificates',
-          ),
+          isMobile
+              ? context.tr('sidebar.nav_keychain', defaultText: 'Keychain')
+              : context.tr(
+                  'keychain.title',
+                  defaultText: 'SSH Keychain & Certificates',
+                ),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
         elevation: 0,
-        actions: MediaQuery.of(context).size.width < 600
+        actions: isMobile
             ? [
-                IconButton(
-                  icon: const Icon(
-                    Icons.folder_open,
-                    size: 20,
-                    color: ShellitColors.accentCyan,
-                  ),
-                  tooltip: context.tr(
-                    'keychain.btn_import',
-                    defaultText: 'Import ~/.ssh',
-                  ),
-                  onPressed: () async {
-                    await ImportSshKeysDialog.show(context);
-                    ref.invalidate(keychainListProvider);
-                  },
-                ),
                 IconButton(
                   icon: const Icon(
                     Icons.bolt,
                     size: 20,
-                    color: ShellitColors.accentBlue,
+                    color: ShellitColors.accentCyan,
                   ),
                   tooltip: context.tr(
                     'keychain.btn_generate',
@@ -81,7 +75,30 @@ class KeychainScreen extends ConsumerWidget {
                   ),
                   onPressed: () => _showAddKeyDialog(context, ref),
                 ),
-                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    !vaultState.isUnlocked ? Icons.lock : Icons.lock_open,
+                    color: !vaultState.isUnlocked
+                        ? ShellitColors.statusYellow
+                        : ShellitColors.accentBlue,
+                    size: 20,
+                  ),
+                  tooltip: !vaultState.isUnlocked ? 'Unlock Vault' : 'Vault Unlocked',
+                  onPressed: () async {
+                    if (!vaultState.isUnlocked) {
+                      await showUnlockVaultDialog(context, ref);
+                    } else {
+                      ref.read(vaultProvider.notifier).lock();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Vault locked'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(width: 6),
               ]
             : [
                 OutlinedButton.icon(
@@ -173,11 +190,17 @@ class KeychainScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    context.tr(
-                      'keychain.empty_desc',
-                      defaultText:
-                          'Generate a modern Ed25519 key or import existing keys from your local ~/.ssh folder',
-                    ),
+                    isMobile
+                        ? context.tr(
+                            'keychain.empty_desc_mobile',
+                            defaultText:
+                                'Generate a modern Ed25519 key or add an existing key manually',
+                          )
+                        : context.tr(
+                            'keychain.empty_desc',
+                            defaultText:
+                                'Generate a modern Ed25519 key or import existing keys from your local ~/.ssh folder',
+                          ),
                     style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 13,
@@ -207,19 +230,31 @@ class KeychainScreen extends ConsumerWidget {
                           ref.invalidate(keychainListProvider);
                         },
                       ),
-                      OutlinedButton.icon(
-                        icon: const Icon(Icons.folder_open, size: 16),
-                        label: Text(
-                          context.tr(
-                            'keychain.btn_import_ssh',
-                            defaultText: 'Import from ~/.ssh',
+                      if (isMobile)
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.add_circle_outline, size: 16),
+                          label: Text(
+                            context.tr(
+                              'keychain.btn_add_manual',
+                              defaultText: 'Add Key Manually',
+                            ),
                           ),
+                          onPressed: () => _showAddKeyDialog(context, ref),
+                        )
+                      else
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.folder_open, size: 16),
+                          label: Text(
+                            context.tr(
+                              'keychain.btn_import_ssh',
+                              defaultText: 'Import from ~/.ssh',
+                            ),
+                          ),
+                          onPressed: () async {
+                            await ImportSshKeysDialog.show(context);
+                            ref.invalidate(keychainListProvider);
+                          },
                         ),
-                        onPressed: () async {
-                          await ImportSshKeysDialog.show(context);
-                          ref.invalidate(keychainListProvider);
-                        },
-                      ),
                     ],
                   ),
                 ],
@@ -250,37 +285,46 @@ class KeychainScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: badgeColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: badgeColor.withValues(alpha: 0.3),
+                      // Top row: Key Icon + Label + Badges
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: badgeColor.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.vpn_key_rounded,
+                              color: badgeColor,
+                              size: 20,
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          Icons.vpn_key_rounded,
-                          color: badgeColor,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Row(
                               children: [
-                                Text(
-                                  key.label,
-                                  style: const TextStyle(
-                                    color: ShellitColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                Flexible(
+                                  child: Text(
+                                    key.label,
+                                    style: const TextStyle(
+                                      color: ShellitColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -343,7 +387,27 @@ class KeychainScreen extends ConsumerWidget {
                                 ],
                               ],
                             ),
-                            const SizedBox(height: 4),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // Middle details: Fingerprint (full width!) and Created date
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ShellitColors.obsidianBackground,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: ShellitColors.border.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
                               '${context.tr('keychain.fingerprint_label', defaultText: 'Fingerprint')}: ${key.fingerprint ?? "N/A"}',
                               style: const TextStyle(
@@ -351,6 +415,8 @@ class KeychainScreen extends ConsumerWidget {
                                 color: ShellitColors.textMuted,
                                 fontSize: 11,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -363,9 +429,10 @@ class KeychainScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      // Actions
+                      const SizedBox(height: 4),
+                      // Bottom row: Actions
                       Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
                             icon: const Icon(

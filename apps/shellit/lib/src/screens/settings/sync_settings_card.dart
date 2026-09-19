@@ -311,38 +311,51 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                     ],
                   ),
                 ),
-                if (_statusMessage != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _statusColor.withAlpha(30),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: _statusColor.withAlpha(100)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _statusColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          _statusMessage!,
-                          style: TextStyle(color: _statusColor, fontSize: 11),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
+            if (_statusMessage != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: _statusColor.withAlpha(25),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: _statusColor.withAlpha(90)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _statusColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _statusMessage!,
+                        style: TextStyle(
+                          color: _statusColor,
+                          fontSize: 12,
+                          height: 1.3,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             const Divider(color: ShellitColors.border),
             const SizedBox(height: 12),
@@ -537,47 +550,10 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
             const SizedBox(height: 14),
 
             // Actions
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: [
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    await _saveCurrentSettings();
-                    if (!context.mounted) return;
-                    _showMessage(
-                      context.tr(
-                        'sync.saved_success',
-                        defaultText: 'Sync settings saved successfully',
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.save_outlined, size: 16),
-                  label: Text(
-                    context.tr(
-                      'sync.btn_save_settings',
-                      defaultText: 'Save Settings',
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ShellitColors.textPrimary,
-                    side: const BorderSide(color: ShellitColors.border),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: _isSyncing ? null : _testConnection,
-                  icon: const Icon(Icons.network_check_rounded, size: 16),
-                  label: Text(
-                    context.tr(
-                      'sync.btn_test_connection',
-                      defaultText: 'Test Connection',
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ShellitColors.textPrimary,
-                    side: const BorderSide(color: ShellitColors.border),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 ElevatedButton.icon(
                   onPressed: _isSyncing ? null : _runSync,
                   icon: _isSyncing
@@ -605,6 +581,43 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
                     backgroundColor: ShellitColors.accentCyan,
                     foregroundColor: Colors.black,
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await _saveCurrentSettings();
+                    if (!context.mounted) return;
+                    _showMessage(
+                      context.tr(
+                        'sync.saved_success',
+                        defaultText: 'Sync settings saved successfully',
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.save_outlined, size: 16),
+                  label: Text(
+                    context.tr(
+                      'sync.btn_save_settings',
+                      defaultText: 'Save Settings',
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ShellitColors.textPrimary,
+                    side: const BorderSide(color: ShellitColors.border),
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _isSyncing ? null : _testConnection,
+                  icon: const Icon(Icons.network_check_rounded, size: 16),
+                  label: Text(
+                    context.tr(
+                      'sync.btn_test_connection',
+                      defaultText: 'Test Connection',
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ShellitColors.textPrimary,
+                    side: const BorderSide(color: ShellitColors.border),
                   ),
                 ),
               ],

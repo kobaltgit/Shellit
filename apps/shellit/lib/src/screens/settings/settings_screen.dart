@@ -22,16 +22,30 @@ class SettingsScreen extends ConsumerWidget {
     final recordingMode = ref.watch(sessionRecordingModeProvider);
     final activeLocale = ref.watch(activeLocaleProvider);
     final availableLocales = ref.watch(availableLocalesProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 700 ||
+        ((defaultTargetPlatform == TargetPlatform.android ||
+                defaultTargetPlatform == TargetPlatform.iOS) &&
+            screenWidth < 900);
 
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
         title: Text(
-          context.tr('settings.title', defaultText: 'Settings & Security'),
+          isMobile
+              ? context.tr('sidebar.nav_settings', defaultText: 'Settings')
+              : context.tr('settings.title', defaultText: 'Settings & Security'),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.lock_outline, size: 20),
+            tooltip: context.tr('settings.lock_vault_now', defaultText: 'Lock Vault'),
+            onPressed: () => ref.read(vaultProvider.notifier).lock(),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -458,225 +472,227 @@ class SettingsScreen extends ConsumerWidget {
           const SyncSettingsCard(),
           const SizedBox(height: 24),
 
-          // Section 5: Logs & Diagnostics
-          _buildSectionHeader(
-            context.tr('settings.logs_title',
-                defaultText: 'Logs & Diagnostics'),
-          ),
-          const SizedBox(height: 8),
-          Card(
-            color: ShellitColors.obsidianCard,
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(color: ShellitColors.border),
-              borderRadius: BorderRadius.circular(8),
+          if (!isMobile) ...[
+            // Section 5: Logs & Diagnostics
+            _buildSectionHeader(
+              context.tr('settings.logs_title',
+                  defaultText: 'Logs & Diagnostics'),
             ),
-            child: Column(
-              children: [
-                SwitchListTile(
-                  activeThumbColor: ShellitColors.accentCyan,
-                  value: logSettings.isFileLoggingEnabled,
-                  onChanged: (val) => logController.setFileLoggingEnabled(val),
-                  title: Text(
-                    context.tr('settings.logging.write_disk_title',
-                        defaultText: 'Write System Logs to Disk'),
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  subtitle: Text(
-                    context.tr('settings.logging.write_disk_subtitle',
-                        defaultText:
-                            'Persists rotated diagnostic logs (up to 2x 5MB) for crash analysis'),
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-                const Divider(color: ShellitColors.border, height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.filter_list_outlined,
-                    color: ShellitColors.accentCyan,
-                  ),
-                  title: Text(
-                    context.tr('settings.logging.min_disk_log_title',
-                        defaultText: 'Minimum Disk Log Level'),
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  subtitle: Text(
-                    context.tr('settings.logging.min_disk_log_subtitle',
-                        defaultText:
-                            'Filter minimum severity before writing to log files'),
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: DropdownButton<LogLevel>(
-                    value: logSettings.minFileLogLevel,
-                    dropdownColor: ShellitColors.obsidianCard,
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 13,
-                    ),
-                    underline: const SizedBox(),
-                    items: [
-                      DropdownMenuItem(
-                        value: LogLevel.debug,
-                        child: Text(context.tr('settings.logs.level_debug', defaultText: 'Debug (Verbose)')),
+            const SizedBox(height: 8),
+            Card(
+              color: ShellitColors.obsidianCard,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: ShellitColors.border),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    activeThumbColor: ShellitColors.accentCyan,
+                    value: logSettings.isFileLoggingEnabled,
+                    onChanged: (val) => logController.setFileLoggingEnabled(val),
+                    title: Text(
+                      context.tr('settings.logging.write_disk_title',
+                          defaultText: 'Write System Logs to Disk'),
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 14,
                       ),
-                      DropdownMenuItem(
-                        value: LogLevel.info,
-                        child: Text(context.tr('settings.logs.level_info', defaultText: 'Info (Default)')),
+                    ),
+                    subtitle: Text(
+                      context.tr('settings.logging.write_disk_subtitle',
+                          defaultText:
+                              'Persists rotated diagnostic logs (up to 2x 5MB) for crash analysis'),
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
                       ),
-                      DropdownMenuItem(
-                        value: LogLevel.warning,
-                        child: Text(context.tr('settings.logs.level_warn_error', defaultText: 'Warning & Error')),
+                    ),
+                  ),
+                  const Divider(color: ShellitColors.border, height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.filter_list_outlined,
+                      color: ShellitColors.accentCyan,
+                    ),
+                    title: Text(
+                      context.tr('settings.logging.min_disk_log_title',
+                          defaultText: 'Minimum Disk Log Level'),
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 14,
                       ),
-                      DropdownMenuItem(
-                        value: LogLevel.error,
-                        child: Text(context.tr('settings.logs.level_error_only', defaultText: 'Error Only')),
+                    ),
+                    subtitle: Text(
+                      context.tr('settings.logging.min_disk_log_subtitle',
+                          defaultText:
+                              'Filter minimum severity before writing to log files'),
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
                       ),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        logController.setMinFileLogLevel(val);
-                      }
-                    },
-                  ),
-                ),
-                const Divider(color: ShellitColors.border, height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.fiber_manual_record,
-                    color: ShellitColors.statusRed,
-                  ),
-                  title: Text(
-                    context.tr('settings.logging.recording_policy_title',
-                        defaultText: 'Terminal Session Recording Policy'),
-                    style: const TextStyle(
-                       color: ShellitColors.textPrimary,
-                      fontSize: 14,
                     ),
-                  ),
-                  subtitle: Text(
-                    context.tr('settings.logging.recording_policy_subtitle',
-                        defaultText:
-                            'Capture terminal sessions (asciinema .cast and plain text .log)'),
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: DropdownButton<SessionRecordingMode>(
-                    value: recordingMode,
-                    dropdownColor: ShellitColors.obsidianCard,
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 13,
-                    ),
-                    underline: const SizedBox(),
-                    items: [
-                      DropdownMenuItem(
-                        value: SessionRecordingMode.prodOnly,
-                        child: Text(context.tr('settings.logs.rec_prod', defaultText: 'PROD Only (Recommended)')),
+                    trailing: DropdownButton<LogLevel>(
+                      value: logSettings.minFileLogLevel,
+                      dropdownColor: ShellitColors.obsidianCard,
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 13,
                       ),
-                      DropdownMenuItem(
-                        value: SessionRecordingMode.all,
-                        child: Text(context.tr('settings.logs.rec_all', defaultText: 'All Sessions')),
-                      ),
-                      DropdownMenuItem(
-                        value: SessionRecordingMode.manual,
-                        child: Text(context.tr('settings.logs.rec_manual', defaultText: 'Manual (REC button only)')),
-                      ),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        ref
-                            .read(sessionRecordingModeProvider.notifier)
-                            .setMode(val);
-                      }
-                    },
-                  ),
-                ),
-                const Divider(color: ShellitColors.border, height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.folder_open_outlined,
-                    color: ShellitColors.accentCyan,
-                  ),
-                  title: Text(
-                    context.tr('settings.logging.open_logs_dir_title',
-                        defaultText: 'Open Logs Directory'),
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  subtitle: Text(
-                    logSettings.logsDirectory.isNotEmpty
-                        ? logSettings.logsDirectory
-                        : 'Application Support / logs',
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: const Icon(
-                    Icons.launch,
-                    size: 16,
-                    color: ShellitColors.textMuted,
-                  ),
-                  onTap: () => logController.openLogsFolder(),
-                ),
-                const Divider(color: ShellitColors.border, height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.delete_sweep_outlined,
-                    color: ShellitColors.statusRed,
-                  ),
-                  title: Text(
-                    context.tr('settings.logging.clear_logs_title',
-                        defaultText: 'Clear Disk Logs'),
-                    style: const TextStyle(
-                      color: ShellitColors.statusRed,
-                      fontSize: 14,
-                    ),
-                  ),
-                  subtitle: Text(
-                    context.tr('settings.logging.clear_logs_subtitle',
-                        defaultText:
-                            'Erase all historical log files from storage'),
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  onTap: () async {
-                    await logController.clearDiskLogs();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(context.tr(
-                            'settings.logs.files_deleted_msg',
-                            defaultText: 'Disk log files deleted successfully',
-                          )),
-                          duration: const Duration(seconds: 2),
+                      underline: const SizedBox(),
+                      items: [
+                        DropdownMenuItem(
+                          value: LogLevel.debug,
+                          child: Text(context.tr('settings.logs.level_debug', defaultText: 'Debug (Verbose)')),
                         ),
-                      );
-                    }
-                  },
-                ),
-              ],
+                        DropdownMenuItem(
+                          value: LogLevel.info,
+                          child: Text(context.tr('settings.logs.level_info', defaultText: 'Info (Default)')),
+                        ),
+                        DropdownMenuItem(
+                          value: LogLevel.warning,
+                          child: Text(context.tr('settings.logs.level_warn_error', defaultText: 'Warning & Error')),
+                        ),
+                        DropdownMenuItem(
+                          value: LogLevel.error,
+                          child: Text(context.tr('settings.logs.level_error_only', defaultText: 'Error Only')),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          logController.setMinFileLogLevel(val);
+                        }
+                      },
+                    ),
+                  ),
+                  const Divider(color: ShellitColors.border, height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.fiber_manual_record,
+                      color: ShellitColors.statusRed,
+                    ),
+                    title: Text(
+                      context.tr('settings.logging.recording_policy_title',
+                          defaultText: 'Terminal Session Recording Policy'),
+                      style: const TextStyle(
+                         color: ShellitColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      context.tr('settings.logging.recording_policy_subtitle',
+                          defaultText:
+                              'Capture terminal sessions (asciinema .cast and plain text .log)'),
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: DropdownButton<SessionRecordingMode>(
+                      value: recordingMode,
+                      dropdownColor: ShellitColors.obsidianCard,
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                      underline: const SizedBox(),
+                      items: [
+                        DropdownMenuItem(
+                          value: SessionRecordingMode.prodOnly,
+                          child: Text(context.tr('settings.logs.rec_prod', defaultText: 'PROD Only (Recommended)')),
+                        ),
+                        DropdownMenuItem(
+                          value: SessionRecordingMode.all,
+                          child: Text(context.tr('settings.logs.rec_all', defaultText: 'All Sessions')),
+                        ),
+                        DropdownMenuItem(
+                          value: SessionRecordingMode.manual,
+                          child: Text(context.tr('settings.logs.rec_manual', defaultText: 'Manual (REC button only)')),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          ref
+                              .read(sessionRecordingModeProvider.notifier)
+                              .setMode(val);
+                        }
+                      },
+                    ),
+                  ),
+                  const Divider(color: ShellitColors.border, height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.folder_open_outlined,
+                      color: ShellitColors.accentCyan,
+                    ),
+                    title: Text(
+                      context.tr('settings.logging.open_logs_dir_title',
+                          defaultText: 'Open Logs Directory'),
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      logSettings.logsDirectory.isNotEmpty
+                          ? logSettings.logsDirectory
+                          : 'Application Support / logs',
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 11,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(
+                      Icons.launch,
+                      size: 16,
+                      color: ShellitColors.textMuted,
+                    ),
+                    onTap: () => logController.openLogsFolder(),
+                  ),
+                  const Divider(color: ShellitColors.border, height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_sweep_outlined,
+                      color: ShellitColors.statusRed,
+                    ),
+                    title: Text(
+                      context.tr('settings.logging.clear_logs_title',
+                          defaultText: 'Clear Disk Logs'),
+                      style: const TextStyle(
+                        color: ShellitColors.statusRed,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      context.tr('settings.logging.clear_logs_subtitle',
+                          defaultText:
+                              'Erase all historical log files from storage'),
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    onTap: () async {
+                      await logController.clearDiskLogs();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(context.tr(
+                              'settings.logs.files_deleted_msg',
+                              defaultText: 'Disk log files deleted successfully',
+                            )),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

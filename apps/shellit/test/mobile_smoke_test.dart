@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shellit/src/di/app_providers.dart';
+import 'package:shellit/src/screens/keychain/keychain_screen.dart';
+import 'package:shellit/src/screens/settings/settings_screen.dart';
 import 'package:shellit/src/shellit_app.dart';
 import 'package:storage_vault/storage_vault.dart';
 import 'package:terminal_ui/terminal_ui.dart';
@@ -115,14 +117,18 @@ void main() {
         // 5. Switch to Keychain tab
         await tester.tap(find.text('Keychain'));
         await tester.pumpAndSettle();
-        expect(find.text('SSH Keychain & Certificates'), findsOneWidget);
+        expect(find.byType(KeychainScreen), findsOneWidget);
+        expect(find.widgetWithText(AppBar, 'Keychain'), findsOneWidget);
 
         // 6. Switch to Settings tab
         await tester.tap(find.text('Settings'));
         await tester.pumpAndSettle();
-        expect(find.text('Settings & Security'), findsOneWidget);
+        expect(find.byType(SettingsScreen), findsOneWidget);
+        expect(find.widgetWithText(AppBar, 'Settings'), findsOneWidget);
         // Ensure language selector is hidden on mobile
         expect(find.text('Language & Translation'), findsNothing);
+        // Ensure logs & diagnostics is hidden on mobile
+        expect(find.text('Logs & Diagnostics'), findsNothing);
 
         // 7. Switch back to Hosts tab
         await tester.tap(find.text('Hosts'));

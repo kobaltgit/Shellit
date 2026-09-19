@@ -3,7 +3,7 @@
 
 #define MyAppName "Shellit"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.6.0"
+  #define MyAppVersion "0.6.1"
 #endif
 #define MyAppPublisher "Kobalt"
 #define MyAppURL "https://github.com/kobaltgit/Shellit"
