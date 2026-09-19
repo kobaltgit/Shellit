@@ -37,61 +37,107 @@ class KeychainScreen extends ConsumerWidget {
         ),
         backgroundColor: ShellitColors.obsidianBackground,
         elevation: 0,
-        actions: [
-          OutlinedButton.icon(
-            icon: const Icon(
-              Icons.folder_open,
-              size: 15,
-              color: ShellitColors.accentCyan,
-            ),
-            label: Text(
-              context.tr('keychain.btn_import', defaultText: 'Import ~/.ssh'),
-              style: const TextStyle(
-                color: ShellitColors.accentCyan,
-                fontSize: 12,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: ShellitColors.accentCyan),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            ),
-            onPressed: () async {
-              await ImportSshKeysDialog.show(context);
-              ref.invalidate(keychainListProvider);
-            },
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.bolt, size: 16),
-            label: Text(
-              context.tr('keychain.btn_generate', defaultText: 'Generate Key'),
-              style: const TextStyle(fontSize: 12),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ShellitColors.accentBlue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            ),
-            onPressed: () async {
-              await GenerateKeyDialog.show(context);
-              ref.invalidate(keychainListProvider);
-            },
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(
-              Icons.add_circle_outline,
-              size: 20,
-              color: ShellitColors.textSecondary,
-            ),
-            tooltip: context.tr(
-              'keychain.tooltip_add_pem',
-              defaultText: 'Add Key Manually (PEM)',
-            ),
-            onPressed: () => _showAddKeyDialog(context, ref),
-          ),
-          const SizedBox(width: 12),
-        ],
+        actions: MediaQuery.of(context).size.width < 600
+            ? [
+                IconButton(
+                  icon: const Icon(
+                    Icons.folder_open,
+                    size: 20,
+                    color: ShellitColors.accentCyan,
+                  ),
+                  tooltip: context.tr(
+                    'keychain.btn_import',
+                    defaultText: 'Import ~/.ssh',
+                  ),
+                  onPressed: () async {
+                    await ImportSshKeysDialog.show(context);
+                    ref.invalidate(keychainListProvider);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.bolt,
+                    size: 20,
+                    color: ShellitColors.accentBlue,
+                  ),
+                  tooltip: context.tr(
+                    'keychain.btn_generate',
+                    defaultText: 'Generate Key',
+                  ),
+                  onPressed: () async {
+                    await GenerateKeyDialog.show(context);
+                    ref.invalidate(keychainListProvider);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    size: 20,
+                    color: ShellitColors.textSecondary,
+                  ),
+                  tooltip: context.tr(
+                    'keychain.tooltip_add_pem',
+                    defaultText: 'Add Key Manually (PEM)',
+                  ),
+                  onPressed: () => _showAddKeyDialog(context, ref),
+                ),
+                const SizedBox(width: 8),
+              ]
+            : [
+                OutlinedButton.icon(
+                  icon: const Icon(
+                    Icons.folder_open,
+                    size: 15,
+                    color: ShellitColors.accentCyan,
+                  ),
+                  label: Text(
+                    context.tr('keychain.btn_import', defaultText: 'Import ~/.ssh'),
+                    style: const TextStyle(
+                      color: ShellitColors.accentCyan,
+                      fontSize: 12,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: ShellitColors.accentCyan),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
+                  onPressed: () async {
+                    await ImportSshKeysDialog.show(context);
+                    ref.invalidate(keychainListProvider);
+                  },
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.bolt, size: 16),
+                  label: Text(
+                    context.tr('keychain.btn_generate', defaultText: 'Generate Key'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ShellitColors.accentBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  ),
+                  onPressed: () async {
+                    await GenerateKeyDialog.show(context);
+                    ref.invalidate(keychainListProvider);
+                  },
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    size: 20,
+                    color: ShellitColors.textSecondary,
+                  ),
+                  tooltip: context.tr(
+                    'keychain.tooltip_add_pem',
+                    defaultText: 'Add Key Manually (PEM)',
+                  ),
+                  onPressed: () => _showAddKeyDialog(context, ref),
+                ),
+                const SizedBox(width: 12),
+              ],
       ),
       body: keysAsync.when(
         data: (keys) {
@@ -139,8 +185,10 @@ class KeychainScreen extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 12,
                     children: [
                       ElevatedButton.icon(
                         icon: const Icon(Icons.bolt, size: 16),
@@ -159,7 +207,6 @@ class KeychainScreen extends ConsumerWidget {
                           ref.invalidate(keychainListProvider);
                         },
                       ),
-                      const SizedBox(width: 12),
                       OutlinedButton.icon(
                         icon: const Icon(Icons.folder_open, size: 16),
                         label: Text(

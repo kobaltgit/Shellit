@@ -4,10 +4,14 @@ import '../../theme/shellit_theme.dart';
 
 class MobileAccessoryBar extends StatefulWidget {
   final ValueChanged<String> onKeyPress;
+  final VoidCallback? onPaste;
+  final VoidCallback? onHideKeyboard;
 
   const MobileAccessoryBar({
     super.key,
     required this.onKeyPress,
+    this.onPaste,
+    this.onHideKeyboard,
   });
 
   @override
@@ -51,6 +55,27 @@ class _MobileAccessoryBarState extends State<MobileAccessoryBar> {
     widget.onKeyPress(sequence);
   }
 
+  Future<void> _handlePaste() async {
+    HapticFeedback.lightImpact();
+    if (widget.onPaste != null) {
+      widget.onPaste!();
+      return;
+    }
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text != null && data!.text!.isNotEmpty) {
+      widget.onKeyPress(data.text!);
+    }
+  }
+
+  void _handleHideKeyboard() {
+    HapticFeedback.lightImpact();
+    if (widget.onHideKeyboard != null) {
+      widget.onHideKeyboard!();
+    } else {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final keys = [
@@ -74,54 +99,133 @@ class _MobileAccessoryBarState extends State<MobileAccessoryBar> {
         color: ShellitColors.obsidianSidebar,
         border: Border(top: BorderSide(color: ShellitColors.border, width: 1)),
       ),
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        itemCount: keys.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final (label, seq) = keys[index];
-          final isModifier = label == 'Ctrl' || label == 'Alt';
-          final isActive = (label == 'Ctrl' && _ctrlActive) ||
-              (label == 'Alt' && _altActive);
+      child: Row(
+        children: [
+          Expanded(
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              itemCount: keys.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 6),
+              itemBuilder: (context, index) {
+                final (label, seq) = keys[index];
+                final isModifier = label == 'Ctrl' || label == 'Alt';
+                final isActive = (label == 'Ctrl' && _ctrlActive) ||
+                    (label == 'Alt' && _altActive);
 
-          return Material(
-            color: isActive
-                ? ShellitColors.accentBlue
-                : ShellitColors.obsidianCard,
-            borderRadius: BorderRadius.circular(6),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(6),
-              onTap: () => _handleKey(label, seq),
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 40),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
+                return Material(
+                  color: isActive
+                      ? ShellitColors.accentBlue
+                      : ShellitColors.obsidianCard,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isActive
-                        ? ShellitColors.accentBlue
-                        : ShellitColors.border,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () => _handleKey(label, seq),
+                    child: Container(
+                      constraints: const BoxConstraints(minWidth: 40),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: isActive
+                              ? ShellitColors.accentBlue
+                              : ShellitColors.border,
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontFamily: 'JetBrains Mono',
+                          fontSize: 13,
+                          fontWeight:
+                              isModifier ? FontWeight.bold : FontWeight.w500,
+                          color: isActive
+                              ? Colors.white
+                              : (isModifier
+                                  ? ShellitColors.accentCyan
+                                  : ShellitColors.textPrimary),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: 'JetBrains Mono',
-                    fontSize: 13,
-                    fontWeight: isModifier ? FontWeight.bold : FontWeight.w500,
-                    color: isActive
-                        ? Colors.white
-                        : (isModifier
-                            ? ShellitColors.accentCyan
-                            : ShellitColors.textPrimary),
-                  ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ),
+          Container(
+            height: 24,
+            width: 1,
+            color: ShellitColors.border,
+          ),
+          // Fast actions: PASTE and HIDE keyboard
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: ShellitColors.obsidianCard,
+                  borderRadius: BorderRadius.circular(6),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: _handlePaste,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: ShellitColors.border),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.content_paste,
+                              size: 14, color: ShellitColors.accentCyan),
+                          SizedBox(width: 4),
+                          Text(
+                            'PASTE',
+                            style: TextStyle(
+                              fontFamily: 'JetBrains Mono',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: ShellitColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Hide Keyboard',
+                  child: Material(
+                    color: ShellitColors.obsidianCard,
+                    borderRadius: BorderRadius.circular(6),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: _handleHideKeyboard,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: ShellitColors.border),
+                        ),
+                        child: const Icon(
+                          Icons.keyboard_hide_outlined,
+                          size: 16,
+                          color: ShellitColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

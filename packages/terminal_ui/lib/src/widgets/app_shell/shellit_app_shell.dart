@@ -17,6 +17,7 @@ import '../splits/split_matrix_view.dart';
 import '../terminal/terminal_connecting_view.dart';
 import '../terminal/terminal_screen.dart';
 import '../dialogs/unlock_vault_dialog.dart';
+import '../mobile/mobile_app_shell.dart';
 import 'navigation_sidebar.dart';
 import 'top_bar_tabs.dart';
 
@@ -38,6 +39,7 @@ class ShellitAppShell extends ConsumerStatefulWidget {
       onToggleRecording;
   final Widget Function(BuildContext context)? pluginSidebarBuilder;
   final Widget? topBarTrailing;
+  final bool? forceMobile;
 
   const ShellitAppShell({
     super.key,
@@ -50,6 +52,7 @@ class ShellitAppShell extends ConsumerStatefulWidget {
     this.onToggleRecording,
     this.pluginSidebarBuilder,
     this.topBarTrailing,
+    this.forceMobile,
   });
 
   @override
@@ -311,20 +314,36 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
     final sessionState = ref.watch(sessionManagerProvider);
     final activeTab = sessionState.activeTab;
 
-    return Focus(
-      focusNode: _shellFocusNode,
-      canRequestFocus: false,
-      skipTraversal: true,
-      onKeyEvent: _handleGlobalKeys,
-      child: Scaffold(
-        backgroundColor: ShellitColors.obsidianBackground,
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final isSmallScreen = constraints.maxWidth < 800;
-            final effectiveSidebarCollapsed =
-                _isSidebarCollapsed || isSmallScreen;
+    final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
 
-            return Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobileView = widget.forceMobile ??
+            (isMobilePlatform
+                ? constraints.maxWidth < 900
+                : constraints.maxWidth < 700);
+
+        if (isMobileView) {
+          return MobileAppShell(
+            onConnectTerminal: widget.onConnectTerminal,
+            onQuickConnectSubmit: widget.onQuickConnectSubmit,
+            sectionBuilder: widget.sectionBuilder,
+          );
+        }
+
+        final isSmallScreen = constraints.maxWidth < 1000;
+        final effectiveSidebarCollapsed =
+            _isSidebarCollapsed || isSmallScreen;
+
+        return Focus(
+          focusNode: _shellFocusNode,
+          canRequestFocus: false,
+          skipTraversal: true,
+          onKeyEvent: _handleGlobalKeys,
+          child: Scaffold(
+            backgroundColor: ShellitColors.obsidianBackground,
+            body: Row(
               children: [
                 // Left Navigation Sidebar
                 NavigationSidebar(
@@ -399,10 +418,10 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                 if (widget.pluginSidebarBuilder != null && activeTab != null)
                   widget.pluginSidebarBuilder!(context),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 

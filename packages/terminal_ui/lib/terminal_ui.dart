@@ -50,6 +50,9 @@ export 'src/widgets/splits/broadcast_input_bar.dart';
 // Omni-Bar & Mobile
 export 'src/widgets/omni_bar/omni_search_modal.dart';
 export 'src/widgets/mobile/mobile_accessory_bar.dart';
+export 'src/widgets/mobile/mobile_app_shell.dart';
+export 'src/widgets/mobile/mobile_hosts_view.dart';
+export 'src/widgets/mobile/mobile_terminal_screen.dart';
 
 // Dialogs
 export 'src/widgets/dialogs/unlock_vault_dialog.dart';

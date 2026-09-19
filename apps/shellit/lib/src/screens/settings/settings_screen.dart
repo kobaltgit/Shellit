@@ -1,4 +1,5 @@
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
@@ -343,11 +344,13 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          // Section: Language & Translation
-          _buildSectionHeader(
-            context.tr('settings.language_title', defaultText: 'Language & Translation'),
-          ),
-          const SizedBox(height: 8),
+          if (defaultTargetPlatform != TargetPlatform.android &&
+              defaultTargetPlatform != TargetPlatform.iOS) ...[
+            // Section: Language & Translation
+            _buildSectionHeader(
+              context.tr('settings.language_title', defaultText: 'Language & Translation'),
+            ),
+            const SizedBox(height: 8),
           Card(
             color: ShellitColors.obsidianCard,
             shape: RoundedRectangleBorder(
@@ -444,6 +447,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+        ],
 
           // Section 4: Synchronization
           _buildSectionHeader(

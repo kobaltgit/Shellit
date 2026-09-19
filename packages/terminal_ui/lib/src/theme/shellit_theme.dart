@@ -24,6 +24,7 @@ class ShellitColors {
   // Status & Health Colors
   static const Color statusGreen = Color(0xFF10B981); // Ping < 50ms, OK
   static const Color statusYellow = Color(0xFFF59E0B); // Ping < 200ms, STAGE
+  static const Color statusOrange = Color(0xFFF97316); // Ping >= 200ms, Slow
   static const Color statusRed =
       Color(0xFFEF4444); // PROD, Ping offline / timeout, Error
   static const Color statusGrey = Color(0xFF6B7280); // Offline / unreachable

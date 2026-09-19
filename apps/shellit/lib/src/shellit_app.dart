@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
@@ -22,22 +23,30 @@ class ShellitApp extends ConsumerWidget {
     final localizationService = ref.watch(localizationServiceProvider);
     final activeLocale = ref.watch(activeLocaleProvider);
 
+    final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final effectiveLocale = isMobilePlatform ? 'en' : activeLocale;
+
     return LocalizationScope(
       service: localizationService,
-      locale: activeLocale,
+      locale: effectiveLocale,
       child: MaterialApp(
         title: 'Shellit',
         debugShowCheckedModeBanner: false,
         theme: ShellitTheme.obsidianDarkTheme,
         home: ShellitAppShell(
-        snippets: snippets,
+        snippets: isMobilePlatform ? null : snippets,
         onConnectTerminal: (host, {onProgress}) =>
             connectController.connectTerminal(host, onProgress: onProgress),
-        onConnectSftp: (host, {onProgress}) =>
-            connectController.connectSftp(host, onProgress: onProgress),
+        onConnectSftp: isMobilePlatform
+            ? null
+            : (host, {onProgress}) =>
+                connectController.connectSftp(host, onProgress: onProgress),
         onToggleRecording: (session, host) =>
             connectController.toggleRecording(session, host),
-        topBarTrailing: Consumer(
+        topBarTrailing: isMobilePlatform
+            ? null
+            : Consumer(
           builder: (context, ref, _) {
             final activePlugin = ref.watch(activeSidebarPluginProvider);
             final pluginsAsync = ref.watch(pluginManagerProvider);
@@ -146,18 +155,20 @@ class ShellitApp extends ConsumerWidget {
             );
           },
         ),
-        pluginSidebarBuilder: (context) {
-          final activeTab = ref.watch(sessionManagerProvider).activeTab;
-          if (activeTab == null) return const SizedBox.shrink();
+        pluginSidebarBuilder: isMobilePlatform
+            ? null
+            : (context) {
+                final activeTab = ref.watch(sessionManagerProvider).activeTab;
+                if (activeTab == null) return const SizedBox.shrink();
 
-          final activePlugin = ref.watch(activeSidebarPluginProvider);
-          if (activePlugin == null) return const SizedBox.shrink();
-          return DesktopPluginHostView(
-            plugin: activePlugin,
-            onClose: () =>
-                ref.read(activeSidebarPluginProvider.notifier).state = null,
-          );
-        },
+                final activePlugin = ref.watch(activeSidebarPluginProvider);
+                if (activePlugin == null) return const SizedBox.shrink();
+                return DesktopPluginHostView(
+                  plugin: activePlugin,
+                  onClose: () =>
+                      ref.read(activeSidebarPluginProvider.notifier).state = null,
+                );
+              },
         sectionBuilder: (context, section) {
           switch (section) {
             case SidebarSection.keychain:
