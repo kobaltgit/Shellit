@@ -58,7 +58,7 @@ Shellit was designed, engineered, and tested from scratch in **under 24 hours** 
 
 > ⏱️ **Total Active Time:** ~19 hours (including a 4-hour night rest).  
 > 🛡️ **Quality Metrics:** 34 completed stages, 24 reported & resolved bugs, 133+ passing tests, 0 analyzer errors.  
-> 📖 **Read the unfiltered developer log:** [**`docs/CHRONICLE.md`**](docs/CHRONICLE.md).
+> 📖 **Read the unfiltered developer log:** [**`docs/CHRONICLE.en.md`**](docs/CHRONICLE.en.md).
 
 </details>
 
@@ -262,7 +262,7 @@ All development processes, technical specifications, and tasks are cataloged in 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — Milestone roadmap and progress timeline.
 - [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — Interactive task tracker across packages.
 - [`docs/BUGS_AND_ISSUES.md`](docs/BUGS_AND_ISSUES.md) — Realtime bug registry and incident log.
-- [`docs/CHRONICLE.md`](docs/CHRONICLE.md) — Project development devlog and chronicle.
+- [`docs/CHRONICLE.en.md`](docs/CHRONICLE.en.md) — Project development devlog and chronicle.
 - [`GEMINI.md`](GEMINI.md) — System operating guide for AI agents.
 
 ---
