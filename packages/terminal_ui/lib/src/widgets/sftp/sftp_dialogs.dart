@@ -112,7 +112,8 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              context.tr('sftp.chmod_title', defaultText: 'Permissions: {name}')
+              context
+                  .tr('sftp.chmod_title', defaultText: 'Permissions: {name}')
                   .replaceAll('{name}', widget.fileName),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
               overflow: TextOverflow.ellipsis,
@@ -166,8 +167,7 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
-                          context.tr('sftp.chmod_owner',
-                              defaultText: 'Owner'),
+                          context.tr('sftp.chmod_owner', defaultText: 'Owner'),
                           style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
@@ -208,8 +208,7 @@ class _SftpChmodDialogState extends State<SftpChmodDialog> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Text(
-                          context.tr('sftp.chmod_group',
-                              defaultText: 'Group'),
+                          context.tr('sftp.chmod_group', defaultText: 'Group'),
                           style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w600)),
                     ),
@@ -372,10 +371,12 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
       ),
       title: Row(
         children: [
-          const Icon(Icons.edit_outlined, size: 18, color: ShellitColors.accentBlue),
+          const Icon(Icons.edit_outlined,
+              size: 18, color: ShellitColors.accentBlue),
           const SizedBox(width: 8),
           Text(context.tr('sftp.rename_title', defaultText: 'Rename'),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
         ],
       ),
       content: SizedBox(
@@ -386,7 +387,8 @@ class _SftpRenameDialogState extends State<SftpRenameDialog> {
           style: const TextStyle(fontSize: 13, fontFamily: 'JetBrains Mono'),
           decoration: InputDecoration(
             labelText: context.tr('sftp.rename_label', defaultText: 'New name'),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           onSubmitted: (val) {
             final trimmed = val.trim();
@@ -564,7 +566,8 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
               context.tr('sftp.delete_dir_warning',
                   defaultText:
                       'This will recursively delete the directory and all of its contents. This action cannot be undone.'),
-              style: const TextStyle(fontSize: 12, color: ShellitColors.statusRed),
+              style:
+                  const TextStyle(fontSize: 12, color: ShellitColors.statusRed),
             ),
           ],
         ],

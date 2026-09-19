@@ -121,8 +121,7 @@ class ProdConfirmationDialog extends StatelessWidget {
                     color: ShellitColors.statusRed,
                   ),
                 ),
-                TextSpan(
-                    text: parts.length > 1 ? parts[1] : ' (PRODUCTION):'),
+                TextSpan(text: parts.length > 1 ? parts[1] : ' (PRODUCTION):'),
               ],
             ),
           ),

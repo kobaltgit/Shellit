@@ -415,7 +415,8 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
         title: TextField(
           controller: _searchController,
           autofocus: true,
-          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 14),
+          style:
+              const TextStyle(color: ShellitColors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: context.tr('hosts.search_placeholder',
                 defaultText: 'Search hosts...'),
@@ -464,8 +465,8 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
         ),
         IconButton(
           icon: const Icon(Icons.bolt, color: ShellitColors.accentCyan),
-          tooltip: context.tr('omni.quick_connect',
-              defaultText: 'Quick Connect'),
+          tooltip:
+              context.tr('omni.quick_connect', defaultText: 'Quick Connect'),
           onPressed: () => _showQuickConnectBottomSheet(context),
         ),
         IconButton(

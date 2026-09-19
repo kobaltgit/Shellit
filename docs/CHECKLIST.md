@@ -411,3 +411,54 @@
 - [x] Двустороннее масштабирование терминала:
   - [x] `TerminalView` обёрнут в `LayoutBuilder` с гарантированным проактивным ресайзом PTY при разворачивании окна.
 - [x] Релиз v0.7.3: успешное прохождение всех тестов монорепозитория, чистый `flutter analyze` и запуск мультиплатформенной сборки в GitHub Actions.
+
+---
+
+## Фаза 14: Вкладка с локальным терминалом (ConPTY / flutter_pty2, профили шеллов, строгий дизайн в стиле Termius и i18n)
+- [x] Контракты и домен ядра (`packages/core_foundation`):
+  - [x] Перечисление `ShellType` (powershell, pwsh, cmd, wsl, gitBash, bash, zsh, custom).
+  - [x] Сущность `LocalShellProfile` (id, name, shellType, executablePath, arguments, workingDirectory, isDefault, environment).
+  - [x] Контракт `ILocalTerminalService`.
+- [x] Движок PTY и авто-детектор шеллов (`packages/terminal_ui`):
+  - [x] Интеграция `flutter_pty2` (hardened ConPTY на Windows, Unix PTY на Linux/macOS с поддержкой UTF-8 и truecolor).
+  - [x] Реализация `LocalTerminalSession` с поддержкой `ITerminalSession`, автозавершением таба при коде 0 и выводом ошибки при сбое.
+  - [x] `LocalShellDetector`: автосканирование установленных шеллов на машине (PowerShell 7, Windows PowerShell 5.1, cmd.exe, wsl.exe, git bash) с приоритетом `pwsh` > `powershell`.
+  - [x] Провайдер `localShellsProvider` для реактивного управления профилями и выбора дефолтного шелла.
+- [x] Интеграция в App Shell и менеджер сессий:
+  - [x] Расширение `TabType.localTerminal` и поддержка `SessionTab` с полем `localShellProfile`.
+  - [x] Метод `openLocalTerminalTab` в `SessionManagerNotifier`.
+  - [x] Строгий монохромный Split-Button `[ Terminal | ▼ ]` (`LocalTerminalButton`) в тулбаре каталога хостов рядом с `Add Host`.
+  - [x] Клик по левой части — мгновенный запуск дефолтного шелла в 1 клик в домашней папке `%USERPROFILE%`.
+  - [x] Клик по стрелке — строгое выпадающее меню со списком обнаруженных шеллов и отметкой дефолтного.
+  - [x] Отрисовка вкладки в TopBar с иконкой `Icons.terminal` и контурным нейтральным бейджем `LOCAL`.
+  - [x] Глобальный хоткей `Ctrl+` ` (бэкстик/тильда) для быстрого открытия локального шелла.
+  - [x] Интеграция команд запуска локальных шеллов в Omni-Bar (`Ctrl+K`).
+- [x] Полная интернационализация (i18n & Языковые плагины):
+  - [x] Нулевой хардкод UI-строк: все тексты кнопки, подсказки, заголовки и сообщения об ошибках вынесены в `defaultEnglishStrings` под ключами `local_terminal.*`.
+  - [x] Полная совместимость с экспортом шаблонов перевода и сторонними языковыми плагинами.
+- [x] Тестирование и верификация:
+  - [x] Комплект юнит- и виджет-тестов `test/local_terminal_test.dart` (детектор, нотификатор, сплит-кнопка).
+  - [x] 100% прохождение всех тестов (20 тестов `core_foundation`, 77 тестов `terminal_ui`, 43 теста `apps/shellit`).
+  - [x] 0 ошибок и предупреждений в `flutter analyze` по всему проекту.
+
+---
+
+## Фаза 15: Карточка «О программе» в настройках (About Shellit в стиле Tabby, GitHub Releases API, пред-заполненный Bug Report)
+- [x] Разработка карточки `AboutSettingsCard` (`apps/shellit/lib/src/screens/settings/about_settings_card.dart`):
+  - [x] Адаптивная вёрстка (2 колонки side-by-side на десктопе, вертикальная стопка на мобильных/узких экранах).
+  - [x] Левый блок: Векторный логотип `ShellitLogo`, название `Shellit`, плашка версии (`0.7.3`), суперскрипт `α`, кнопка «Проверить обновления».
+  - [x] Интеграция с GitHub Releases API (`api.github.com/repos/kobaltgit/Shellit/releases/latest`): асинхронная проверка, спиннер, диалог при наличии новой версии с кнопкой перехода на скачивание, уведомление при актуальной версии.
+  - [x] Правый блок quick-action тайлов:
+    - [x] 🐛 «Сообщить о проблеме» / *Открыть пред-заполненный отчет на GitHub*: формирование ссылки с версией Shellit, ОС, платформой и шаблоном описания.
+    - [x] 💬 «Community» / *Telegram (В планах)*: информационный SnackBar о планируемом запуске сообщества вместе с релизом.
+    - [x] 🐙 «GitHub» / *Исходный код*: переход на репозиторий `https://github.com/kobaltgit/Shellit`.
+    - [x] 📖 «Что нового» / *Посмотреть изменения в релизе*: встроенное модальное окно с ключевыми фичами релиза v0.7.3 и кнопкой перехода ко всем релизам.
+- [x] Интеграция в `SettingsScreen`:
+  - [x] Новая секция «О ПРОГРАММЕ» в конце списка настроек.
+- [x] Полная интернационализация (i18n):
+  - [x] Добавлены ключи `settings.about.*` в мастер-словарь `default_strings.dart` (en) и языковой пакет `ru.json` (ru).
+- [x] Тестирование и верификация:
+  - [x] Виджет-тесты `test/about_settings_card_test.dart` (5 тестов успешно).
+  - [x] Полный прогон тестов приложения (48/48 успешно).
+  - [x] Чистый `flutter analyze` (0 warnings, 0 errors).
+- [x] Релиз v0.8.0: успешное прохождение всех тестов монорепозитория, чистый `flutter analyze` и запуск мультиплатформенной сборки в GitHub Actions.

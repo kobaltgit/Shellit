@@ -12,10 +12,7 @@ import 'snippets_screen.dart';
 class AiSnippetChatView extends ConsumerStatefulWidget {
   final VoidCallback onOpenSettings;
 
-  const AiSnippetChatView({
-    super.key,
-    required this.onOpenSettings,
-  });
+  const AiSnippetChatView({super.key, required this.onOpenSettings});
 
   @override
   ConsumerState<AiSnippetChatView> createState() => _AiSnippetChatViewState();
@@ -69,33 +66,42 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
     _scrollToBottom();
   }
 
-  void _executeCommand(String command, String title, [SessionTab? specificTab]) {
+  void _executeCommand(
+    String command,
+    String title, [
+    SessionTab? specificTab,
+  ]) {
     final sessionState = ref.read(sessionManagerProvider);
     final connectedTabs = sessionState.tabs
         .where((t) => t.terminalSession != null)
         .toList();
 
-    final tab = specificTab ??
+    final tab =
+        specificTab ??
         (sessionState.activeTab?.terminalSession != null
             ? sessionState.activeTab
             : (connectedTabs.isNotEmpty ? connectedTabs.first : null));
 
     if (tab?.terminalSession != null) {
-      final cmdWithNewline =
-          command.endsWith('\n') ? command : '$command\n';
+      final cmdWithNewline = command.endsWith('\n') ? command : '$command\n';
       tab!.terminalSession!.inputStream.add(
         Uint8List.fromList(utf8.encode(cmdWithNewline)),
       );
       final tabTitle = tab.title.isNotEmpty ? tab.title : 'terminal';
-      final hostInfo = tab.host?.hostname != null ? ' (${tab.host!.hostname})' : '';
+      final hostInfo = tab.host?.hostname != null
+          ? ' (${tab.host!.hostname})'
+          : '';
 
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle_outline,
-                  size: 16, color: ShellitColors.statusGreen),
+              const Icon(
+                Icons.check_circle_outline,
+                size: 16,
+                color: ShellitColors.statusGreen,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text.rich(
@@ -146,8 +152,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.info_outline,
-                  size: 16, color: ShellitColors.accentCyan),
+              const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: ShellitColors.accentCyan,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -205,8 +214,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.bookmark_added_outlined,
-                  size: 16, color: ShellitColors.accentCyan),
+              const Icon(
+                Icons.bookmark_added_outlined,
+                size: 16,
+                color: ShellitColors.accentCyan,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -239,9 +251,16 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
 
     if (connectedTabs.isEmpty) {
       return OutlinedButton.icon(
-        icon: const Icon(Icons.play_arrow, size: 14, color: ShellitColors.textMuted),
+        icon: const Icon(
+          Icons.play_arrow,
+          size: 14,
+          color: ShellitColors.textMuted,
+        ),
         label: Text(
-          context.tr('snippets.ai.btn_run_terminal', defaultText: 'Run in Terminal'),
+          context.tr(
+            'snippets.ai.btn_run_terminal',
+            defaultText: 'Run in Terminal',
+          ),
           style: const TextStyle(color: ShellitColors.textMuted, fontSize: 12),
         ),
         style: OutlinedButton.styleFrom(
@@ -255,7 +274,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
     if (connectedTabs.length == 1) {
       final singleTab = connectedTabs.first;
       return OutlinedButton.icon(
-        icon: const Icon(Icons.play_arrow, size: 14, color: ShellitColors.statusGreen),
+        icon: const Icon(
+          Icons.play_arrow,
+          size: 14,
+          color: ShellitColors.statusGreen,
+        ),
         label: Text(
           'Run in ${singleTab.title}',
           style: const TextStyle(
@@ -268,7 +291,8 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           side: const BorderSide(color: ShellitColors.statusGreen),
         ),
-        onPressed: () => _executeCommand(snippet.command, snippet.title, singleTab),
+        onPressed: () =>
+            _executeCommand(snippet.command, snippet.title, singleTab),
       );
     }
 
@@ -294,15 +318,21 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                 Icon(
                   Icons.terminal,
                   size: 15,
-                  color: isSelected ? ShellitColors.statusGreen : ShellitColors.textSecondary,
+                  color: isSelected
+                      ? ShellitColors.statusGreen
+                      : ShellitColors.textSecondary,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     tab.title,
                     style: TextStyle(
-                      color: isSelected ? ShellitColors.statusGreen : ShellitColors.textPrimary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? ShellitColors.statusGreen
+                          : ShellitColors.textPrimary,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       fontSize: 12,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -312,7 +342,10 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                   const SizedBox(width: 8),
                   Text(
                     tab.host!.hostname,
-                    style: const TextStyle(color: ShellitColors.textMuted, fontSize: 11),
+                    style: const TextStyle(
+                      color: ShellitColors.textMuted,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ],
@@ -321,7 +354,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
         }).toList();
       },
       child: OutlinedButton.icon(
-        icon: const Icon(Icons.play_arrow, size: 14, color: ShellitColors.statusGreen),
+        icon: const Icon(
+          Icons.play_arrow,
+          size: 14,
+          color: ShellitColors.statusGreen,
+        ),
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -334,7 +371,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.arrow_drop_down, size: 16, color: ShellitColors.statusGreen),
+            const Icon(
+              Icons.arrow_drop_down,
+              size: 16,
+              color: ShellitColors.statusGreen,
+            ),
           ],
         ),
         style: OutlinedButton.styleFrom(
@@ -355,7 +396,8 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
       future: vaultRepo.getSettings(),
       builder: (context, snapshot) {
         final settings = snapshot.data;
-        final hasKey = settings?.geminiApiKey != null &&
+        final hasKey =
+            settings?.geminiApiKey != null &&
             settings!.geminiApiKey!.trim().isNotEmpty;
 
         if (!hasKey) {
@@ -391,7 +433,10 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
             // Generating indicator
             if (chatState.isGenerating) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     const SizedBox(
@@ -430,8 +475,11 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline,
-                        color: ShellitColors.statusRed, size: 16),
+                    const Icon(
+                      Icons.error_outline,
+                      color: ShellitColors.statusRed,
+                      size: 16,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -518,7 +566,10 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentBlue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
               onPressed: widget.onOpenSettings,
             ),
@@ -533,9 +584,7 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
         color: ShellitColors.obsidianCard,
-        border: Border(
-          bottom: BorderSide(color: ShellitColors.border),
-        ),
+        border: Border(bottom: BorderSide(color: ShellitColors.border)),
       ),
       child: Row(
         children: [
@@ -591,11 +640,26 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
 
   Widget _buildQuickPromptsBar() {
     final prompts = [
-      context.tr('snippets.ai.quick_docker', defaultText: 'Docker clean stopped containers'),
-      context.tr('snippets.ai.quick_large_files', defaultText: 'Find files >100MB'),
-      context.tr('snippets.ai.quick_ports', defaultText: 'List listening TCP ports'),
-      context.tr('snippets.ai.quick_ram', defaultText: 'Top 10 memory consuming processes'),
-      context.tr('snippets.ai.quick_logs', defaultText: 'Compress logs older than 7 days'),
+      context.tr(
+        'snippets.ai.quick_docker',
+        defaultText: 'Docker clean stopped containers',
+      ),
+      context.tr(
+        'snippets.ai.quick_large_files',
+        defaultText: 'Find files >100MB',
+      ),
+      context.tr(
+        'snippets.ai.quick_ports',
+        defaultText: 'List listening TCP ports',
+      ),
+      context.tr(
+        'snippets.ai.quick_ram',
+        defaultText: 'Top 10 memory consuming processes',
+      ),
+      context.tr(
+        'snippets.ai.quick_logs',
+        defaultText: 'Compress logs older than 7 days',
+      ),
     ];
 
     return Container(
@@ -754,8 +818,10 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
             if (snippet?.isDangerous == true) ...[
               const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: ShellitColors.statusRed.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
@@ -851,7 +917,9 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: ShellitColors.textSecondary,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                     ),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: snippet.command));
@@ -861,11 +929,17 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                           content: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.check, size: 14, color: ShellitColors.statusGreen),
+                              const Icon(
+                                Icons.check,
+                                size: 14,
+                                color: ShellitColors.statusGreen,
+                              ),
                               const SizedBox(width: 8),
                               Text(
-                                context.tr('snippets.copied_snackbar',
-                                    defaultText: 'Copied to clipboard'),
+                                context.tr(
+                                  'snippets.copied_snackbar',
+                                  defaultText: 'Copied to clipboard',
+                                ),
                                 style: const TextStyle(
                                   color: ShellitColors.textPrimary,
                                   fontSize: 12,
@@ -906,7 +980,9 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                           : ShellitColors.accentBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                     ),
                     onPressed: _savedSnippetIds.contains(snippet.title)
                         ? null
@@ -926,9 +1002,7 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       decoration: const BoxDecoration(
         color: ShellitColors.obsidianCard,
-        border: Border(
-          top: BorderSide(color: ShellitColors.border),
-        ),
+        border: Border(top: BorderSide(color: ShellitColors.border)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -938,7 +1012,8 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
               focusNode: FocusNode(skipTraversal: true),
               onKeyEvent: (event) {
                 if (event is KeyDownEvent) {
-                  final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+                  final isCtrl =
+                      HardwareKeyboard.instance.isControlPressed ||
                       HardwareKeyboard.instance.isMetaPressed;
                   final isEnter =
                       event.logicalKey == LogicalKeyboardKey.enter ||
@@ -959,8 +1034,7 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                 decoration: InputDecoration(
                   hintText: context.tr(
                     'snippets.ai.chat_placeholder',
-                    defaultText:
-                        'Ask for a snippet... (Ctrl+Enter to send)',
+                    defaultText: 'Ask for a snippet... (Ctrl+Enter to send)',
                   ),
                   hintStyle: const TextStyle(color: ShellitColors.textMuted),
                   filled: true,
@@ -975,8 +1049,9 @@ class _AiSnippetChatViewState extends ConsumerState<AiSnippetChatView> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        const BorderSide(color: ShellitColors.accentCyan),
+                    borderSide: const BorderSide(
+                      color: ShellitColors.accentCyan,
+                    ),
                   ),
                 ),
                 // Enter = newline (default behavior), Ctrl+Enter handled by KeyboardListener

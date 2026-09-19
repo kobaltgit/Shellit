@@ -36,6 +36,12 @@ export 'src/widgets/terminal/terminal_context_menu.dart';
 export 'src/widgets/terminal/terminal_shortcuts_dialog.dart';
 export 'src/widgets/terminal/prod_guard_border.dart';
 export 'src/widgets/terminal/prod_confirmation_dialog.dart';
+export 'src/widgets/terminal/local_terminal_button.dart';
+
+// Local Terminal Services & Providers
+export 'src/services/local_terminal_session.dart';
+export 'src/services/local_shell_detector.dart';
+export 'src/providers/local_terminal_provider.dart';
 
 // SFTP Manager
 export 'src/widgets/sftp/sftp_tab_view.dart';

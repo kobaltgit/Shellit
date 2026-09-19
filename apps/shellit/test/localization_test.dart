@@ -20,7 +20,10 @@ void main() {
     test('returns default English strings when active locale is English', () {
       expect(service.currentLocale, equals('en'));
       expect(service.translate('common.connect'), equals('Connect'));
-      expect(service.translate('settings.title'), equals('Settings & Security'));
+      expect(
+        service.translate('settings.title'),
+        equals('Settings & Security'),
+      );
     });
 
     test('interpolates parameters accurately in strings', () {
@@ -46,7 +49,10 @@ void main() {
       expect(service.translate('common.connect'), equals('Подключиться'));
 
       // Key NOT present in Russian dictionary -> falls back to default English
-      expect(service.translate('settings.title'), equals('Settings & Security'));
+      expect(
+        service.translate('settings.title'),
+        equals('Settings & Security'),
+      );
 
       // Key NOT present in either -> uses defaultText or returns key
       expect(
@@ -56,28 +62,30 @@ void main() {
       expect(service.translate('unknown.action'), equals('unknown.action'));
     });
 
-    test('unregisters language pack and resets active locale to en if removed',
-        () async {
-      service.registerLanguagePack('de', {'common.connect': 'Verbinden'});
-      expect(service.availableLocales, contains('de'));
+    test(
+      'unregisters language pack and resets active locale to en if removed',
+      () async {
+        service.registerLanguagePack('de', {'common.connect': 'Verbinden'});
+        expect(service.availableLocales, contains('de'));
 
-      await service.setLocale('de');
-      expect(service.currentLocale, equals('de'));
-      expect(service.translate('common.connect'), equals('Verbinden'));
+        await service.setLocale('de');
+        expect(service.currentLocale, equals('de'));
+        expect(service.translate('common.connect'), equals('Verbinden'));
 
-      // Unregister 'de'
-      service.unregisterLanguagePack('de');
-      expect(service.availableLocales, isNot(contains('de')));
-      // Should automatically reset active locale to 'en'
-      expect(service.currentLocale, equals('en'));
-      // Translation should now fallback to English
-      expect(service.translate('common.connect'), equals('Connect'));
+        // Unregister 'de'
+        service.unregisterLanguagePack('de');
+        expect(service.availableLocales, isNot(contains('de')));
+        // Should automatically reset active locale to 'en'
+        expect(service.currentLocale, equals('en'));
+        // Translation should now fallback to English
+        expect(service.translate('common.connect'), equals('Connect'));
 
-      // Attempting to unregister built-in English should have no effect
-      service.unregisterLanguagePack('en');
-      expect(service.availableLocales, contains('en'));
-      expect(service.currentLocale, equals('en'));
-    });
+        // Attempting to unregister built-in English should have no effect
+        service.unregisterLanguagePack('en');
+        expect(service.availableLocales, contains('en'));
+        expect(service.currentLocale, equals('en'));
+      },
+    );
 
     test('exports full default English template', () {
       final template = service.exportTemplate();
@@ -120,15 +128,14 @@ void main() {
   });
 
   group('LocalizationScope & UI Reactivity', () {
-    testWidgets('context.tr translates and re-renders on locale change',
-        (tester) async {
+    testWidgets('context.tr translates and re-renders on locale change', (
+      tester,
+    ) async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       final service = container.read(localizationServiceProvider);
-      service.registerLanguagePack('ru_RU', {
-        'common.connect': 'Подключиться',
-      });
+      service.registerLanguagePack('ru_RU', {'common.connect': 'Подключиться'});
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -182,73 +189,77 @@ void main() {
     });
 
     testWidgets(
-        'availableLocalesProvider dynamically updates on register/unregister and resets active locale',
-        (tester) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+      'availableLocalesProvider dynamically updates on register/unregister and resets active locale',
+      (tester) async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: Consumer(
-            builder: (context, ref, _) {
-              final activeLocale = ref.watch(activeLocaleProvider);
-              final availableLocales = ref.watch(availableLocalesProvider);
-              final l10nService = ref.watch(localizationServiceProvider);
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: Consumer(
+              builder: (context, ref, _) {
+                final activeLocale = ref.watch(activeLocaleProvider);
+                final availableLocales = ref.watch(availableLocalesProvider);
+                final l10nService = ref.watch(localizationServiceProvider);
 
-              return LocalizationScope(
-                service: l10nService,
-                locale: activeLocale,
-                child: MaterialApp(
-                  home: Scaffold(
-                    body: Builder(
-                      builder: (ctx) {
-                        return Column(
-                          children: [
-                            Text('Active: $activeLocale'),
-                            Text('Locales: ${availableLocales.join(', ')}'),
-                            Text(ctx.tr('common.connect')),
-                          ],
-                        );
-                      },
+                return LocalizationScope(
+                  service: l10nService,
+                  locale: activeLocale,
+                  child: MaterialApp(
+                    home: Scaffold(
+                      body: Builder(
+                        builder: (ctx) {
+                          return Column(
+                            children: [
+                              Text('Active: $activeLocale'),
+                              Text('Locales: ${availableLocales.join(', ')}'),
+                              Text(ctx.tr('common.connect')),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
 
-      // Initial state: only English
-      expect(find.text('Active: en'), findsOneWidget);
-      expect(find.text('Locales: en'), findsOneWidget);
-      expect(find.text('Connect'), findsOneWidget);
+        // Initial state: only English
+        expect(find.text('Active: en'), findsOneWidget);
+        expect(find.text('Locales: en'), findsOneWidget);
+        expect(find.text('Connect'), findsOneWidget);
 
-      // Dynamically register Spanish
-      container.read(activeLocaleProvider.notifier).registerLanguagePack('es', {
-        'common.connect': 'Conectar',
-      });
-      await tester.pumpAndSettle();
+        // Dynamically register Spanish
+        container.read(activeLocaleProvider.notifier).registerLanguagePack(
+          'es',
+          {'common.connect': 'Conectar'},
+        );
+        await tester.pumpAndSettle();
 
-      // Locales list updated to include 'es'
-      expect(find.text('Locales: en, es'), findsOneWidget);
+        // Locales list updated to include 'es'
+        expect(find.text('Locales: en, es'), findsOneWidget);
 
-      // Change locale to 'es'
-      await container.read(activeLocaleProvider.notifier).changeLocale('es');
-      await tester.pumpAndSettle();
+        // Change locale to 'es'
+        await container.read(activeLocaleProvider.notifier).changeLocale('es');
+        await tester.pumpAndSettle();
 
-      expect(find.text('Active: es'), findsOneWidget);
-      expect(find.text('Conectar'), findsOneWidget);
+        expect(find.text('Active: es'), findsOneWidget);
+        expect(find.text('Conectar'), findsOneWidget);
 
-      // Unregister 'es' (simulating plugin deletion/disable)
-      container.read(activeLocaleProvider.notifier).unregisterLanguagePack('es');
-      await tester.pumpAndSettle();
+        // Unregister 'es' (simulating plugin deletion/disable)
+        container
+            .read(activeLocaleProvider.notifier)
+            .unregisterLanguagePack('es');
+        await tester.pumpAndSettle();
 
-      // Available locales should remove 'es', active should fall back to 'en', and string should be English
-      expect(find.text('Locales: en'), findsOneWidget);
-      expect(find.text('Active: en'), findsOneWidget);
-      expect(find.text('Connect'), findsOneWidget);
-    });
+        // Available locales should remove 'es', active should fall back to 'en', and string should be English
+        expect(find.text('Locales: en'), findsOneWidget);
+        expect(find.text('Active: en'), findsOneWidget);
+        expect(find.text('Connect'), findsOneWidget);
+      },
+    );
   });
 }

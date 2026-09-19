@@ -178,7 +178,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           // Tab Overflow Dropdown Button
           if (sessionState.tabs.length > 2)
             Tooltip(
-              message: context.tr('tabs.overflow_all_tabs',
+              message: context
+                  .tr('tabs.overflow_all_tabs',
                       defaultText: 'All Open Tabs ({count})')
                   .replaceAll('{count}', sessionState.tabs.length.toString()),
               child: InkWell(
@@ -467,7 +468,8 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
           backgroundColor: ShellitColors.obsidianCard,
           title: Row(
             children: [
-              const Icon(Icons.shield, color: ShellitColors.accentBlue, size: 22),
+              const Icon(Icons.shield,
+                  color: ShellitColors.accentBlue, size: 22),
               const SizedBox(width: 8),
               Text(
                 context.tr('vault.setup_password_title',
@@ -595,6 +597,9 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
         break;
       case TabType.splitTerminal:
         icon = Icons.dashboard_customize_outlined;
+        break;
+      case TabType.localTerminal:
+        icon = Icons.terminal;
         break;
     }
 
@@ -729,6 +734,27 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   context.tr('hosts.card.env_prod', defaultText: 'PROD'),
                   style: const TextStyle(
                     color: ShellitColors.envProdText,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (tab.type == TabType.localTerminal)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: ShellitColors.obsidianBackground,
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(
+                    color: ShellitColors.borderLight,
+                    width: 0.5,
+                  ),
+                ),
+                child: Text(
+                  context.tr('local_terminal.tab.badge', defaultText: 'LOCAL'),
+                  style: const TextStyle(
+                    color: ShellitColors.textSecondary,
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),

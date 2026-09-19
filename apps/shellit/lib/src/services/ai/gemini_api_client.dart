@@ -8,7 +8,8 @@ class GeminiApiClient {
 
   GeminiApiClient({http.Client? client}) : _client = client ?? http.Client();
 
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta';
 
   /// Fetches available generative models from Google Gemini API.
   Future<List<AiModelInfo>> fetchAvailableModels(String apiKey) async {
@@ -32,7 +33,9 @@ class GeminiApiClient {
     }
 
     final data = jsonDecode(response.body);
-    if (data is! Map || !data.containsKey('models') || data['models'] is! List) {
+    if (data is! Map ||
+        !data.containsKey('models') ||
+        data['models'] is! List) {
       throw const FormatException('Invalid models list response format');
     }
 
@@ -43,7 +46,8 @@ class GeminiApiClient {
       if (m is! Map) continue;
       final name = m['name'] as String? ?? '';
       final id = name.replaceFirst('models/', '');
-      final supportedMethods = (m['supportedGenerationMethods'] as List?)
+      final supportedMethods =
+          (m['supportedGenerationMethods'] as List?)
               ?.map((e) => e.toString())
               .toList() ??
           [];
@@ -55,7 +59,8 @@ class GeminiApiClient {
 
       final displayName = m['displayName'] as String? ?? id;
       final description = m['description'] as String? ?? '';
-      final isRecommended = id == 'gemini-2.5-flash' ||
+      final isRecommended =
+          id == 'gemini-2.5-flash' ||
           id == 'gemini-2.5-pro' ||
           id.startsWith('gemini-2.5');
 
@@ -92,7 +97,9 @@ class GeminiApiClient {
       throw const FormatException('API key is empty');
     }
 
-    final uri = Uri.parse('$_baseUrl/models/$modelId:generateContent?key=$cleanKey');
+    final uri = Uri.parse(
+      '$_baseUrl/models/$modelId:generateContent?key=$cleanKey',
+    );
 
     // Build multi-turn message payload
     final List<Map<String, dynamic>> contents = [];
@@ -110,9 +117,9 @@ class GeminiApiClient {
             'text': msg.isUser
                 ? msg.text
                 : (msg.snippet != null
-                    ? jsonEncode(msg.snippet!.toJson())
-                    : msg.text),
-          }
+                      ? jsonEncode(msg.snippet!.toJson())
+                      : msg.text),
+          },
         ],
       });
     }
@@ -121,23 +128,26 @@ class GeminiApiClient {
     contents.add({
       'role': 'user',
       'parts': [
-        {'text': prompt}
+        {'text': prompt},
       ],
     });
 
-    final targetOs = osType != null && osType.isNotEmpty ? osType : 'Linux/POSIX Bash';
+    final targetOs = osType != null && osType.isNotEmpty
+        ? osType
+        : 'Linux/POSIX Bash';
 
     final requestBody = {
       'systemInstruction': {
         'parts': [
           {
-            'text': 'You are an elite DevOps and Systems Engineer inside the Shellit SSH client terminal assistant. '
+            'text':
+                'You are an elite DevOps and Systems Engineer inside the Shellit SSH client terminal assistant. '
                 'Target platform: $targetOs. '
                 'Your task is to write robust, secure, and production-ready shell commands and snippets. '
                 'You MUST ALWAYS reply with valid JSON conforming to the requested schema. '
                 'Mark isDangerous: true whenever the command deletes data (rm, truncate, wipe), reboots, terminates processes abruptly, modifies disk partitions, or drops databases.',
-          }
-        ]
+          },
+        ],
       },
       'contents': contents,
       'generationConfig': {
@@ -150,15 +160,21 @@ class GeminiApiClient {
             'description': {'type': 'STRING'},
             'tags': {
               'type': 'ARRAY',
-              'items': {'type': 'STRING'}
+              'items': {'type': 'STRING'},
             },
             'explanation': {'type': 'STRING'},
             'isDangerous': {'type': 'BOOLEAN'},
-            'dangerWarning': {'type': 'STRING'}
+            'dangerWarning': {'type': 'STRING'},
           },
-          'required': ['title', 'command', 'description', 'tags', 'isDangerous']
-        }
-      }
+          'required': [
+            'title',
+            'command',
+            'description',
+            'tags',
+            'isDangerous',
+          ],
+        },
+      },
     };
 
     final response = await _client.post(

@@ -11,8 +11,10 @@ final geminiApiClientProvider = Provider<GeminiApiClient>((ref) {
 });
 
 /// Future provider to fetch available models for a given API key.
-final geminiModelsProvider =
-    FutureProvider.family<List<AiModelInfo>, String>((ref, apiKey) async {
+final geminiModelsProvider = FutureProvider.family<List<AiModelInfo>, String>((
+  ref,
+  apiKey,
+) async {
   if (apiKey.trim().isEmpty) return const [];
   final client = ref.watch(geminiApiClientProvider);
   return client.fetchAvailableModels(apiKey.trim());
@@ -124,5 +126,5 @@ class AiChatController extends StateNotifier<AiChatState> {
 /// Riverpod provider for the AI Chat Controller
 final aiChatControllerProvider =
     StateNotifierProvider<AiChatController, AiChatState>((ref) {
-  return AiChatController(ref);
-});
+      return AiChatController(ref);
+    });

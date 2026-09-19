@@ -27,8 +27,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sshClientServiceProvider
-                .overrideWithValue(_FakeSshClientService()),
+            sshClientServiceProvider.overrideWithValue(_FakeSshClientService()),
           ],
           child: MaterialApp(
             theme: ShellitTheme.obsidianDarkTheme,
@@ -71,8 +70,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sshClientServiceProvider
-                .overrideWithValue(_FakeSshClientService()),
+            sshClientServiceProvider.overrideWithValue(_FakeSshClientService()),
           ],
           child: MaterialApp(
             theme: ShellitTheme.obsidianDarkTheme,

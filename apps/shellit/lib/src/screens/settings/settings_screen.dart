@@ -8,6 +8,7 @@ import '../../controllers/recording_settings_provider.dart';
 import '../../di/app_providers.dart';
 import '../../localization/localization_providers.dart';
 import '../../localization/template_exporter.dart';
+import 'about_settings_card.dart';
 import 'ai_settings_card.dart';
 import 'sync_settings_card.dart';
 
@@ -24,9 +25,11 @@ class SettingsScreen extends ConsumerWidget {
     final activeLocale = ref.watch(activeLocaleProvider);
     final availableLocales = ref.watch(availableLocalesProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
+    final isMobilePlatform =
+        defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS;
-    final isMobile = screenWidth < 700 || (isMobilePlatform && screenWidth < 900);
+    final isMobile =
+        screenWidth < 700 || (isMobilePlatform && screenWidth < 900);
     final showDesktopExtensions = !isMobile && !isMobilePlatform;
 
     return Scaffold(
@@ -35,7 +38,10 @@ class SettingsScreen extends ConsumerWidget {
         title: Text(
           isMobile
               ? context.tr('sidebar.nav_settings', defaultText: 'Settings')
-              : context.tr('settings.title', defaultText: 'Settings & Security'),
+              : context.tr(
+                  'settings.title',
+                  defaultText: 'Settings & Security',
+                ),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
@@ -43,7 +49,10 @@ class SettingsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.lock_outline, size: 20),
-            tooltip: context.tr('settings.lock_vault_now', defaultText: 'Lock Vault'),
+            tooltip: context.tr(
+              'settings.lock_vault_now',
+              defaultText: 'Lock Vault',
+            ),
             onPressed: () => ref.read(vaultProvider.notifier).lock(),
           ),
         ],
@@ -53,8 +62,10 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           // Section 1: Security & Vault
           _buildSectionHeader(
-            context.tr('settings.security_vault_title',
-                defaultText: 'Security & Vault'),
+            context.tr(
+              'settings.security_vault_title',
+              defaultText: 'Security & Vault',
+            ),
           ),
           const SizedBox(height: 8),
           Card(
@@ -71,20 +82,24 @@ class SettingsScreen extends ConsumerWidget {
                     color: ShellitColors.accentCyan,
                   ),
                   title: Text(
-                    context.tr('settings.vault.auto_lock_title',
-                        defaultText: 'Auto-Lock Timeout'),
+                    context.tr(
+                      'settings.vault.auto_lock_title',
+                      defaultText: 'Auto-Lock Timeout',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textPrimary,
                       fontSize: 14,
                     ),
                   ),
                   subtitle: Text(
-                    context.tr('settings.vault.auto_lock_subtitle',
-                        params: {
-                          'minutes': '${vaultState.autoLockTimeoutMinutes}'
-                        },
-                        defaultText:
-                            'Lock database after ${vaultState.autoLockTimeoutMinutes} minutes of inactivity'),
+                    context.tr(
+                      'settings.vault.auto_lock_subtitle',
+                      params: {
+                        'minutes': '${vaultState.autoLockTimeoutMinutes}',
+                      },
+                      defaultText:
+                          'Lock database after ${vaultState.autoLockTimeoutMinutes} minutes of inactivity',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 12,
@@ -100,28 +115,48 @@ class SettingsScreen extends ConsumerWidget {
                     items: [
                       DropdownMenuItem(
                         value: 5,
-                        child: Text(context.tr('settings.vault.auto_lock_5m',
-                            defaultText: '5 minutes')),
+                        child: Text(
+                          context.tr(
+                            'settings.vault.auto_lock_5m',
+                            defaultText: '5 minutes',
+                          ),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 15,
-                        child: Text(context.tr('settings.vault.auto_lock_15m',
-                            defaultText: '15 minutes')),
+                        child: Text(
+                          context.tr(
+                            'settings.vault.auto_lock_15m',
+                            defaultText: '15 minutes',
+                          ),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 30,
-                        child: Text(context.tr('settings.vault.auto_lock_30m',
-                            defaultText: '30 minutes')),
+                        child: Text(
+                          context.tr(
+                            'settings.vault.auto_lock_30m',
+                            defaultText: '30 minutes',
+                          ),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 60,
-                        child: Text(context.tr('settings.vault.auto_lock_1h',
-                            defaultText: '1 hour')),
+                        child: Text(
+                          context.tr(
+                            'settings.vault.auto_lock_1h',
+                            defaultText: '1 hour',
+                          ),
+                        ),
                       ),
                       DropdownMenuItem(
                         value: 0,
-                        child: Text(context.tr('settings.vault.auto_lock_never',
-                            defaultText: 'Never')),
+                        child: Text(
+                          context.tr(
+                            'settings.vault.auto_lock_never',
+                            defaultText: 'Never',
+                          ),
+                        ),
                       ),
                     ],
                     onChanged: (val) {
@@ -141,10 +176,14 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   title: Text(
                     vaultState.isInitialized
-                        ? context.tr('settings.vault.change_password_title',
-                            defaultText: 'Change Master Password')
-                        : context.tr('settings.vault.set_password_title',
-                            defaultText: 'Set Master Password'),
+                        ? context.tr(
+                            'settings.vault.change_password_title',
+                            defaultText: 'Change Master Password',
+                          )
+                        : context.tr(
+                            'settings.vault.set_password_title',
+                            defaultText: 'Set Master Password',
+                          ),
                     style: const TextStyle(
                       color: ShellitColors.textPrimary,
                       fontSize: 14,
@@ -152,12 +191,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   subtitle: Text(
                     vaultState.isInitialized
-                        ? context.tr('settings.vault.change_password_subtitle',
+                        ? context.tr(
+                            'settings.vault.change_password_subtitle',
                             defaultText:
-                                'Re-encrypt SQLCipher database with a new Argon2id key')
-                        : context.tr('settings.vault.set_password_subtitle',
+                                'Re-encrypt SQLCipher database with a new Argon2id key',
+                          )
+                        : context.tr(
+                            'settings.vault.set_password_subtitle',
                             defaultText:
-                                'Protect database and SSH keys with Argon2id encryption'),
+                                'Protect database and SSH keys with Argon2id encryption',
+                          ),
                     style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 12,
@@ -181,8 +224,10 @@ class SettingsScreen extends ConsumerWidget {
                       color: ShellitColors.statusRed,
                     ),
                     title: Text(
-                      context.tr('settings.vault.disable_password_title',
-                          defaultText: 'Disable Master Password'),
+                      context.tr(
+                        'settings.vault.disable_password_title',
+                        defaultText: 'Disable Master Password',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.statusRed,
                         fontSize: 14,
@@ -190,9 +235,11 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     subtitle: Text(
-                      context.tr('settings.vault.disable_password_subtitle',
-                          defaultText:
-                              'The vault will remain open without prompting for a password when launching the app'),
+                      context.tr(
+                        'settings.vault.disable_password_subtitle',
+                        defaultText:
+                            'The vault will remain open without prompting for a password when launching the app',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textMuted,
                         fontSize: 12,
@@ -212,8 +259,10 @@ class SettingsScreen extends ConsumerWidget {
 
           // Section 2: Terminal Appearance
           _buildSectionHeader(
-            context.tr('settings.terminal_appearance_title',
-                defaultText: 'Terminal Appearance'),
+            context.tr(
+              'settings.terminal_appearance_title',
+              defaultText: 'Terminal Appearance',
+            ),
           ),
           const SizedBox(height: 8),
           Card(
@@ -228,17 +277,21 @@ class SettingsScreen extends ConsumerWidget {
                 color: ShellitColors.accentCyan,
               ),
               title: Text(
-                context.tr('settings.terminal.color_scheme_label',
-                    defaultText: 'Color Scheme'),
+                context.tr(
+                  'settings.terminal.color_scheme_label',
+                  defaultText: 'Color Scheme',
+                ),
                 style: const TextStyle(
                   color: ShellitColors.textPrimary,
                   fontSize: 14,
                 ),
               ),
               subtitle: Text(
-                context.tr('settings.terminal.current_scheme',
-                    params: {'scheme': activeSchemeName},
-                    defaultText: 'Current scheme: $activeSchemeName'),
+                context.tr(
+                  'settings.terminal.current_scheme',
+                  params: {'scheme': activeSchemeName},
+                  defaultText: 'Current scheme: $activeSchemeName',
+                ),
                 style: const TextStyle(
                   color: ShellitColors.textMuted,
                   fontSize: 12,
@@ -254,23 +307,45 @@ class SettingsScreen extends ConsumerWidget {
                 items: [
                   DropdownMenuItem(
                     value: 'Obsidian Dark',
-                    child: Text(context.tr('settings.theme_obsidian', defaultText: 'Obsidian Dark')),
+                    child: Text(
+                      context.tr(
+                        'settings.theme_obsidian',
+                        defaultText: 'Obsidian Dark',
+                      ),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'Dracula',
-                    child: Text(context.tr('settings.theme_dracula', defaultText: 'Dracula')),
+                    child: Text(
+                      context.tr(
+                        'settings.theme_dracula',
+                        defaultText: 'Dracula',
+                      ),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'Nord',
-                    child: Text(context.tr('settings.theme_nord', defaultText: 'Nord')),
+                    child: Text(
+                      context.tr('settings.theme_nord', defaultText: 'Nord'),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'OLED True Black',
-                    child: Text(context.tr('settings.theme_oled', defaultText: 'OLED True Black')),
+                    child: Text(
+                      context.tr(
+                        'settings.theme_oled',
+                        defaultText: 'OLED True Black',
+                      ),
+                    ),
                   ),
                   DropdownMenuItem(
                     value: 'Cyberpunk',
-                    child: Text(context.tr('settings.theme_cyberpunk', defaultText: 'Cyberpunk')),
+                    child: Text(
+                      context.tr(
+                        'settings.theme_cyberpunk',
+                        defaultText: 'Cyberpunk',
+                      ),
+                    ),
                   ),
                 ],
                 onChanged: (val) {
@@ -285,8 +360,10 @@ class SettingsScreen extends ConsumerWidget {
 
           // Section 3: Backup & Export
           _buildSectionHeader(
-            context.tr('settings.backup_storage_title',
-                defaultText: 'Backup & Storage'),
+            context.tr(
+              'settings.backup_storage_title',
+              defaultText: 'Backup & Storage',
+            ),
           ),
           const SizedBox(height: 8),
           Card(
@@ -303,17 +380,21 @@ class SettingsScreen extends ConsumerWidget {
                     color: ShellitColors.accentCyan,
                   ),
                   title: Text(
-                    context.tr('settings.backup.export_title',
-                        defaultText: 'Export Encrypted Vault Backup'),
+                    context.tr(
+                      'settings.backup.export_title',
+                      defaultText: 'Export Encrypted Vault Backup',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textPrimary,
                       fontSize: 14,
                     ),
                   ),
                   subtitle: Text(
-                    context.tr('settings.backup.export_subtitle',
-                        defaultText:
-                            'Save encrypted archive (.shellit-vault) protected by master key'),
+                    context.tr(
+                      'settings.backup.export_subtitle',
+                      defaultText:
+                          'Save encrypted archive (.shellit-vault) protected by master key',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 12,
@@ -332,17 +413,21 @@ class SettingsScreen extends ConsumerWidget {
                     color: ShellitColors.accentCyan,
                   ),
                   title: Text(
-                    context.tr('settings.backup.import_title',
-                        defaultText: 'Import Vault Backup'),
+                    context.tr(
+                      'settings.backup.import_title',
+                      defaultText: 'Import Vault Backup',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textPrimary,
                       fontSize: 14,
                     ),
                   ),
                   subtitle: Text(
-                    context.tr('settings.backup.import_subtitle',
-                        defaultText:
-                            'Restore hosts, keys and snippets from encrypted file'),
+                    context.tr(
+                      'settings.backup.import_subtitle',
+                      defaultText:
+                          'Restore hosts, keys and snippets from encrypted file',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textMuted,
                       fontSize: 12,
@@ -361,7 +446,10 @@ class SettingsScreen extends ConsumerWidget {
 
           // Section: Cross-Device Sync (E2EE)
           _buildSectionHeader(
-            context.tr('settings.sync.title', defaultText: 'Cross-Device Sync (E2EE)'),
+            context.tr(
+              'settings.sync.title',
+              defaultText: 'Cross-Device Sync (E2EE)',
+            ),
           ),
           const SizedBox(height: 8),
           const SyncSettingsCard(),
@@ -369,7 +457,10 @@ class SettingsScreen extends ConsumerWidget {
 
           // Section: AI Assistant & Gemini
           _buildSectionHeader(
-            context.tr('settings.ai.section_title', defaultText: 'AI Assistant & Gemini'),
+            context.tr(
+              'settings.ai.section_title',
+              defaultText: 'AI Assistant & Gemini',
+            ),
           ),
           const SizedBox(height: 8),
           const AiSettingsCard(),
@@ -378,112 +469,117 @@ class SettingsScreen extends ConsumerWidget {
           if (showDesktopExtensions) ...[
             // Section: Language & Translation
             _buildSectionHeader(
-              context.tr('settings.language_title', defaultText: 'Language & Translation'),
+              context.tr(
+                'settings.language_title',
+                defaultText: 'Language & Translation',
+              ),
             ),
             const SizedBox(height: 8),
-          Card(
-            color: ShellitColors.obsidianCard,
-            shape: RoundedRectangleBorder(
-              side: const BorderSide(color: ShellitColors.border),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(
-                    Icons.translate_outlined,
-                    color: ShellitColors.accentCyan,
-                  ),
-                  title: Text(
-                    context.tr(
-                      'settings.language.select_label',
-                      defaultText: 'Active Language',
-                    ),
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Current: ${_formatLocaleName(activeLocale)}',
-                    style: const TextStyle(
-                      color: ShellitColors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  trailing: DropdownButton<String>(
-                    value: availableLocales.contains(activeLocale)
-                        ? activeLocale
-                        : 'en',
-                    dropdownColor: ShellitColors.obsidianCard,
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 13,
-                    ),
-                    underline: const SizedBox.shrink(),
-                    icon: const Icon(
-                      Icons.arrow_drop_down,
+            Card(
+              color: ShellitColors.obsidianCard,
+              shape: RoundedRectangleBorder(
+                side: const BorderSide(color: ShellitColors.border),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.translate_outlined,
                       color: ShellitColors.accentCyan,
                     ),
-                    items: availableLocales.map((code) {
-                      return DropdownMenuItem<String>(
-                        value: code,
-                        child: Text(_formatLocaleName(code)),
-                      );
-                    }).toList(),
-                    onChanged: (newVal) {
-                      if (newVal != null) {
-                        ref
-                            .read(activeLocaleProvider.notifier)
-                            .changeLocale(newVal);
-                      }
-                    },
-                  ),
-                ),
-                const Divider(color: ShellitColors.border, height: 1),
-                ListTile(
-                  leading: const Icon(
-                    Icons.file_download_outlined,
-                    color: ShellitColors.accentBlue,
-                  ),
-                  title: Text(
-                    context.tr(
-                      'settings.language.export_template_btn',
-                      defaultText: 'Export Translation Template (.json)',
+                    title: Text(
+                      context.tr(
+                        'settings.language.select_label',
+                        defaultText: 'Active Language',
+                      ),
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 14,
+                      ),
                     ),
-                    style: const TextStyle(
-                      color: ShellitColors.textPrimary,
-                      fontSize: 14,
+                    subtitle: Text(
+                      'Current: ${_formatLocaleName(activeLocale)}',
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: DropdownButton<String>(
+                      value: availableLocales.contains(activeLocale)
+                          ? activeLocale
+                          : 'en',
+                      dropdownColor: ShellitColors.obsidianCard,
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                      underline: const SizedBox.shrink(),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: ShellitColors.accentCyan,
+                      ),
+                      items: availableLocales.map((code) {
+                        return DropdownMenuItem<String>(
+                          value: code,
+                          child: Text(_formatLocaleName(code)),
+                        );
+                      }).toList(),
+                      onChanged: (newVal) {
+                        if (newVal != null) {
+                          ref
+                              .read(activeLocaleProvider.notifier)
+                              .changeLocale(newVal);
+                        }
+                      },
                     ),
                   ),
-                  subtitle: Text(
-                    context.tr(
-                      'settings.language.export_subtitle',
-                      defaultText:
-                          'Export complete master string dictionary to create custom language plugins',
+                  const Divider(color: ShellitColors.border, height: 1),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.file_download_outlined,
+                      color: ShellitColors.accentBlue,
                     ),
-                    style: const TextStyle(
+                    title: Text(
+                      context.tr(
+                        'settings.language.export_template_btn',
+                        defaultText: 'Export Translation Template (.json)',
+                      ),
+                      style: const TextStyle(
+                        color: ShellitColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      context.tr(
+                        'settings.language.export_subtitle',
+                        defaultText:
+                            'Export complete master string dictionary to create custom language plugins',
+                      ),
+                      style: const TextStyle(
+                        color: ShellitColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right,
                       color: ShellitColors.textMuted,
-                      fontSize: 12,
                     ),
+                    onTap: () => _showExportTemplateDialog(context),
                   ),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: ShellitColors.textMuted,
-                  ),
-                  onTap: () => _showExportTemplateDialog(context),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+          ],
 
           if (showDesktopExtensions) ...[
             // Section 5: Logs & Diagnostics
             _buildSectionHeader(
-              context.tr('settings.logs_title',
-                  defaultText: 'Logs & Diagnostics'),
+              context.tr(
+                'settings.logs_title',
+                defaultText: 'Logs & Diagnostics',
+              ),
             ),
             const SizedBox(height: 8),
             Card(
@@ -497,19 +593,24 @@ class SettingsScreen extends ConsumerWidget {
                   SwitchListTile(
                     activeThumbColor: ShellitColors.accentCyan,
                     value: logSettings.isFileLoggingEnabled,
-                    onChanged: (val) => logController.setFileLoggingEnabled(val),
+                    onChanged: (val) =>
+                        logController.setFileLoggingEnabled(val),
                     title: Text(
-                      context.tr('settings.logging.write_disk_title',
-                          defaultText: 'Write System Logs to Disk'),
+                      context.tr(
+                        'settings.logging.write_disk_title',
+                        defaultText: 'Write System Logs to Disk',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textPrimary,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      context.tr('settings.logging.write_disk_subtitle',
-                          defaultText:
-                              'Persists rotated diagnostic logs (up to 2x 5MB) for crash analysis'),
+                      context.tr(
+                        'settings.logging.write_disk_subtitle',
+                        defaultText:
+                            'Persists rotated diagnostic logs (up to 2x 5MB) for crash analysis',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textMuted,
                         fontSize: 12,
@@ -523,17 +624,21 @@ class SettingsScreen extends ConsumerWidget {
                       color: ShellitColors.accentCyan,
                     ),
                     title: Text(
-                      context.tr('settings.logging.min_disk_log_title',
-                          defaultText: 'Minimum Disk Log Level'),
+                      context.tr(
+                        'settings.logging.min_disk_log_title',
+                        defaultText: 'Minimum Disk Log Level',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textPrimary,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      context.tr('settings.logging.min_disk_log_subtitle',
-                          defaultText:
-                              'Filter minimum severity before writing to log files'),
+                      context.tr(
+                        'settings.logging.min_disk_log_subtitle',
+                        defaultText:
+                            'Filter minimum severity before writing to log files',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textMuted,
                         fontSize: 12,
@@ -550,19 +655,39 @@ class SettingsScreen extends ConsumerWidget {
                       items: [
                         DropdownMenuItem(
                           value: LogLevel.debug,
-                          child: Text(context.tr('settings.logs.level_debug', defaultText: 'Debug (Verbose)')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.level_debug',
+                              defaultText: 'Debug (Verbose)',
+                            ),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: LogLevel.info,
-                          child: Text(context.tr('settings.logs.level_info', defaultText: 'Info (Default)')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.level_info',
+                              defaultText: 'Info (Default)',
+                            ),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: LogLevel.warning,
-                          child: Text(context.tr('settings.logs.level_warn_error', defaultText: 'Warning & Error')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.level_warn_error',
+                              defaultText: 'Warning & Error',
+                            ),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: LogLevel.error,
-                          child: Text(context.tr('settings.logs.level_error_only', defaultText: 'Error Only')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.level_error_only',
+                              defaultText: 'Error Only',
+                            ),
+                          ),
                         ),
                       ],
                       onChanged: (val) {
@@ -579,17 +704,21 @@ class SettingsScreen extends ConsumerWidget {
                       color: ShellitColors.statusRed,
                     ),
                     title: Text(
-                      context.tr('settings.logging.recording_policy_title',
-                          defaultText: 'Terminal Session Recording Policy'),
+                      context.tr(
+                        'settings.logging.recording_policy_title',
+                        defaultText: 'Terminal Session Recording Policy',
+                      ),
                       style: const TextStyle(
-                         color: ShellitColors.textPrimary,
+                        color: ShellitColors.textPrimary,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      context.tr('settings.logging.recording_policy_subtitle',
-                          defaultText:
-                              'Capture terminal sessions (asciinema .cast and plain text .log)'),
+                      context.tr(
+                        'settings.logging.recording_policy_subtitle',
+                        defaultText:
+                            'Capture terminal sessions (asciinema .cast and plain text .log)',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textMuted,
                         fontSize: 12,
@@ -606,15 +735,30 @@ class SettingsScreen extends ConsumerWidget {
                       items: [
                         DropdownMenuItem(
                           value: SessionRecordingMode.prodOnly,
-                          child: Text(context.tr('settings.logs.rec_prod', defaultText: 'PROD Only (Recommended)')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.rec_prod',
+                              defaultText: 'PROD Only (Recommended)',
+                            ),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: SessionRecordingMode.all,
-                          child: Text(context.tr('settings.logs.rec_all', defaultText: 'All Sessions')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.rec_all',
+                              defaultText: 'All Sessions',
+                            ),
+                          ),
                         ),
                         DropdownMenuItem(
                           value: SessionRecordingMode.manual,
-                          child: Text(context.tr('settings.logs.rec_manual', defaultText: 'Manual (REC button only)')),
+                          child: Text(
+                            context.tr(
+                              'settings.logs.rec_manual',
+                              defaultText: 'Manual (REC button only)',
+                            ),
+                          ),
                         ),
                       ],
                       onChanged: (val) {
@@ -633,8 +777,10 @@ class SettingsScreen extends ConsumerWidget {
                       color: ShellitColors.accentCyan,
                     ),
                     title: Text(
-                      context.tr('settings.logging.open_logs_dir_title',
-                          defaultText: 'Open Logs Directory'),
+                      context.tr(
+                        'settings.logging.open_logs_dir_title',
+                        defaultText: 'Open Logs Directory',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textPrimary,
                         fontSize: 14,
@@ -665,17 +811,21 @@ class SettingsScreen extends ConsumerWidget {
                       color: ShellitColors.statusRed,
                     ),
                     title: Text(
-                      context.tr('settings.logging.clear_logs_title',
-                          defaultText: 'Clear Disk Logs'),
+                      context.tr(
+                        'settings.logging.clear_logs_title',
+                        defaultText: 'Clear Disk Logs',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.statusRed,
                         fontSize: 14,
                       ),
                     ),
                     subtitle: Text(
-                      context.tr('settings.logging.clear_logs_subtitle',
-                          defaultText:
-                              'Erase all historical log files from storage'),
+                      context.tr(
+                        'settings.logging.clear_logs_subtitle',
+                        defaultText:
+                            'Erase all historical log files from storage',
+                      ),
                       style: const TextStyle(
                         color: ShellitColors.textMuted,
                         fontSize: 12,
@@ -686,10 +836,13 @@ class SettingsScreen extends ConsumerWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(context.tr(
-                              'settings.logs.files_deleted_msg',
-                              defaultText: 'Disk log files deleted successfully',
-                            )),
+                            content: Text(
+                              context.tr(
+                                'settings.logs.files_deleted_msg',
+                                defaultText:
+                                    'Disk log files deleted successfully',
+                              ),
+                            ),
                             duration: const Duration(seconds: 2),
                           ),
                         );
@@ -700,6 +853,18 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: 24),
+
+          // Section: About Shellit
+          _buildSectionHeader(
+            context.tr(
+              'settings.about.section_title',
+              defaultText: 'About Shellit',
+            ),
+          ),
+          const SizedBox(height: 8),
+          const AboutSettingsCard(),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -749,8 +914,14 @@ class SettingsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
         title: Text(
-          context.tr('settings.export_template.title', defaultText: 'Export Translation Template'),
-          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+          context.tr(
+            'settings.export_template.title',
+            defaultText: 'Export Translation Template',
+          ),
+          style: const TextStyle(
+            color: ShellitColors.textPrimary,
+            fontSize: 16,
+          ),
         ),
         content: SizedBox(
           width: 460,
@@ -759,10 +930,15 @@ class SettingsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.tr('settings.export_template.description',
-                    defaultText:
-                        'Export complete master strings dictionary (JSON) to create custom language plugins or submit community translations:'),
-                style: const TextStyle(color: ShellitColors.textMuted, fontSize: 13),
+                context.tr(
+                  'settings.export_template.description',
+                  defaultText:
+                      'Export complete master strings dictionary (JSON) to create custom language plugins or submit community translations:',
+                ),
+                style: const TextStyle(
+                  color: ShellitColors.textMuted,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -772,10 +948,14 @@ class SettingsScreen extends ConsumerWidget {
                   fontSize: 13,
                 ),
                 decoration: InputDecoration(
-                  labelText: context.tr('settings.export_template.path_label',
-                      defaultText: 'Output File Path (Optional)'),
-                  hintText: context.tr('settings.export_template.path_hint',
-                      defaultText: 'Leave empty for default Downloads folder'),
+                  labelText: context.tr(
+                    'settings.export_template.path_label',
+                    defaultText: 'Output File Path (Optional)',
+                  ),
+                  hintText: context.tr(
+                    'settings.export_template.path_hint',
+                    defaultText: 'Leave empty for default Downloads folder',
+                  ),
                 ),
               ),
             ],
@@ -805,7 +985,8 @@ class SettingsScreen extends ConsumerWidget {
                       content: Text(
                         context.tr(
                           'settings.export_template.success_msg',
-                          defaultText: 'Template exported successfully to: {path}',
+                          defaultText:
+                              'Template exported successfully to: {path}',
                           namedArgs: {'path': res.valueOrNull ?? ''},
                         ),
                       ),
@@ -830,7 +1011,10 @@ class SettingsScreen extends ConsumerWidget {
               }
             },
             child: Text(
-              context.tr('settings.export_template.btn_export', defaultText: 'Export Template'),
+              context.tr(
+                'settings.export_template.btn_export',
+                defaultText: 'Export Template',
+              ),
               style: const TextStyle(color: Colors.white),
             ),
           ),
@@ -1221,7 +1405,8 @@ class SettingsScreen extends ConsumerWidget {
                         final pwd = passCtrl.text;
                         if (pwd.isEmpty) {
                           setState(() {
-                            localError = 'Please enter your current master password.';
+                            localError =
+                                'Please enter your current master password.';
                           });
                           return;
                         }

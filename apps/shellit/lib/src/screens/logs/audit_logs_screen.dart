@@ -71,11 +71,17 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
           tabs: [
             Tab(
               icon: const Icon(Icons.dvr_outlined, size: 18),
-              text: context.tr('audit.tab_system_logs', defaultText: 'System Logs'),
+              text: context.tr(
+                'audit.tab_system_logs',
+                defaultText: 'System Logs',
+              ),
             ),
             Tab(
               icon: const Icon(Icons.fiber_smart_record_outlined, size: 18),
-              text: context.tr('audit.tab_session_recordings', defaultText: 'Session Recordings'),
+              text: context.tr(
+                'audit.tab_session_recordings',
+                defaultText: 'Session Recordings',
+              ),
             ),
           ],
         ),
@@ -177,7 +183,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                           value: state.selectedTag,
                           dropdownColor: ShellitColors.obsidianCard,
                           hint: Text(
-                            context.tr('audit.all_tags', defaultText: 'All Tags'),
+                            context.tr(
+                              'audit.all_tags',
+                              defaultText: 'All Tags',
+                            ),
                             style: const TextStyle(
                               fontSize: 12,
                               color: ShellitColors.textMuted,
@@ -191,7 +200,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                             DropdownMenuItem<String?>(
                               value: null,
                               child: Text(
-                                context.tr('audit.all_tags', defaultText: 'All Tags'),
+                                context.tr(
+                                  'audit.all_tags',
+                                  defaultText: 'All Tags',
+                                ),
                               ),
                             ),
                             ...state.availableTags.map(
@@ -211,8 +223,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   // Auto-scroll toggle
                   IconButton(
                     tooltip: state.autoScroll
-                        ? context.tr('audit.tooltip_autoscroll_on', defaultText: 'Auto-scroll ON')
-                        : context.tr('audit.tooltip_autoscroll_off', defaultText: 'Auto-scroll OFF'),
+                        ? context.tr(
+                            'audit.tooltip_autoscroll_on',
+                            defaultText: 'Auto-scroll ON',
+                          )
+                        : context.tr(
+                            'audit.tooltip_autoscroll_off',
+                            defaultText: 'Auto-scroll OFF',
+                          ),
                     icon: Icon(
                       Icons.arrow_downward,
                       size: 18,
@@ -226,8 +244,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   // Pause/Resume toggle
                   IconButton(
                     tooltip: state.isPaused
-                        ? context.tr('audit.tooltip_resume_stream', defaultText: 'Resume Stream')
-                        : context.tr('audit.tooltip_pause_stream', defaultText: 'Pause Stream'),
+                        ? context.tr(
+                            'audit.tooltip_resume_stream',
+                            defaultText: 'Resume Stream',
+                          )
+                        : context.tr(
+                            'audit.tooltip_pause_stream',
+                            defaultText: 'Pause Stream',
+                          ),
                     icon: Icon(
                       state.isPaused ? Icons.play_arrow : Icons.pause,
                       size: 18,
@@ -268,7 +292,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
 
                   // Clear buffer
                   IconButton(
-                    tooltip: context.tr('audit.tooltip_clear_buffer', defaultText: 'Clear In-Memory Buffer'),
+                    tooltip: context.tr(
+                      'audit.tooltip_clear_buffer',
+                      defaultText: 'Clear In-Memory Buffer',
+                    ),
                     icon: const Icon(
                       Icons.delete_sweep_outlined,
                       size: 18,
@@ -319,10 +346,19 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   ),
                   const Spacer(),
                   Text(
-                    context.tr(
-                      'audit.events_count',
-                      defaultText: '{filtered} / {total} events',
-                    ).replaceAll('{filtered}', state.filteredEntries.length.toString()).replaceAll('{total}', state.allEntries.length.toString()),
+                    context
+                        .tr(
+                          'audit.events_count',
+                          defaultText: '{filtered} / {total} events',
+                        )
+                        .replaceAll(
+                          '{filtered}',
+                          state.filteredEntries.length.toString(),
+                        )
+                        .replaceAll(
+                          '{total}',
+                          state.allEntries.length.toString(),
+                        ),
                     style: const TextStyle(
                       fontSize: 11,
                       color: ShellitColors.textMuted,
@@ -349,8 +385,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                       const SizedBox(height: 12),
                       Text(
                         state.allEntries.isEmpty
-                            ? context.tr('audit.empty_logs', defaultText: 'No logs captured yet')
-                            : context.tr('audit.empty_filter', defaultText: 'No logs match current filter'),
+                            ? context.tr(
+                                'audit.empty_logs',
+                                defaultText: 'No logs captured yet',
+                              )
+                            : context.tr(
+                                'audit.empty_filter',
+                                defaultText: 'No logs match current filter',
+                              ),
                         style: const TextStyle(
                           color: ShellitColors.textMuted,
                           fontSize: 13,
@@ -548,7 +590,12 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
           title: Row(
             children: [
               Text(
-                context.tr('audit.detail_title', defaultText: 'Log Event Details [{level}]').replaceAll('{level}', entry.level.name.toUpperCase()),
+                context
+                    .tr(
+                      'audit.detail_title',
+                      defaultText: 'Log Event Details [{level}]',
+                    )
+                    .replaceAll('{level}', entry.level.name.toUpperCase()),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -561,7 +608,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   size: 16,
                   color: ShellitColors.textSecondary,
                 ),
-                tooltip: context.tr('audit.tooltip_copy_event', defaultText: 'Copy event'),
+                tooltip: context.tr(
+                  'audit.tooltip_copy_event',
+                  defaultText: 'Copy event',
+                ),
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: entry.toString()));
                   Navigator.pop(context);
@@ -576,12 +626,27 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _detailField(context.tr('audit.detail_timestamp', defaultText: 'Timestamp'), entry.timestamp.toIso8601String()),
-                  _detailField(context.tr('audit.detail_tag', defaultText: 'Tag'), entry.tag),
-                  _detailField(context.tr('audit.detail_level', defaultText: 'Level'), entry.level.name.toUpperCase()),
+                  _detailField(
+                    context.tr(
+                      'audit.detail_timestamp',
+                      defaultText: 'Timestamp',
+                    ),
+                    entry.timestamp.toIso8601String(),
+                  ),
+                  _detailField(
+                    context.tr('audit.detail_tag', defaultText: 'Tag'),
+                    entry.tag,
+                  ),
+                  _detailField(
+                    context.tr('audit.detail_level', defaultText: 'Level'),
+                    entry.level.name.toUpperCase(),
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    context.tr('audit.detail_message', defaultText: 'Message (Sanitized):'),
+                    context.tr(
+                      'audit.detail_message',
+                      defaultText: 'Message (Sanitized):',
+                    ),
                     style: const TextStyle(
                       fontSize: 11,
                       color: ShellitColors.textMuted,
@@ -638,7 +703,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen>
                   if (entry.stackTrace != null) ...[
                     const SizedBox(height: 12),
                     Text(
-                      context.tr('audit.detail_stack_trace', defaultText: 'Stack Trace:'),
+                      context.tr(
+                        'audit.detail_stack_trace',
+                        defaultText: 'Stack Trace:',
+                      ),
                       style: const TextStyle(
                         fontSize: 11,
                         color: ShellitColors.textMuted,

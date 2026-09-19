@@ -14,7 +14,7 @@ class AvailableLocalesNotifier extends StateNotifier<List<String>> {
   final AppLocalizationService _service;
 
   AvailableLocalesNotifier(this._service)
-      : super(List<String>.unmodifiable(_service.availableLocales));
+    : super(List<String>.unmodifiable(_service.availableLocales));
 
   void refresh() {
     state = List<String>.unmodifiable(_service.availableLocales);
@@ -33,9 +33,9 @@ class AvailableLocalesNotifier extends StateNotifier<List<String>> {
 /// Provider for tracking available locale codes reactively.
 final availableLocalesProvider =
     StateNotifierProvider<AvailableLocalesNotifier, List<String>>((ref) {
-  final service = ref.watch(localizationServiceProvider);
-  return AvailableLocalesNotifier(service);
-});
+      final service = ref.watch(localizationServiceProvider);
+      return AvailableLocalesNotifier(service);
+    });
 
 /// State notifier for the currently active locale.
 class ActiveLocaleNotifier extends StateNotifier<String> {
@@ -43,7 +43,7 @@ class ActiveLocaleNotifier extends StateNotifier<String> {
   final Ref? _ref;
 
   ActiveLocaleNotifier(this._service, [this._ref])
-      : super(_service.currentLocale);
+    : super(_service.currentLocale);
 
   Future<void> changeLocale(String newLocale) async {
     await _service.setLocale(newLocale);
@@ -67,24 +67,15 @@ class ActiveLocaleNotifier extends StateNotifier<String> {
 /// Provider for tracking and mutating active locale reactively.
 final activeLocaleProvider =
     StateNotifierProvider<ActiveLocaleNotifier, String>((ref) {
-  final service = ref.watch(localizationServiceProvider);
-  return ActiveLocaleNotifier(service, ref);
-});
+      final service = ref.watch(localizationServiceProvider);
+      return ActiveLocaleNotifier(service, ref);
+    });
 
 /// Extension on [WidgetRef] to translate strings inside Riverpod controllers.
 extension LocalizationRefExtension on WidgetRef {
-  String tr(
-    String key, {
-    Map<String, String>? params,
-    String? defaultText,
-  }) {
+  String tr(String key, {Map<String, String>? params, String? defaultText}) {
     final service = watch(localizationServiceProvider);
     watch(activeLocaleProvider); // register reactive dependency
-    return service.translate(
-      key,
-      params: params,
-      defaultText: defaultText,
-    );
+    return service.translate(key, params: params, defaultText: defaultText);
   }
 }
-

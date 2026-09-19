@@ -27,43 +27,41 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
         final hostRepo = ref.read(appHostRepositoryProvider);
         final hosts = await hostRepo.getAllHosts();
         final serverList = hosts
-            .map((h) => {
-                  'id': h.id,
-                  'label': h.label,
-                  'hostname': h.hostname,
-                  'port': h.port,
-                  'username': h.username,
-                  'environment': h.environment.name,
-                  'osType': h.osType.name,
-                  'lastPingLatencyMs': h.lastPingLatencyMs,
-                  'dangerousCommandProtection': h.dangerousCommandProtection,
-                })
+            .map(
+              (h) => {
+                'id': h.id,
+                'label': h.label,
+                'hostname': h.hostname,
+                'port': h.port,
+                'username': h.username,
+                'environment': h.environment.name,
+                'osType': h.osType.name,
+                'lastPingLatencyMs': h.lastPingLatencyMs,
+                'dangerousCommandProtection': h.dangerousCommandProtection,
+              },
+            )
             .toList();
 
-        return {
-          'text': json.encode(serverList),
-          'isError': false,
-        };
+        return {'text': json.encode(serverList), 'isError': false};
 
       case 'shellit_list_active_sessions':
         final sessionManager = ref.read(sessionManagerProvider);
         final sessionList = sessionManager.tabs
-            .map((tab) => {
-                  'id': tab.id,
-                  'title': tab.title,
-                  'type': tab.type.name,
-                  'hostId': tab.host?.id,
-                  'hostLabel': tab.host?.label,
-                  'hostname': tab.host?.hostname,
-                  'environment': tab.host?.environment.name,
-                  'isConnected': tab.terminalSession?.underlyingClient != null,
-                })
+            .map(
+              (tab) => {
+                'id': tab.id,
+                'title': tab.title,
+                'type': tab.type.name,
+                'hostId': tab.host?.id,
+                'hostLabel': tab.host?.label,
+                'hostname': tab.host?.hostname,
+                'environment': tab.host?.environment.name,
+                'isConnected': tab.terminalSession?.underlyingClient != null,
+              },
+            )
             .toList();
 
-        return {
-          'text': json.encode(sessionList),
-          'isError': false,
-        };
+        return {'text': json.encode(sessionList), 'isError': false};
 
       case 'shellit_exec_command':
         final command = arguments['command'] as String?;
@@ -105,7 +103,8 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
         // PROD Guard Protection Check
         if (host != null && host.environment == HostEnvironment.production) {
           final lower = command.toLowerCase();
-          final isDestructive = lower.contains('rm -rf') ||
+          final isDestructive =
+              lower.contains('rm -rf') ||
               lower.contains('reboot') ||
               lower.contains('shutdown') ||
               lower.contains('drop database') ||
@@ -113,8 +112,10 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
               lower.contains('dd if=');
 
           if (isDestructive) {
-            AppLogger.w('MCP blocked destructive command on PROD: $command',
-                tag: 'McpServer');
+            AppLogger.w(
+              'MCP blocked destructive command on PROD: $command',
+              tag: 'McpServer',
+            );
             return {
               'text':
                   'PROD Guard Alert: Command "$command" is classified as dangerous and was blocked on production server "${host.label}". Please execute it directly in Shellit terminal if intended.',
@@ -126,7 +127,8 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
         final client = targetTab.terminalSession?.underlyingClient;
         if (client == null) {
           return {
-            'text': 'Error: SSH client is not connected for "${targetTab.title}".',
+            'text':
+                'Error: SSH client is not connected for "${targetTab.title}".',
             'isError': true,
           };
         }
@@ -144,20 +146,14 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
             'isError': false,
           };
         } catch (e) {
-          return {
-            'text': 'SSH command failed: $e',
-            'isError': true,
-          };
+          return {'text': 'SSH command failed: $e', 'isError': true};
         }
 
       case 'shellit_get_terminal_buffer':
         final sessionManager = ref.read(sessionManagerProvider);
         final activeTab = sessionManager.activeTab;
         if (activeTab == null) {
-          return {
-            'text': 'No active tab open in Shellit.',
-            'isError': false,
-          };
+          return {'text': 'No active tab open in Shellit.', 'isError': false};
         }
         return {
           'text':

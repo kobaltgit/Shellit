@@ -6,11 +6,7 @@ class McpVectorIcon extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const McpVectorIcon({
-    super.key,
-    this.size = 14,
-    this.color,
-  });
+  const McpVectorIcon({super.key, this.size = 14, this.color});
 
   @override
   Widget build(BuildContext context) {

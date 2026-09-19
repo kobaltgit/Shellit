@@ -28,14 +28,8 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
       final installedIds = existing.map((p) => p.manifest.id).toSet();
 
       final pluginsToEnsure = [
-        (
-          id: 'com.shellit.docker-monitor',
-          fileName: 'docker_monitor.shellit',
-        ),
-        (
-          id: 'com.shellit.mcp-server',
-          fileName: 'mcp_server.shellit',
-        ),
+        (id: 'com.shellit.docker-monitor', fileName: 'docker_monitor.shellit'),
+        (id: 'com.shellit.mcp-server', fileName: 'mcp_server.shellit'),
       ];
 
       for (final item in pluginsToEnsure) {
@@ -60,18 +54,8 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
             'demo_plugins',
             item.fileName,
           ),
-          p.join(
-            Directory.current.path,
-            'plugins',
-            item.fileName,
-          ),
-          p.join(
-            Directory.current.path,
-            '..',
-            '..',
-            'plugins',
-            item.fileName,
-          ),
+          p.join(Directory.current.path, 'plugins', item.fileName),
+          p.join(Directory.current.path, '..', '..', 'plugins', item.fileName),
           p.join(
             Directory.current.path,
             'assets',
@@ -93,7 +77,6 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
     }
   }
 
-
   Future<void> _syncLocalizationPlugins(
     List<InstalledPlugin> plugins,
     IPluginLoader loader,
@@ -114,8 +97,9 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
     final localizationService = ref.read(localizationServiceProvider);
 
     // 1. Unregister any locale that is no longer installed or has been disabled
-    final currentLocales =
-        List<String>.from(localizationService.availableLocales);
+    final currentLocales = List<String>.from(
+      localizationService.availableLocales,
+    );
     for (final locale in currentLocales) {
       if (locale == 'en') continue; // Built-in English cannot be unregistered
       if (!activeLocales.containsKey(locale)) {
@@ -129,8 +113,7 @@ class PluginManagerNotifier extends AsyncNotifier<List<InstalledPlugin>> {
       final plugin = entry.value;
       final packRes = await loader.loadLanguagePack(plugin);
       if (packRes.isSuccess) {
-        activeLocaleNotifier.registerLanguagePack(
-            locale, packRes.getOrThrow());
+        activeLocaleNotifier.registerLanguagePack(locale, packRes.getOrThrow());
       }
     }
   }

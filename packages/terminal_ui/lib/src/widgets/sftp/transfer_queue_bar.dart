@@ -179,7 +179,8 @@ class TransferQueueBar extends StatelessWidget {
           if (onClearCompleted != null)
             TextButton(
               onPressed: onClearCompleted,
-              child: Text(context.tr('common.clear', defaultText: 'Clear'), style: const TextStyle(fontSize: 11)),
+              child: Text(context.tr('common.clear', defaultText: 'Clear'),
+                  style: const TextStyle(fontSize: 11)),
             ),
         ],
       ),

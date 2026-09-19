@@ -16,7 +16,10 @@ class PluginsScreen extends ConsumerWidget {
       backgroundColor: ShellitColors.obsidianBackground,
       appBar: AppBar(
         title: Text(
-          context.tr('plugins.title', defaultText: 'Desktop Plugin Extensions (.shellit)'),
+          context.tr(
+            'plugins.title',
+            defaultText: 'Desktop Plugin Extensions (.shellit)',
+          ),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
         backgroundColor: ShellitColors.obsidianBackground,
@@ -27,7 +30,10 @@ class PluginsScreen extends ConsumerWidget {
             child: ElevatedButton.icon(
               icon: const Icon(Icons.file_download_outlined, size: 16),
               label: Text(
-                context.tr('plugins.btn_install', defaultText: 'Install .shellit'),
+                context.tr(
+                  'plugins.btn_install',
+                  defaultText: 'Install .shellit',
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentBlue,
@@ -48,7 +54,12 @@ class PluginsScreen extends ConsumerWidget {
         ),
         error: (err, _) => Center(
           child: Text(
-            context.tr('plugins.error_loading', defaultText: 'Error loading plugins: {error}').replaceAll('{error}', err.toString()),
+            context
+                .tr(
+                  'plugins.error_loading',
+                  defaultText: 'Error loading plugins: {error}',
+                )
+                .replaceAll('{error}', err.toString()),
             style: const TextStyle(color: ShellitColors.statusRed),
           ),
         ),
@@ -65,7 +76,10 @@ class PluginsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    context.tr('plugins.empty_title', defaultText: 'No plugins installed yet'),
+                    context.tr(
+                      'plugins.empty_title',
+                      defaultText: 'No plugins installed yet',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.textPrimary,
                       fontSize: 15,
@@ -76,7 +90,8 @@ class PluginsScreen extends ConsumerWidget {
                   Text(
                     context.tr(
                       'plugins.empty_desc',
-                      defaultText: 'Install .shellit extensions or language packs to extend Shellit functionality',
+                      defaultText:
+                          'Install .shellit extensions or language packs to extend Shellit functionality',
                     ),
                     style: const TextStyle(
                       color: ShellitColors.textSecondary,
@@ -88,7 +103,10 @@ class PluginsScreen extends ConsumerWidget {
                   ElevatedButton.icon(
                     icon: const Icon(Icons.add, size: 16),
                     label: Text(
-                      context.tr('plugins.btn_install', defaultText: 'Install .shellit'),
+                      context.tr(
+                        'plugins.btn_install',
+                        defaultText: 'Install .shellit',
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ShellitColors.accentBlue,
@@ -175,10 +193,21 @@ class PluginsScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  context.tr(
-                                    'plugins.by_author',
-                                    defaultText: 'v{version} by {author} • {id}',
-                                  ).replaceAll('{version}', plugin.manifest.version).replaceAll('{author}', plugin.manifest.author).replaceAll('{id}', plugin.manifest.id),
+                                  context
+                                      .tr(
+                                        'plugins.by_author',
+                                        defaultText:
+                                            'v{version} by {author} • {id}',
+                                      )
+                                      .replaceAll(
+                                        '{version}',
+                                        plugin.manifest.version,
+                                      )
+                                      .replaceAll(
+                                        '{author}',
+                                        plugin.manifest.author,
+                                      )
+                                      .replaceAll('{id}', plugin.manifest.id),
                                   style: const TextStyle(
                                     color: ShellitColors.textMuted,
                                     fontSize: 11,
@@ -224,7 +253,10 @@ class PluginsScreen extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            context.tr('plugins.permissions_label', defaultText: 'Permissions: '),
+                            context.tr(
+                              'plugins.permissions_label',
+                              defaultText: 'Permissions: ',
+                            ),
                             style: const TextStyle(
                               color: ShellitColors.textMuted,
                               fontSize: 11,
@@ -232,7 +264,10 @@ class PluginsScreen extends ConsumerWidget {
                           ),
                           if (plugin.manifest.permissions.isEmpty)
                             Text(
-                              context.tr('plugins.permissions_none', defaultText: 'None'),
+                              context.tr(
+                                'plugins.permissions_none',
+                                defaultText: 'None',
+                              ),
                               style: const TextStyle(
                                 color: ShellitColors.textMuted,
                                 fontSize: 11,
@@ -281,7 +316,12 @@ class PluginsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
         title: Text(
-          context.tr('plugins.uninstall_confirm_title', defaultText: 'Uninstall {name}?').replaceAll('{name}', plugin.manifest.name),
+          context
+              .tr(
+                'plugins.uninstall_confirm_title',
+                defaultText: 'Uninstall {name}?',
+              )
+              .replaceAll('{name}', plugin.manifest.name),
           style: const TextStyle(
             color: ShellitColors.textPrimary,
             fontSize: 15,
@@ -290,7 +330,8 @@ class PluginsScreen extends ConsumerWidget {
         content: Text(
           context.tr(
             'plugins.uninstall_confirm_desc',
-            defaultText: 'Are you sure you want to remove this plugin and all its files?',
+            defaultText:
+                'Are you sure you want to remove this plugin and all its files?',
           ),
           style: const TextStyle(
             color: ShellitColors.textSecondary,
@@ -316,14 +357,21 @@ class PluginsScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        context.tr('plugins.uninstall_success', defaultText: 'Uninstalled {name}').replaceAll('{name}', plugin.manifest.name),
+                        context
+                            .tr(
+                              'plugins.uninstall_success',
+                              defaultText: 'Uninstalled {name}',
+                            )
+                            .replaceAll('{name}', plugin.manifest.name),
                       ),
                     ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${context.tr('common.error', defaultText: 'Error')}: ${res.failureOrNull?.message}'),
+                      content: Text(
+                        '${context.tr('common.error', defaultText: 'Error')}: ${res.failureOrNull?.message}',
+                      ),
                     ),
                   );
                 }
@@ -347,8 +395,14 @@ class PluginsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
         title: Text(
-          context.tr('plugins.install_dialog_title', defaultText: 'Install Plugin Package'),
-          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+          context.tr(
+            'plugins.install_dialog_title',
+            defaultText: 'Install Plugin Package',
+          ),
+          style: const TextStyle(
+            color: ShellitColors.textPrimary,
+            fontSize: 16,
+          ),
         ),
         content: SizedBox(
           width: 460,
@@ -357,7 +411,11 @@ class PluginsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                context.tr('plugins.install_dialog_desc', defaultText: 'Enter full file path to .shellit (or .zip) bundle archive:'),
+                context.tr(
+                  'plugins.install_dialog_desc',
+                  defaultText:
+                      'Enter full file path to .shellit (or .zip) bundle archive:',
+                ),
                 style: const TextStyle(
                   color: ShellitColors.textSecondary,
                   fontSize: 13,
@@ -371,8 +429,14 @@ class PluginsScreen extends ConsumerWidget {
                   fontSize: 13,
                 ),
                 decoration: InputDecoration(
-                  labelText: context.tr('plugins.install_dialog_path_field', defaultText: 'Plugin Archive File Path'),
-                  hintText: context.tr('plugins.install_dialog_path_hint', defaultText: r'C:\path\to\docker_monitor.shellit'),
+                  labelText: context.tr(
+                    'plugins.install_dialog_path_field',
+                    defaultText: 'Plugin Archive File Path',
+                  ),
+                  hintText: context.tr(
+                    'plugins.install_dialog_path_hint',
+                    defaultText: r'C:\path\to\docker_monitor.shellit',
+                  ),
                 ),
               ),
             ],
@@ -401,10 +465,15 @@ class PluginsScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        context.tr(
-                          'plugins.install_dialog_success',
-                          defaultText: 'Plugin "{name}" installed safely!',
-                        ).replaceAll('{name}', res.getOrThrow().manifest.name),
+                        context
+                            .tr(
+                              'plugins.install_dialog_success',
+                              defaultText: 'Plugin "{name}" installed safely!',
+                            )
+                            .replaceAll(
+                              '{name}',
+                              res.getOrThrow().manifest.name,
+                            ),
                       ),
                     ),
                   );
@@ -412,10 +481,15 @@ class PluginsScreen extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        context.tr(
-                          'plugins.install_dialog_failed',
-                          defaultText: 'Failed: {error}',
-                        ).replaceAll('{error}', res.failureOrNull?.message ?? ''),
+                        context
+                            .tr(
+                              'plugins.install_dialog_failed',
+                              defaultText: 'Failed: {error}',
+                            )
+                            .replaceAll(
+                              '{error}',
+                              res.failureOrNull?.message ?? '',
+                            ),
                       ),
                       backgroundColor: ShellitColors.statusRed,
                     ),
@@ -424,7 +498,10 @@ class PluginsScreen extends ConsumerWidget {
               }
             },
             child: Text(
-              context.tr('plugins.install_dialog_btn_install', defaultText: 'Install'),
+              context.tr(
+                'plugins.install_dialog_btn_install',
+                defaultText: 'Install',
+              ),
               style: const TextStyle(color: Colors.white),
             ),
           ),

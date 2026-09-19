@@ -127,7 +127,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
           _errorMessage =
               result.failureOrNull?.message ??
               (mounted
-                  ? context.tr('keychain.deploy_err_generic', defaultText: 'Error deploying key')
+                  ? context.tr(
+                      'keychain.deploy_err_generic',
+                      defaultText: 'Error deploying key',
+                    )
                   : 'Error deploying key');
         });
         return;
@@ -137,14 +140,20 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
 
       final status = result.valueOrNull!;
       String msg = status == KeyDeployStatus.alreadyPresent
-          ? context.tr(
-              'keychain.deploy_dialog_already_present',
-              defaultText: 'Key is already installed in ~/.ssh/authorized_keys on {host}',
-            ).replaceAll('{host}', host)
-          : context.tr(
-              'keychain.deploy_dialog_success_msg',
-              defaultText: 'Public key successfully added to ~/.ssh/authorized_keys on {host}!',
-            ).replaceAll('{host}', host);
+          ? context
+                .tr(
+                  'keychain.deploy_dialog_already_present',
+                  defaultText:
+                      'Key is already installed in ~/.ssh/authorized_keys on {host}',
+                )
+                .replaceAll('{host}', host)
+          : context
+                .tr(
+                  'keychain.deploy_dialog_success_msg',
+                  defaultText:
+                      'Public key successfully added to ~/.ssh/authorized_keys on {host}!',
+                )
+                .replaceAll('{host}', host);
 
       // If bind requested and host was chosen from database
       if (_bindToHost && !_useManualHost && _selectedHost != null) {
@@ -167,7 +176,8 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
     } catch (e) {
       setState(() {
         _isDeploying = false;
-        _errorMessage = '${context.tr('common.error', defaultText: 'Error')}: $e';
+        _errorMessage =
+            '${context.tr('common.error', defaultText: 'Error')}: $e';
       });
     }
   }
@@ -196,7 +206,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
           ),
           const SizedBox(width: 12),
           Text(
-            context.tr('keychain.deploy_dialog_title', defaultText: 'Deploy Key to Server (ssh-copy-id)'),
+            context.tr(
+              'keychain.deploy_dialog_title',
+              defaultText: 'Deploy Key to Server (ssh-copy-id)',
+            ),
             style: const TextStyle(
               color: ShellitColors.textPrimary,
               fontSize: 15,
@@ -266,10 +279,16 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  context.tr(
-                    'keychain.deploy_dialog_deploying_label',
-                    defaultText: 'Deploying: {label} ({type})',
-                  ).replaceAll('{label}', widget.keyEntity.label).replaceAll('{type}', widget.keyEntity.keyType.name.toUpperCase()),
+                  context
+                      .tr(
+                        'keychain.deploy_dialog_deploying_label',
+                        defaultText: 'Deploying: {label} ({type})',
+                      )
+                      .replaceAll('{label}', widget.keyEntity.label)
+                      .replaceAll(
+                        '{type}',
+                        widget.keyEntity.keyType.name.toUpperCase(),
+                      ),
                   style: const TextStyle(
                     color: ShellitColors.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -299,7 +318,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
                   ),
                   onPressed: () => setState(() => _useManualHost = false),
                   child: Text(
-                    context.tr('keychain.deploy_dialog_tab_saved_host', defaultText: 'Saved Host'),
+                    context.tr(
+                      'keychain.deploy_dialog_tab_saved_host',
+                      defaultText: 'Saved Host',
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       color: !_useManualHost
@@ -328,7 +350,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
                   ),
                   onPressed: () => setState(() => _useManualHost = true),
                   child: Text(
-                    context.tr('keychain.deploy_dialog_tab_manual_host', defaultText: 'Manual Host'),
+                    context.tr(
+                      'keychain.deploy_dialog_tab_manual_host',
+                      defaultText: 'Manual Host',
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       color: _useManualHost
@@ -349,7 +374,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
           DropdownButtonFormField<HostEntity>(
             initialValue: _selectedHost,
             decoration: InputDecoration(
-              labelText: context.tr('keychain.deploy_dialog_target_host_label', defaultText: 'Target Host'),
+              labelText: context.tr(
+                'keychain.deploy_dialog_target_host_label',
+                defaultText: 'Target Host',
+              ),
               isDense: true,
               border: const OutlineInputBorder(),
             ),
@@ -378,7 +406,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
                     color: ShellitColors.textPrimary,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('keychain.deploy_dialog_host_ip_label', defaultText: 'Host IP or Domain *'),
+                    labelText: context.tr(
+                      'keychain.deploy_dialog_host_ip_label',
+                      defaultText: 'Host IP or Domain *',
+                    ),
                     hintText: '192.168.1.100',
                     isDense: true,
                     border: const OutlineInputBorder(),
@@ -396,7 +427,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
                     color: ShellitColors.textPrimary,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('keychain.deploy_dialog_port_label', defaultText: 'Port'),
+                    labelText: context.tr(
+                      'keychain.deploy_dialog_port_label',
+                      defaultText: 'Port',
+                    ),
                     hintText: '22',
                     isDense: true,
                     border: const OutlineInputBorder(),
@@ -413,7 +447,10 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
               color: ShellitColors.textPrimary,
             ),
             decoration: InputDecoration(
-              labelText: context.tr('keychain.deploy_dialog_username_label', defaultText: 'Username *'),
+              labelText: context.tr(
+                'keychain.deploy_dialog_username_label',
+                defaultText: 'Username *',
+              ),
               hintText: 'root / ubuntu',
               isDense: true,
               border: const OutlineInputBorder(),
@@ -457,7 +494,8 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
             title: Text(
               context.tr(
                 'keychain.deploy_dialog_bind_checkbox',
-                defaultText: 'Bind this key to the host in Shellit for future logins',
+                defaultText:
+                    'Bind this key to the host in Shellit for future logins',
               ),
               style: const TextStyle(
                 fontSize: 12,
@@ -539,8 +577,14 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
             : const Icon(Icons.cloud_upload, size: 16),
         label: Text(
           _isDeploying
-              ? context.tr('keychain.deploy_dialog_btn_deploying', defaultText: 'Deploying...')
-              : context.tr('keychain.deploy_dialog_btn_deploy', defaultText: 'Deploy Key'),
+              ? context.tr(
+                  'keychain.deploy_dialog_btn_deploying',
+                  defaultText: 'Deploying...',
+                )
+              : context.tr(
+                  'keychain.deploy_dialog_btn_deploy',
+                  defaultText: 'Deploy Key',
+                ),
         ),
         onPressed: _isDeploying ? null : _handleDeploy,
       ),
@@ -555,9 +599,7 @@ class _DeployKeyDialogState extends ConsumerState<DeployKeyDialog> {
           foregroundColor: Colors.white,
         ),
         onPressed: () => Navigator.pop(context),
-        child: Text(
-          context.tr('common.done', defaultText: 'Done'),
-        ),
+        child: Text(context.tr('common.done', defaultText: 'Done')),
       ),
     ];
   }

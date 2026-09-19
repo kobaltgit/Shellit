@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../localization/localization_scope.dart';
@@ -6,6 +8,7 @@ import '../../providers/folders_provider.dart';
 import '../../providers/hosts_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/shellit_theme.dart';
+import '../terminal/local_terminal_button.dart';
 import 'host_card.dart';
 import 'host_form_dialog.dart';
 
@@ -130,6 +133,14 @@ class HostViewsSwitcher extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8)),
                 ),
               ),
+
+              if (!kIsWeb &&
+                  (Platform.isWindows ||
+                      Platform.isMacOS ||
+                      Platform.isLinux)) ...[
+                const SizedBox(width: 8),
+                const LocalTerminalButton(),
+              ],
             ],
           ),
         ),

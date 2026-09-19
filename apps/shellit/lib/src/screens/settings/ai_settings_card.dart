@@ -84,9 +84,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
         setState(() {
           _isLoadingModels = false;
           if (!silent) {
-            _statusMessage = context.tr('settings.ai.test_failed', params: {
-              'error': e.toString().replaceFirst('Exception: ', ''),
-            });
+            _statusMessage = context.tr(
+              'settings.ai.test_failed',
+              params: {'error': e.toString().replaceFirst('Exception: ', '')},
+            );
             _statusColor = ShellitColors.statusRed;
           }
         });
@@ -98,9 +99,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
     final key = _keyController.text.trim();
     if (key.isEmpty) {
       setState(() {
-        _statusMessage = context.tr('settings.ai.test_failed', params: {
-          'error': 'API key is empty',
-        });
+        _statusMessage = context.tr(
+          'settings.ai.test_failed',
+          params: {'error': 'API key is empty'},
+        );
         _statusColor = ShellitColors.statusRed;
       });
       return;
@@ -118,9 +120,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
         setState(() {
           _availableModels = models;
           _isTesting = false;
-          _statusMessage = context.tr('settings.ai.test_success', params: {
-            'count': '${models.length}',
-          });
+          _statusMessage = context.tr(
+            'settings.ai.test_success',
+            params: {'count': '${models.length}'},
+          );
           _statusColor = ShellitColors.statusGreen;
           if (models.isNotEmpty && !models.any((m) => m.id == _selectedModel)) {
             _selectedModel = models.first.id;
@@ -131,9 +134,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
       if (mounted) {
         setState(() {
           _isTesting = false;
-          _statusMessage = context.tr('settings.ai.test_failed', params: {
-            'error': e.toString().replaceFirst('Exception: ', ''),
-          });
+          _statusMessage = context.tr(
+            'settings.ai.test_failed',
+            params: {'error': e.toString().replaceFirst('Exception: ', '')},
+          );
           _statusColor = ShellitColors.statusRed;
         });
       }
@@ -161,7 +165,8 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
 
     if (mounted) {
       if (res.isError) {
-        final errorMsg = res.failureOrNull?.message ?? 'Failed to save settings';
+        final errorMsg =
+            res.failureOrNull?.message ?? 'Failed to save settings';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -188,12 +193,19 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle_outline, color: ShellitColors.statusGreen, size: 16),
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: ShellitColors.statusGreen,
+                  size: 16,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     msg,
-                    style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                      color: ShellitColors.textPrimary,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -282,7 +294,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
 
             // API Key input field
             Text(
-              context.tr('settings.ai.api_key_label', defaultText: 'Gemini API Key'),
+              context.tr(
+                'settings.ai.api_key_label',
+                defaultText: 'Gemini API Key',
+              ),
               style: const TextStyle(
                 color: ShellitColors.textPrimary,
                 fontSize: 13,
@@ -299,7 +314,10 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
                 fontSize: 13,
               ),
               decoration: InputDecoration(
-                hintText: context.tr('settings.ai.api_key_hint', defaultText: 'AIzaSy...'),
+                hintText: context.tr(
+                  'settings.ai.api_key_hint',
+                  defaultText: 'AIzaSy...',
+                ),
                 hintStyle: const TextStyle(color: ShellitColors.textMuted),
                 filled: true,
                 fillColor: ShellitColors.obsidianBackground,
@@ -388,11 +406,12 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: _availableModels.any((m) => m.id == _selectedModel)
+                        value:
+                            _availableModels.any((m) => m.id == _selectedModel)
                             ? _selectedModel
                             : (_availableModels.isNotEmpty
-                                ? _availableModels.first.id
-                                : _selectedModel),
+                                  ? _availableModels.first.id
+                                  : _selectedModel),
                         dropdownColor: ShellitColors.obsidianCard,
                         style: const TextStyle(
                           color: ShellitColors.textPrimary,
@@ -414,14 +433,21 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: ShellitColors.accentCyan.withValues(alpha: 0.15),
-                                            borderRadius: BorderRadius.circular(4),
+                                            color: ShellitColors.accentCyan
+                                                .withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                             border: Border.all(
-                                              color: ShellitColors.accentCyan.withValues(alpha: 0.4),
+                                              color: ShellitColors.accentCyan
+                                                  .withValues(alpha: 0.4),
                                             ),
                                           ),
                                           child: Text(
-                                            context.tr('settings.ai.recommended_badge', defaultText: 'Recommended'),
+                                            context.tr(
+                                              'settings.ai.recommended_badge',
+                                              defaultText: 'Recommended',
+                                            ),
                                             style: const TextStyle(
                                               color: ShellitColors.accentCyan,
                                               fontSize: 10,
@@ -504,12 +530,18 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
                         )
                       : const Icon(Icons.bolt, size: 16),
                   label: Text(
-                    context.tr('settings.ai.test_connection_btn', defaultText: 'Test Connection'),
+                    context.tr(
+                      'settings.ai.test_connection_btn',
+                      defaultText: 'Test Connection',
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ShellitColors.accentCyan,
                     side: const BorderSide(color: ShellitColors.accentCyan),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                   ),
                   onPressed: _isTesting ? null : _testConnection,
                 ),
@@ -517,12 +549,18 @@ class _AiSettingsCardState extends ConsumerState<AiSettingsCard> {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.save_outlined, size: 16),
                   label: Text(
-                    context.tr('settings.ai.save_btn', defaultText: 'Save AI Settings'),
+                    context.tr(
+                      'settings.ai.save_btn',
+                      defaultText: 'Save AI Settings',
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ShellitColors.accentBlue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                   ),
                   onPressed: _saveSettings,
                 ),

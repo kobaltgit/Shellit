@@ -87,7 +87,10 @@ class TunnelsScreen extends ConsumerWidget {
       body: rules.isEmpty
           ? Center(
               child: Text(
-                context.tr('tunnels.empty_title', defaultText: 'No active port forwarding rules'),
+                context.tr(
+                  'tunnels.empty_title',
+                  defaultText: 'No active port forwarding rules',
+                ),
                 style: const TextStyle(color: ShellitColors.textMuted),
               ),
             )
@@ -144,8 +147,14 @@ class TunnelsScreen extends ConsumerWidget {
                           ),
                           child: Text(
                             rule.type == TunnelForwardType.local
-                                ? context.tr('tunnels.type_local', defaultText: 'LOCAL (L)')
-                                : context.tr('tunnels.type_remote', defaultText: 'REMOTE (R)'),
+                                ? context.tr(
+                                    'tunnels.type_local',
+                                    defaultText: 'LOCAL (L)',
+                                  )
+                                : context.tr(
+                                    'tunnels.type_remote',
+                                    defaultText: 'REMOTE (R)',
+                                  ),
                             style: const TextStyle(
                               color: ShellitColors.accentCyan,
                               fontSize: 10,
@@ -220,8 +229,14 @@ class TunnelsScreen extends ConsumerWidget {
         builder: (ctx, setState) => AlertDialog(
           backgroundColor: ShellitColors.obsidianCard,
           title: Text(
-            context.tr('tunnels.dialog_title', defaultText: 'Add Port Forwarding Rule'),
-            style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+            context.tr(
+              'tunnels.dialog_title',
+              defaultText: 'Add Port Forwarding Rule',
+            ),
+            style: const TextStyle(
+              color: ShellitColors.textPrimary,
+              fontSize: 16,
+            ),
           ),
           content: SizedBox(
             width: 440,
@@ -245,19 +260,28 @@ class TunnelsScreen extends ConsumerWidget {
                 DropdownButtonFormField<TunnelForwardType>(
                   initialValue: selectedType,
                   decoration: InputDecoration(
-                    labelText: context.tr('tunnels.forward_type', defaultText: 'Forward Type'),
+                    labelText: context.tr(
+                      'tunnels.forward_type',
+                      defaultText: 'Forward Type',
+                    ),
                   ),
                   items: [
                     DropdownMenuItem(
                       value: TunnelForwardType.local,
                       child: Text(
-                        context.tr('tunnels.forward_local_opt', defaultText: 'Local Forward (-L)'),
+                        context.tr(
+                          'tunnels.forward_local_opt',
+                          defaultText: 'Local Forward (-L)',
+                        ),
                       ),
                     ),
                     DropdownMenuItem(
                       value: TunnelForwardType.remote,
                       child: Text(
-                        context.tr('tunnels.forward_remote_opt', defaultText: 'Remote Forward (-R)'),
+                        context.tr(
+                          'tunnels.forward_remote_opt',
+                          defaultText: 'Remote Forward (-R)',
+                        ),
                       ),
                     ),
                   ],
@@ -277,7 +301,10 @@ class TunnelsScreen extends ConsumerWidget {
                           fontSize: 13,
                         ),
                         decoration: InputDecoration(
-                          labelText: context.tr('tunnels.local_port', defaultText: 'Local Port'),
+                          labelText: context.tr(
+                            'tunnels.local_port',
+                            defaultText: 'Local Port',
+                          ),
                         ),
                       ),
                     ),
@@ -291,7 +318,10 @@ class TunnelsScreen extends ConsumerWidget {
                           fontSize: 13,
                         ),
                         decoration: InputDecoration(
-                          labelText: context.tr('tunnels.remote_port', defaultText: 'Remote Port'),
+                          labelText: context.tr(
+                            'tunnels.remote_port',
+                            defaultText: 'Remote Port',
+                          ),
                         ),
                       ),
                     ),
@@ -305,7 +335,10 @@ class TunnelsScreen extends ConsumerWidget {
                     fontSize: 13,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('tunnels.remote_host', defaultText: 'Remote Target Host'),
+                    labelText: context.tr(
+                      'tunnels.remote_host',
+                      defaultText: 'Remote Target Host',
+                    ),
                   ),
                 ),
               ],

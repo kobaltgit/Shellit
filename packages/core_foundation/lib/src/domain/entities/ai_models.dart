@@ -54,7 +54,10 @@ class AiSnippetResponse {
     final rawTags = json['tags'];
     List<String> parsedTags = [];
     if (rawTags is List) {
-      parsedTags = rawTags.map((t) => t.toString().trim()).where((t) => t.isNotEmpty).toList();
+      parsedTags = rawTags
+          .map((t) => t.toString().trim())
+          .where((t) => t.isNotEmpty)
+          .toList();
     }
 
     return AiSnippetResponse(

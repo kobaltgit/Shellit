@@ -150,6 +150,9 @@ class _TabOverflowMenuState extends ConsumerState<TabOverflowMenu> {
                           case TabType.splitTerminal:
                             icon = Icons.dashboard_customize_outlined;
                             break;
+                          case TabType.localTerminal:
+                            icon = Icons.terminal;
+                            break;
                         }
 
                         return InkWell(

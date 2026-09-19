@@ -115,8 +115,7 @@ class MobileHostsView extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: ShellitColors.obsidianCard,
         title: Text(
-          context.tr('hosts.delete_confirm_title',
-              defaultText: 'Delete Host?'),
+          context.tr('hosts.delete_confirm_title', defaultText: 'Delete Host?'),
           style: const TextStyle(color: ShellitColors.textPrimary),
         ),
         content: Text(
@@ -235,7 +234,8 @@ class MobileHostsView extends ConsumerWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.copy_outlined, color: Colors.white70),
+                  leading:
+                      const Icon(Icons.copy_outlined, color: Colors.white70),
                   title: Text(
                     context.tr('common.duplicate',
                         defaultText: 'Duplicate Host'),
@@ -292,8 +292,7 @@ class MobileHostsView extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 context.tr('hosts.empty_desc',
-                    defaultText:
-                        'Create a new host or adjust search filters.'),
+                    defaultText: 'Create a new host or adjust search filters.'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                     fontSize: 14, color: ShellitColors.textSecondary),
@@ -324,8 +323,7 @@ class MobileHostsView extends ConsumerWidget {
       itemCount: hosts.length,
       itemBuilder: (context, index) {
         final host = hosts[index];
-        final latency =
-            pingState.latencyFor(host.id) ?? host.lastPingLatencyMs;
+        final latency = pingState.latencyFor(host.id) ?? host.lastPingLatencyMs;
         final pingStatus = latency.pingStatus;
 
         return Card(

@@ -115,8 +115,7 @@ class TerminalConnectingView extends StatelessWidget {
                                         host?.label ??
                                             context.tr(
                                                 'connecting.connecting_host',
-                                                defaultText:
-                                                    'Connecting Host'),
+                                                defaultText: 'Connecting Host'),
                                         style: const TextStyle(
                                           color: ShellitColors.textPrimary,
                                           fontSize: 16,
@@ -182,8 +181,7 @@ class TerminalConnectingView extends StatelessWidget {
                                       ? '${host!.username}@${host!.hostname}:${host!.port}'
                                       : context.tr(
                                           'connecting.resolving_endpoint',
-                                          defaultText:
-                                              'Resolving endpoint...'),
+                                          defaultText: 'Resolving endpoint...'),
                                   style: const TextStyle(
                                     color: ShellitColors.textSecondary,
                                     fontSize: 12,
@@ -466,8 +464,8 @@ class TerminalConnectingView extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onClose,
                   icon: const Icon(Icons.close, size: 14),
-                  label: Text(context.tr('common.close_tab',
-                      defaultText: 'Close Tab')),
+                  label: Text(
+                      context.tr('common.close_tab', defaultText: 'Close Tab')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: ShellitColors.textSecondary,
                     side: const BorderSide(color: ShellitColors.border),
@@ -559,8 +557,8 @@ class TerminalConnectingView extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: onClose,
                 icon: const Icon(Icons.close, size: 14),
-                label: Text(context.tr('common.close_tab',
-                    defaultText: 'Close Tab')),
+                label: Text(
+                    context.tr('common.close_tab', defaultText: 'Close Tab')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: ShellitColors.textSecondary,
                   side: const BorderSide(color: ShellitColors.border),

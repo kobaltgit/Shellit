@@ -35,8 +35,8 @@ class BroadcastInputBar extends StatelessWidget {
             _buildLayoutButton(
               type: SplitLayoutType.single,
               icon: Icons.crop_square,
-              tooltip: context.tr('splits.single',
-                  defaultText: 'Single Terminal'),
+              tooltip:
+                  context.tr('splits.single', defaultText: 'Single Terminal'),
             ),
             const SizedBox(width: 4),
             _buildLayoutButton(
@@ -127,7 +127,8 @@ class BroadcastInputBar extends StatelessWidget {
             Text(
               context.tr('splits.nav_hint',
                   defaultText: 'Alt + Arrows to navigate splits'),
-              style: const TextStyle(fontSize: 11, color: ShellitColors.textMuted),
+              style:
+                  const TextStyle(fontSize: 11, color: ShellitColors.textMuted),
             ),
           ],
         ),

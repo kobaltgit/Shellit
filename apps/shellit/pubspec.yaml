@@ -4,7 +4,7 @@ description: "Shellit — Modern, secure, cross-platform SSH client, SFTP manage
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.7.3+14
+version: 0.8.0+15
 
 
 environment:
@@ -42,6 +42,8 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   http: ^1.2.0
   url_launcher: ^6.3.0
+  flutter_pty2: ^1.0.2
+  package_info_plus: ^10.2.1
 
 dev_dependencies:
   flutter_test:

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/hosts_provider.dart';
+import '../../providers/local_terminal_provider.dart';
 import '../../providers/ping_monitor_provider.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../localization/localization_scope.dart';
@@ -331,8 +332,26 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
         _openOmniBar();
         return KeyEventResult.handled;
       }
+
+      // Ctrl+` / Cmd+` -> Open default local terminal
+      final isBackquote = event.logicalKey == LogicalKeyboardKey.backquote ||
+          event.physicalKey == PhysicalKeyboardKey.backquote;
+      if (isCtrlOrCmd && isBackquote) {
+        _openDefaultLocalTerminal();
+        return KeyEventResult.handled;
+      }
     }
     return KeyEventResult.ignored;
+  }
+
+  void _openDefaultLocalTerminal() {
+    final shellsState = ref.read(localShellsProvider);
+    final defaultProfile = shellsState.defaultProfile;
+    if (defaultProfile != null) {
+      ref
+          .read(sessionManagerProvider.notifier)
+          .openLocalTerminalTab(profile: defaultProfile);
+    }
   }
 
   @override
@@ -359,8 +378,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
         }
 
         final isSmallScreen = constraints.maxWidth < 1000;
-        final effectiveSidebarCollapsed =
-            _isSidebarCollapsed || isSmallScreen;
+        final effectiveSidebarCollapsed = _isSidebarCollapsed || isSmallScreen;
 
         return Focus(
           focusNode: _shellFocusNode,
@@ -490,6 +508,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
 
     switch (tab.type) {
       case TabType.terminal:
+      case TabType.localTerminal:
         if (tab.terminalSession == null) {
           return TerminalConnectingView(
             key: ValueKey('conn-init-${tab.id}'),

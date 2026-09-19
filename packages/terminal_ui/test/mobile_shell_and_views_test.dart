@@ -100,8 +100,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sshClientServiceProvider
-                .overrideWithValue(FakeSshClientService()),
+            sshClientServiceProvider.overrideWithValue(FakeSshClientService()),
           ],
           child: MaterialApp(
             theme: ShellitTheme.obsidianDarkTheme,
@@ -154,8 +153,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            sshClientServiceProvider
-                .overrideWithValue(FakeSshClientService()),
+            sshClientServiceProvider.overrideWithValue(FakeSshClientService()),
           ],
           child: MaterialApp(
             theme: ShellitTheme.obsidianDarkTheme,
@@ -176,8 +174,7 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
 
       // Enter target and submit
-      await tester.enterText(
-          find.byType(TextField).last, 'root@10.0.0.1:22');
+      await tester.enterText(find.byType(TextField).last, 'root@10.0.0.1:22');
       await tester.tap(find.text('Connect'));
       await tester.pumpAndSettle();
 

@@ -44,9 +44,11 @@ class TerminalContextMenu {
             title: hasSelection &&
                     selectedText != null &&
                     selectedText.trim().isNotEmpty
-                ? context.tr('terminal.context_menu_copy_count',
+                ? context
+                    .tr('terminal.context_menu_copy_count',
                         defaultText: 'Copy ({count})')
-                    .replaceAll('{count}', selectedText.trim().length.toString())
+                    .replaceAll(
+                        '{count}', selectedText.trim().length.toString())
                 : context.tr('terminal.context_menu_copy', defaultText: 'Copy'),
             shortcut: '$cmdOrCtrl+Shift+C',
             enabled: hasSelection,
@@ -58,8 +60,8 @@ class TerminalContextMenu {
           height: 38,
           child: _buildMenuItem(
             icon: Icons.paste_rounded,
-            title: context.tr('terminal.context_menu_paste',
-                defaultText: 'Paste'),
+            title:
+                context.tr('terminal.context_menu_paste', defaultText: 'Paste'),
             shortcut: '$cmdOrCtrl+Shift+V',
             enabled: true,
           ),

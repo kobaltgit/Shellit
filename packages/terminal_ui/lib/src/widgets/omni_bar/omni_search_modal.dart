@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/hosts_provider.dart';
+import '../../providers/local_terminal_provider.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/vault_provider.dart';
@@ -112,6 +113,9 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           case TabType.splitTerminal:
             tabIcon = Icons.dashboard_customize_outlined;
             break;
+          case TabType.localTerminal:
+            tabIcon = Icons.terminal;
+            break;
         }
 
         items.add(
@@ -121,7 +125,8 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             subtitle: isActive
                 ? context.tr('omni.switch_tab_active',
                     defaultText: 'Switch Tab (Active)')
-                : context.tr('omni.switch_tab_target',
+                : context
+                    .tr('omni.switch_tab_target',
                         defaultText: 'Switch Tab ({target})')
                     .replaceAll(
                         '{target}',
@@ -148,8 +153,8 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           OmniCommandItem(
             id: 'host-${host.id}',
             title: host.label,
-            subtitle: context.tr('omni.connect_ssh',
-                    defaultText: 'Connect SSH ({target})')
+            subtitle: context
+                .tr('omni.connect_ssh', defaultText: 'Connect SSH ({target})')
                 .replaceAll('{target}', host.connectionTarget),
             icon: Icons.dns_outlined,
             type: OmniItemType.host,
@@ -197,8 +202,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         ),
         OmniCommandItem(
           id: 'action-split-2x2',
-          title: context.tr('splits.split_grid',
-              defaultText: 'Split 2x2 Grid'),
+          title: context.tr('splits.split_grid', defaultText: 'Split 2x2 Grid'),
           subtitle: context.tr('omni.split_grid_subtitle',
               defaultText: 'Split into 4 terminal panes'),
           icon: Icons.grid_view_sharp,
@@ -223,6 +227,24 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           ref.read(vaultProvider.notifier).lock();
         },
       ),
+      for (final shell in ref.read(localShellsProvider).profiles)
+        OmniCommandItem(
+          id: 'local-shell-${shell.id}',
+          title: context.tr(
+            'omni.action.open_local_terminal',
+            params: {'shell': shell.name},
+            defaultText: 'Open Local Terminal (${shell.name})',
+          ),
+          subtitle: shell.executablePath,
+          icon: Icons.terminal,
+          type: OmniItemType.action,
+          onSelect: () {
+            Navigator.of(context).pop();
+            ref
+                .read(sessionManagerProvider.notifier)
+                .openLocalTerminalTab(profile: shell);
+          },
+        ),
     ];
 
     for (final act in actions) {
@@ -244,8 +266,8 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           OmniCommandItem(
             id: 'snippet-${snip.id}',
             title: snip.title,
-            subtitle: context.tr('omni.run_snippet',
-                    defaultText: 'Run: {cmd}')
+            subtitle: context
+                .tr('omni.run_snippet', defaultText: 'Run: {cmd}')
                 .replaceAll('{cmd}', snip.command),
             icon: Icons.play_arrow_outlined,
             type: OmniItemType.snippet,
@@ -266,8 +288,8 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         items.add(
           OmniCommandItem(
             id: 'theme-$themeName',
-            title: context.tr('omni.set_theme',
-                    defaultText: 'Set Terminal Theme: {name}')
+            title: context
+                .tr('omni.set_theme', defaultText: 'Set Terminal Theme: {name}')
                 .replaceAll('{name}', themeName),
             subtitle: context.tr('omni.set_theme_subtitle',
                 defaultText: 'Switch active color scheme'),
@@ -473,15 +495,13 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      context.tr('omni.footer_select',
-                          defaultText: '↵ Select'),
+                      context.tr('omni.footer_select', defaultText: '↵ Select'),
                       style: const TextStyle(
                           fontSize: 11, color: ShellitColors.textMuted),
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      context.tr('omni.footer_close',
-                          defaultText: 'Esc Close'),
+                      context.tr('omni.footer_close', defaultText: 'Esc Close'),
                       style: const TextStyle(
                           fontSize: 11, color: ShellitColors.textMuted),
                     ),

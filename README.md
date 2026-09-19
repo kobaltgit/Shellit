@@ -9,7 +9,11 @@
 <h1 align="center">Shellit</h1>
 
 <p align="center">
-  <strong>Современный, безопасный и кроссплатформенный SSH-клиент, SFTP-менеджер и центр управления серверами нового поколения, созданный на Flutter &amp; Dart.</strong>
+  <strong>A modern, secure, and cross-platform SSH client, SFTP manager, and next-generation server hub built with Flutter &amp; Dart.</strong>
+</p>
+
+<p align="center">
+  <strong>English</strong> | <a href="README.ru.md">Русский</a>
 </p>
 
 <p align="center">
@@ -22,124 +26,154 @@
 
 ---
 
-## 📖 О проекте
+## 📖 About the Project
 
-**Shellit** объединяет удобство лучших инструментов управления инфраструктурой и бескомпромиссную безопасность. Приложение разработано как независимый инструмент разработчика и сисадмина с фокусом на производительность, изоляцию архитектуры и максимальную прозрачность соединений.
+**Shellit** combines the ergonomics of premier infrastructure management tools with uncompromising security. Engineered as an independent developer and sysadmin power tool, it emphasizes blazing-fast performance, strict architectural isolation, and transparent connection control.
 
-В отличие от стандартных терминалов, Shellit предоставляет наглядную телеметрию состояния серверов в реальном времени, защиту от случайных деструктивных действий в продакшене и расширяемую систему плагинов.
+Unlike traditional terminal emulators, Shellit delivers live server telemetry before connecting, built-in protection against accidental destructive commands in production, and an open, extensible plugin ecosystem.
 
 ---
 
-## ✨ Ключевые возможности (Shellit Identity)
+## ⚡ Development Velocity: From Zero to Release in 24 Hours
 
-- 🔄 **Self-Hosted Zero-Knowledge E2EE Sync (Своя синхронизация на VPS):**
-  Синхронизация хостов, ключей, сниппетов и папок между всеми устройствами (Windows, macOS, Linux, Android, iOS) через ваш собственный ультралегкий сервер на VPS. Данные шифруются на клиенте через **Argon2id** и **AES-256-GCM**. Сервер никогда не видит ваших паролей и ключей. Поддерживает чистый HTTP (внутри WireGuard / Tailscale / LAN) и самоподписанные SSL-сертификаты.
+Shellit was designed, engineered, and tested from scratch in **under 24 hours** (~19 hours of active vibe-coding with autonomous AI agents): from an empty folder to a production-grade cross-platform application with self-hosted E2EE sync, an MCP AI Gateway, and a Gemini assistant.
 
-- 🟢 **Live Host Telemetry (Живой пинг серверов):**
-  Индикация RTT-задержки прямо на карточках хостов (`<50ms` — зеленый, `<200ms` — желтый, оффлайн — серый). Состояние серверов видно еще до установки соединения.
+<details>
+<summary><strong>⏱️ View Development Timeline & Milestone Breakdown</strong></summary>
 
-- 🛡️ **Environment Protection & PROD Guard (Защита окружений):**
-  Цветные бейджи для каждого сервера (`PROD` — тревожный красный, `STAGE` — предупреждающий желтый, `DEV` — спокойный синий). На серверах с тегом `PROD` включается красная защитная рамка, а опасные команды (`rm -rf`, `DROP`, `reboot`, fork-бомбы) перехватываются окном подтверждения.
+| Elapsed Time | Milestone | Key Deliverables |
+|---|---|---|
+| **0h 00m** | **Inception** | Concept, monorepo architecture, package isolation, agent contracts |
+| **+1h 40m** | **Core Foundation** | 4 isolated packages (`core`, `vault`, `network`, `plugins`), 105 tests |
+| **+2h 00m** | **Terminal UI** | Obsidian Dark theme, live RTT ping dot, 126 unit & widget tests |
+| **+5h 17m** | **v0.1.0** | Matrix 2x2 splits, tabs, two-pane SFTP, Windows Inno Setup installer |
+| **+6h 03m** | **v0.2.0** | Self-hosted E2EE cloud sync on VPS, zero-knowledge Go relay server |
+| **+7h 46m** | **v0.3.0** | Keychain manager, Ed25519/RSA key generator, integrated `ssh-copy-id` |
+| **+9h 11m** | **v0.4.0** | Desktop Plugin SDK, sandboxed WebView2 IPC, Docker Monitor plugin |
+| **+11h 31m** | **v0.5.0** | 100% i18n-ready (Zero Hardcoded Strings) & official Russian language pack |
+| **+14h 35m** | **v0.6.0** | Mobile-first Android client with touch accessory bar & haptic feedback |
+| **+20h 52m** | **v0.7.0** | Model Context Protocol (MCP) server for Cursor, Claude & Windsurf |
+| **+24h 15m** | **v0.7.3** | Built-in Gemini AI snippets assistant, dynamic models, pop-out log windows |
+| **+24h 45m** | **Phase 14** | 1-click ConPTY local terminal with shell discovery (PowerShell, WSL, cmd) |
+
+> ⏱️ **Total Active Time:** ~19 hours (including a 4-hour night rest).  
+> 🛡️ **Quality Metrics:** 34 completed stages, 24 reported & resolved bugs, 133+ passing tests, 0 analyzer errors.  
+> 📖 **Read the unfiltered developer log:** [**`docs/CHRONICLE.md`**](docs/CHRONICLE.md).
+
+</details>
+
+---
+
+## ✨ Key Features (Shellit Identity)
+
+- 🔄 **Self-Hosted Zero-Knowledge E2EE Sync:**
+  Seamlessly synchronize hosts, SSH keys, command snippets, and folders across all your devices (Windows, macOS, Linux, Android, iOS) using your own ultra-lightweight VPS relay server. All data is end-to-end encrypted client-side using **Argon2id** and **AES-256-GCM**. The server never sees your passwords, private keys, or host metadata. Supports plain HTTP (ideal for WireGuard, Tailscale, or LANs without domain/SSL hassles) as well as HTTPS (including self-signed certificates).
+
+- 🟢 **Live Host Telemetry (Real-time Ping):**
+  Instant RTT latency indicator displayed directly on host cards (`<50ms` green, `<200ms` yellow, offline grey). Inspect server reachability and response times before opening a connection.
+
+- 🛡️ **Environment Protection & PROD Guard:**
+  Distinct color badges for every server (`PROD` alert red, `STAGE` cautionary yellow, `DEV` calm blue). On servers marked with the `PROD` tag, a glowing red border activates around the terminal, and potentially destructive commands (`rm -rf`, `DROP`, `reboot`, fork bombs) trigger an interactive confirmation modal.
 
 - ⚡ **Omni-Bar (`Ctrl+K` / `Cmd+K`):**
-  Универсальная командная строка в духе Raycast/Spotlight: мгновенный поиск хостов, запуск сниппетов, смена тем оформления и управление лейаутами без отрыва рук от клавиатуры.
+  Universal command palette inspired by Raycast and Spotlight: lightning-fast fuzzy search across hosts, one-key snippet execution, instant theme switching, and split management without taking your hands off the keyboard.
 
 - 🪟 **Matrix Tiling Splits & Drag & Drop:**
-  Гибкое разделение рабочего пространства терминала (горизонтальное, вертикальное, сетка 2x2) внутри вкладок, перетаскивание открытых сессий мышкой в пустые слоты и режим широковещательного ввода (**Broadcast Input**) сразу во все активные сплиты.
+  Flexible terminal workspace layouts (horizontal, vertical, 2x2 grid) within tabs. Drag and drop open session tabs into empty split slots, or use **Broadcast Input** to send keystrokes simultaneously to all active panes.
 
-- 📂 **Two-Pane SFTP Manager (Двухпанельный менеджер файлов):**
-  Полноценный файловый менеджер во вкладке сессии: локальная файловая система слева, удаленный сервер справа, drag-and-drop передача файлов, контекстные меню, графический редактор прав доступа (chmod) и фоновая очередь задач.
+- 📂 **Two-Pane SFTP Manager:**
+  Full-featured file manager integrated right into the session tab: local filesystem on the left, remote server on the right, drag-and-drop transfers, context menus, interactive visual chmod permissions editor, and background transfer queue.
 
-- 📜 **Asciinema Session Recording & Audit (Запись сессий):**
-  Встроенная запись терминальных сессий в стандарте **asciinema v2 (`.cast`)** и текстовые логи (`.log`). Автоматическая запись для PROD-серверов, живой тикающий индикатор `● REC` в тулбаре и двухвкладочный экран журнала диагностики.
+- 📜 **Asciinema Session Recording & Audit:**
+  Built-in terminal session recording following the **asciinema v2 (`.cast`)** standard and raw text logs (`.log`). Automatic recording policy for PROD servers, live `● REC` timer badge in the toolbar, and a two-tab audit log inspector.
 
-- ⚡ **Command Snippets (Быстрые сниппеты):**
-  Библиотека часто используемых команд с поиском по тегам, 1-click отправкой в активный шелл и мгновенным вызовом через Omni-Bar (`Ctrl+K`).
+- ⚡ **Command Snippets:**
+  Curated library of frequently used shell commands with tag search, 1-click execution into the active shell, and instant lookup via Omni-Bar (`Ctrl+K`).
 
 - 🗂️ **Multi-View Catalog:**
-  Мгновенное переключение между режимами каталога: плиточная сетка (Grid), плотный список для 50+ серверов (Dense List) и иерархическое дерево папок (Folder Tree).
+  Instantly switch between catalog view modes: responsive tile Grid, dense high-capacity List (for 50+ servers), and hierarchical Folder Tree.
 
 - 🔐 **Zero Credentials Leakage & SQLCipher Vault:**
-  Локальная база данных зашифрована через **AES-256 (SQLCipher)**. Мастер-пароль защищен деривацией ключа **Argon2id**. Строгий протокол очистки оперативной памяти (Zeroize) после закрытия сессий и санитизация логов.
+  Local database encrypted with **AES-256 (SQLCipher)**. Master password secured with **Argon2id** key derivation. Strict memory hygiene (Zeroize) clears plaintext secrets upon session closure, coupled with comprehensive log sanitization.
 
 - 🤖 **Model Context Protocol (MCP Server Plugin):**
-  Встроенный шлюз MCP (спецификация 2024-11-05, Server-Sent Events / SSE) для безопасного подключения современных ИИ-ассистентов (Cursor, Claude Desktop, Windsurf) напрямую к вашим серверам и терминалам. Предоставляет стандартизированные инструменты вызова команд, чтения терминального буфера и SFTP-файлов под защитой шлюза **PROD Guard** и аудита действий нейросети.
+  Built-in MCP Gateway (specification 2024-11-05, Server-Sent Events / SSE) to securely connect modern AI assistants (Cursor, Claude Desktop, Windsurf, Antigravity) directly to your servers and terminal sessions. Exposes standardized tools to run commands, fetch terminal buffers, and inspect remote SFTP files under PROD Guard protection with a dedicated AI audit trail.
 
 - 🧩 **Open Desktop Plugin SDK:**
-  Расширение возможностей приложения кастомными плагинами (`.shellit`) через изолированный WebView IPC-мост на десктопных платформах.
+  Extend the application's capabilities with custom sandboxed plugins (`.shellit`) communicating via an isolated WebView IPC bridge on desktop platforms.
 
-- 🌐 **Community Language Packs (Плагины локализации):**
-  Интерфейс на 100% готов к локализации (Zero Hardcoded Strings). Базовый язык — английский, а для перехода на русский язык доступен официальный языковой пакет: [**Скачать `russian_lang_pack.shellit`**](plugins/russian_lang_pack.shellit).
-
----
-
-## 🧩 Плагины и языковые пакеты (Plugins & Extensions)
-
-Shellit поддерживает динамическую установку плагинов и языковых пакетов (`.shellit`) на лету без перезагрузки приложения.
-
-### 📦 Каталог расширений:
-
-- 🤖 **[MCP Server Plugin (`plugins/mcp_server.shellit`)](plugins/mcp_server.shellit)** — встроенный AI Gateway для Cursor, Claude и Windsurf со шлюзом безопасности PROD Guard _(поставляется «из коробки»)_.
-- 🐳 **[Docker Monitor (`plugins/docker_monitor.shellit`)](plugins/docker_monitor.shellit)** — мониторинг контейнеров и логов в реальном времени _(поставляется «из коробки»)_.
-- 🌐 **[Russian Language Pack (`plugins/russian_lang_pack.shellit`)](plugins/russian_lang_pack.shellit)** — 100% русский перевод интерфейса (527+ ключей).
-
-#### Инструкция по установке:
-
-1. Скачайте нужный `.shellit` файл из папки [**`plugins/`**](plugins/).
-2. В приложении Shellit откройте боковое меню **«Плагины»** (Plugins).
-3. Нажмите кнопку **«Установить .shellit»** (Install .shellit) в правом верхнем углу и выберите файл.
-4. Для языковых пакетов: перейдите в **«Настройки» → «Язык и локализация»** и выберите нужный язык!
-
-> Подробнее о каталоге плагинов: [`plugins/README.md`](plugins/README.md).  
-> Руководство по созданию переводов: [`docs/LOCALIZATION_AND_I18N_GUIDE.md`](docs/LOCALIZATION_AND_I18N_GUIDE.md).
+- 🌐 **Community Language Packs:**
+  100% internationalization-ready UI (Zero Hardcoded Strings). English is the native default, with an official Russian language pack readily available: [**Download `russian_lang_pack.shellit`**](plugins/russian_lang_pack.shellit).
 
 ---
 
-## 🏛 Архитектура монорепозитория
+## 🧩 Plugins & Extensions
 
-Проект построен по модульной архитектуре с соблюдением принципа слабой связанности (Contract-First) и изоляции пакетов:
+Shellit supports dynamic installation of custom plugins and language packages (`.shellit`) on the fly without restarting the application.
+
+### 📦 Extensions Catalog:
+
+- 🤖 **[MCP Server Plugin (`plugins/mcp_server.shellit`)](plugins/mcp_server.shellit)** — built-in AI Gateway for Cursor, Claude, and Windsurf with PROD Guard security gate _(bundled out of the box)_.
+- 🐳 **[Docker Monitor (`plugins/docker_monitor.shellit`)](plugins/docker_monitor.shellit)** — real-time container management and log inspector _(bundled out of the box)_.
+- 🌐 **[Russian Language Pack (`plugins/russian_lang_pack.shellit`)](plugins/russian_lang_pack.shellit)** — 100% Russian translation of the user interface (527+ keys).
+
+#### Installation Instructions:
+
+1. Download the desired `.shellit` package from the [**`plugins/`**](plugins/) directory.
+2. In the Shellit application, open the **Plugins** sidebar.
+3. Click the **Install .shellit** button in the top-right corner and select the file.
+4. For language packs: navigate to **Settings → Language & Localization** and select your preferred language!
+
+> Learn more about the plugin ecosystem: [`plugins/README.md`](plugins/README.md).  
+> Translation authoring guide: [`docs/LOCALIZATION_AND_I18N_GUIDE.md`](docs/LOCALIZATION_AND_I18N_GUIDE.md).
+
+---
+
+## 🏛 Monorepo Architecture
+
+The project is structured as a modular monorepo following contract-first design and strict package isolation:
 
 ```text
 Shellit/
 ├── apps/
-│   └── shellit/                    # Главное Flutter-приложение (DI, Riverpod, Routing, Run)
+│   └── shellit/                    # Main Flutter application (DI, Riverpod, Routing, Run)
 ├── packages/
-│   ├── core_foundation/            # Чистые доменные сущности, Result/Failure, контракты/интерфейсы
-│   ├── storage_vault/              # Зашифрованное хранилище (Drift + SQLCipher, Argon2id, SyncCrypto)
-│   ├── ssh_network_core/           # Сетевое ядро (dartssh2, PTY-потоки, SFTP-клиент, туннели, рекордер)
-│   ├── terminal_ui/                # Эмулятор терминала (xterm.dart, табы, сплиты, мобильная панель)
-│   └── desktop_plugin_sdk/         # Спецификация манифестов плагинов, валидатор и песочница IPC
-├── plugins/                        # Готовые плагины и языковые пакеты (.shellit)
+│   ├── core_foundation/            # Domain entities, Result/Failure, interfaces/contracts
+│   ├── storage_vault/              # Encrypted storage (Drift + SQLCipher, Argon2id, SyncCrypto)
+│   ├── ssh_network_core/           # Network core (dartssh2, PTY streams, SFTP client, tunnels, recorder)
+│   ├── terminal_ui/                # Terminal emulator (xterm.dart, tabs, matrix splits, mobile panel)
+│   └── desktop_plugin_sdk/         # Plugin manifest specs, validator, and IPC sandbox
+├── plugins/                        # Bundled plugins and language packs (.shellit)
 ├── servers/
-│   └── sync_server/                # Легковесный сервер синхронизации (Dart + SQLite, Docker, <20MB RAM)
-└── docs/                           # Центр координации и документации проекта
+│   └── sync_server/                # Lightweight sync relay server (Dart + SQLite, Docker, <20MB RAM)
+└── docs/                           # Central coordination and documentation hub
 ```
 
-> **Правило изоляции:** Любой пакет зависит _только_ от абстракций `packages/core_foundation/`. Прямые перекрестные зависимости между фича-пакетами запрещены.
+> **Isolation Rule:** Feature packages depend _strictly_ on abstractions from `packages/core_foundation/`. Direct cross-dependencies between feature packages are prohibited.
 
 ---
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Требования
+### Requirements
 
 - **Flutter SDK**: `>= 3.12.0`
 - **Dart SDK**: `>= 3.12.0`
-- Поддерживаемые десктопные среды: Windows 10/11, macOS (12+), Linux (Ubuntu 22.04+ / Debian / Fedora)
+- Supported desktop environments: Windows 10/11, macOS (12+), Linux (Ubuntu 22.04+ / Debian / Fedora)
 
-### 1. Клонирование и получение зависимостей
+### 1. Clone & Fetch Dependencies
 
 ```bash
-# Клонирование репозитория
-git clone https://github.com/your-org/shellit.git
+# Clone the repository
+git clone https://github.com/kobaltgit/Shellit.git
 cd Shellit
 
-# Получение зависимостей основного приложения
+# Fetch dependencies for the main app
 cd apps/shellit
 flutter pub get
 ```
 
-### 2. Запуск приложения
+### 2. Run Application
 
 ```bash
 # Windows
@@ -152,32 +186,32 @@ flutter run -d macos
 flutter run -d linux
 ```
 
-### 3. Запуск тестов и статического анализа
+### 3. Run Tests & Static Analysis
 
 ```bash
-# Анализ кода по всему проекту
+# Analyze code across all packages
 flutter analyze
 
-# Запуск тестов
+# Run unit and widget tests
 flutter test
 ```
 
 ---
 
-## ☁️ Собственный сервер синхронизации (Self-Hosted Sync)
+## ☁️ Self-Hosted Sync Server
 
-Shellit не привязывает вас к проприетарным платным облакам. Вы можете развернуть собственный легковесный сервер синхронизации на любом домашнем сервере или VPS всего за 60 секунд.
+Shellit frees you from expensive proprietary clouds. You can deploy your own lightweight synchronization relay server on any home server or VPS in under 60 seconds.
 
-### 🛡️ Архитектура Zero-Knowledge
+### 🛡️ Zero-Knowledge Architecture
 
-- **Клиентское шифрование:** Все хосты, приватные ключи, сниппеты и папки шифруются алгоритмом **AES-256-GCM**. Ключ деривируется из вашей кодовой фразы (Passphrase) через **Argon2id**.
-- **Слепой сервер:** На сервер отправляется только слепой хэш `authHash` и зашифрованные бинарные строки. Владелец сервера не может прочитать даже названия хостов.
-- **Tombstones & LWW:** Удаления отслеживаются «надгробиями», а конфликты разрешаются по правилу Last-Write-Wins (Pull-Then-Push).
-- **Свобода транспорта:** Сервер работает как по чистому `http://` (внутри WireGuard, Tailscale или домашней сети без возни с доменами и SSL), так и по `https://` (включая самоподписанные сертификаты).
+- **Client-Side Encryption:** All hosts, private keys, snippets, and folders are encrypted using **AES-256-GCM**. Encryption keys are derived client-side from your Passphrase via **Argon2id**.
+- **Blind Server:** The server only receives blind authentication tokens (`authHash`) and encrypted binary payloads. The server owner cannot read hostnames or any metadata.
+- **Tombstones & LWW:** Deletions are tracked via tombstones, and conflicts are resolved via Last-Write-Wins (Pull-Then-Push).
+- **Transport Freedom:** Works over plain `http://` (inside WireGuard, Tailscale, or private LANs without domain or certificate overhead) as well as `https://` (including self-signed certificates).
 
-### 🚀 Запуск на сервере через Docker Compose
+### 🚀 Running on Server via Docker Compose
 
-1. Скопируйте папку сервера или создайте `docker-compose.yml` на вашем VPS:
+1. Copy the server directory or create `docker-compose.yml` on your VPS:
 
 ```yaml
 version: "3.8"
@@ -195,61 +229,61 @@ services:
       - PORT=8080
       - HOST=0.0.0.0
       - DATA_PATH=/data/shellit-sync.db
-      - REGISTRATION_TOKEN=super-secret-invite-token # Опционально: защита от чужих регистраций
+      - REGISTRATION_TOKEN=super-secret-invite-token # Optional: protect against unauthorized registrations
 ```
 
-2. Запустите:
+2. Start the service:
 
 ```bash
 docker compose up -d
 ```
 
-### 📱 Подключение в приложении Shellit
+### 📱 Connecting in the Shellit App
 
-1. Перейдите в **Settings → Sync & Cloud**.
-2. Укажите:
-   - **Server URL:** `http://<ip-вашего-vps>:8080` или `https://sync.your-domain.com`.
-   - **Vault ID:** Идентификатор хранилища (например, `my-servers`).
-   - **Sync Passphrase:** Кодовая фраза шифрования (запомните её для других устройств).
-   - **Registration Token:** Токен регистрации (если задан в `REGISTRATION_TOKEN` на сервере).
-   - При использовании самоподписанного сертификата включите **«Allow self-signed SSL / insecure HTTP»**.
-3. Нажмите **Test Connection**, затем **Sync Now**.
-4. Повторите шаг на телефоне или втором компьютере — и ваша инфраструктура синхронизирована!
+1. Open **Settings → Sync & Cloud**.
+2. Configure:
+   - **Server URL:** `http://<your-vps-ip>:8080` or `https://sync.your-domain.com`.
+   - **Vault ID:** Storage vault identifier (e.g. `my-servers`).
+   - **Sync Passphrase:** Encryption passphrase (remember it for your other devices).
+   - **Registration Token:** Registration token (if configured in `REGISTRATION_TOKEN` on the server).
+   - When using self-signed certificates, enable **"Allow self-signed SSL / insecure HTTP"**.
+3. Click **Test Connection**, then **Sync Now**.
+4. Repeat on your phone or secondary computer — and your infrastructure is synchronized!
 
-Подробная документация: [`servers/sync_server/README.md`](servers/sync_server/README.md).
-
----
-
-## 📚 Документация и разработка
-
-Все процессы разработки, спецификации и задачи зафиксированы в директории [`docs/`](docs/):
-
-- [`docs/AGENTS_MASTER_GUIDE.md`](docs/AGENTS_MASTER_GUIDE.md) — Мастер-руководство по архитектуре и стандартам кода.
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Дорожная карта и контрольные точки (Milestones).
-- [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — Интерактивный трекер задач по пакетам.
-- [`docs/BUGS_AND_ISSUES.md`](docs/BUGS_AND_ISSUES.md) — Реестр инцидентов и баг-трекер.
-- [`docs/CHRONICLE.md`](docs/CHRONICLE.md) — Летопись разработки и инженерный дневник проекта.
-- [`GEMINI.md`](GEMINI.md) — Системные инструкции для AI-ассистентов.
+Comprehensive server documentation: [`servers/sync_server/README.md`](servers/sync_server/README.md).
 
 ---
 
-## 🔒 Безопасность
+## 📚 Documentation & Development
 
-- **Zero Hardcoded Secrets**: Никогда не сохраняйте учетные данные или приватные ключи в кодовой базе.
-- **Master Vault**: Приватные ключи и пароли шифруются локально. Без мастер-пароля расшифровка базы математически невозможна.
-- **Memory Hygiene**: Чувствительные данные обнуляются (`zeroize`) сразу после использования в сессии.
+All development processes, technical specifications, and tasks are cataloged in the [`docs/`](docs/) directory:
+
+- [`docs/AGENTS_MASTER_GUIDE.md`](docs/AGENTS_MASTER_GUIDE.md) — Master architectural guide and engineering standards.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — Milestone roadmap and progress timeline.
+- [`docs/CHECKLIST.md`](docs/CHECKLIST.md) — Interactive task tracker across packages.
+- [`docs/BUGS_AND_ISSUES.md`](docs/BUGS_AND_ISSUES.md) — Realtime bug registry and incident log.
+- [`docs/CHRONICLE.md`](docs/CHRONICLE.md) — Project development devlog and chronicle.
+- [`GEMINI.md`](GEMINI.md) — System operating guide for AI agents.
 
 ---
 
-## 📄 Лицензия
+## 🔒 Security
 
-Проект распространяется под свободной копилефтной лицензией **[GNU General Public License v3.0 (GPLv3)](LICENSE)**.
+- **Zero Hardcoded Secrets**: Never store credentials or private keys in the codebase.
+- **Master Vault**: Passwords and private keys are encrypted locally with SQLCipher. Without the master password, decrypting the database is mathematically impossible.
+- **Memory Hygiene**: Sensitive decrypted credentials are wiped from memory (`zeroize`) immediately after use.
 
-### Что это означает (свобода с ограничениями):
+---
 
-- ✅ **Свобода использования:** вы можете бесплатно запускать и использовать Shellit для любых целей, включая личные и коммерческие задачи администрирования серверов.
-- ✅ **Свобода изучения и доработки:** исходный код полностью открыт, доступен для аудита, изменения и расширения.
-- ⚠️ **Ключевые ограничения (Строгий Copyleft):**
-  - **Обязательное сохранение свободы:** любые форки, модификации или производные продукты обязаны распространяться под той же лицензией GPLv3 и с полностью открытым исходным кодом.
-  - **Запрет на закрытие кода:** запрещено включать компоненты ядра Shellit в закрытые проприетарные продукты без раскрытия исходного кода.
-  - **Сохранение авторства:** обязательно сохранение всех уведомлений об авторских правах и текста лицензии.
+## 📄 License
+
+This project is licensed under the copyleft **[GNU General Public License v3.0 (GPLv3)](LICENSE)**.
+
+### What This Means (Freedom with Responsibilities):
+
+- ✅ **Freedom of Use:** You may freely run and use Shellit for personal and commercial server administration.
+- ✅ **Freedom to Study & Modify:** Full source code is open, inspectable, and extensible.
+- ⚠️ **Strict Copyleft Requirements:**
+  - **Reciprocal Freedom:** Any forks, modifications, or derivative products must also be distributed under GPLv3 with full source code made available.
+  - **No Closed-Source Redistribution:** Proprietary commercial wrapping of core components without source disclosure is strictly prohibited.
+  - **Attribution:** Original copyright notices and license texts must remain intact.

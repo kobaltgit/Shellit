@@ -136,9 +136,11 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                       size: 18, color: ShellitColors.accentBlue),
                   const SizedBox(width: 8),
                   Text(
-                    context.tr('splits.picker_title',
+                    context
+                        .tr('splits.picker_title',
                             defaultText: 'Connect Host to Split Pane {slot}')
-                        .replaceAll('{slot}', (widget.slotIndex + 1).toString()),
+                        .replaceAll(
+                            '{slot}', (widget.slotIndex + 1).toString()),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -245,7 +247,8 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                                   size: 16, color: ShellitColors.accentBlue),
                             ),
                             title: Text(
-                              context.tr('splits.picker_quick_connect',
+                              context
+                                  .tr('splits.picker_quick_connect',
                                       defaultText: 'Quick Connect: {target}')
                                   .replaceAll(
                                       '{target}', quickHost.connectionTarget),
@@ -256,7 +259,8 @@ class _HostSlotPickerDialogState extends State<HostSlotPickerDialog> {
                               ),
                             ),
                             subtitle: Text(
-                              context.tr('splits.picker_quick_connect_desc',
+                              context
+                                  .tr('splits.picker_quick_connect_desc',
                                       defaultText:
                                           'Connect to {target} as transient host')
                                   .replaceAll('{target}',

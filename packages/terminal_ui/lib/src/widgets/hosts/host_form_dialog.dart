@@ -380,8 +380,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
                         'hosts.form.key_field',
                         defaultText: 'SSH Key (from Keychain)',
                       ),
-                      prefixIcon:
-                          const Icon(Icons.vpn_key_outlined, size: 18),
+                      prefixIcon: const Icon(Icons.vpn_key_outlined, size: 18),
                     ),
                     items: [
                       DropdownMenuItem<String?>(
@@ -389,8 +388,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
                         child: Text(
                           context.tr(
                             'hosts.form.key_none',
-                            defaultText:
-                                'None (Use system agent or prompt)',
+                            defaultText: 'None (Use system agent or prompt)',
                           ),
                           style: const TextStyle(fontSize: 13),
                         ),

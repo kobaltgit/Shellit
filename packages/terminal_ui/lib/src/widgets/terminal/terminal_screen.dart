@@ -330,9 +330,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // Ctrl + Shift + C
     // Ctrl + Insert
     // Or Ctrl + C / Cmd + C when there IS an active selection!
-    final isCopyShortcut =
-        (isCmdOrCtrl && isShift && isKeyC) ||
-            (isCtrl && key == LogicalKeyboardKey.insert);
+    final isCopyShortcut = (isCmdOrCtrl && isShift && isKeyC) ||
+        (isCtrl && key == LogicalKeyboardKey.insert);
     final isSmartCtrlC = isCmdOrCtrl &&
         !isShift &&
         !isAlt &&
@@ -349,10 +348,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // Ctrl + V
     // Shift + Insert
     // Cmd + V
-    final isPasteShortcut =
-        (isCmdOrCtrl && isShift && isKeyV) ||
-            (isCmdOrCtrl && !isAlt && isKeyV) ||
-            (isShift && key == LogicalKeyboardKey.insert);
+    final isPasteShortcut = (isCmdOrCtrl && isShift && isKeyV) ||
+        (isCmdOrCtrl && !isAlt && isKeyV) ||
+        (isShift && key == LogicalKeyboardKey.insert);
 
     if (isPasteShortcut) {
       _pasteFromClipboard();
@@ -361,8 +359,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // 6. Select All:
     // Ctrl + Shift + A or Cmd + A
-    if ((isCmdOrCtrl && isShift && isKeyA) ||
-        (isMeta && isKeyA)) {
+    if ((isCmdOrCtrl && isShift && isKeyA) || (isMeta && isKeyA)) {
       _selectAll();
       return KeyEventResult.handled;
     }

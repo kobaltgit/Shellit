@@ -138,10 +138,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         } else {
           _statusMessage =
               res.failureOrNull?.message ??
-              context.tr(
-                'sync.test_failed',
-                defaultText: 'Connection failed',
-              );
+              context.tr('sync.test_failed', defaultText: 'Connection failed');
           _statusColor = ShellitColors.statusRed;
         }
       });
@@ -237,10 +234,7 @@ class _SyncSettingsCardState extends ConsumerState<SyncSettingsCard> {
         } else {
           final errMsg = res.failureOrNull?.message ?? '';
           _statusMessage = context
-              .tr(
-                'sync.sync_failed',
-                defaultText: 'Sync failed: {error}',
-              )
+              .tr('sync.sync_failed', defaultText: 'Sync failed: {error}')
               .replaceAll('{error}', errMsg);
           _statusColor = ShellitColors.statusRed;
           _showMessage(_statusMessage!, isError: true);

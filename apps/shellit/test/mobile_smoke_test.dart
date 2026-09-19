@@ -46,6 +46,7 @@ class _FakeMobileTerminalSession implements ITerminalSession {
   Future<void> terminate() async {
     await _outputController.close();
   }
+
   @override
   ISessionRecorder? recorder;
   @override
@@ -188,7 +189,10 @@ void main() {
 
         container
             .read(sessionManagerProvider.notifier)
-            .openTerminalTab(host: mobileHost, session: _FakeMobileTerminalSession());
+            .openTerminalTab(
+              host: mobileHost,
+              session: _FakeMobileTerminalSession(),
+            );
         await tester.pumpAndSettle();
 
         // Verify MobileTerminalScreen is rendered
@@ -207,7 +211,10 @@ void main() {
         await tester.pumpAndSettle();
 
         // Confirmation dialog should appear
-        expect(find.text('Disconnect from Mobile Production Server?'), findsOneWidget);
+        expect(
+          find.text('Disconnect from Mobile Production Server?'),
+          findsOneWidget,
+        );
         await tester.tap(find.text('Disconnect'));
         await tester.pumpAndSettle();
 

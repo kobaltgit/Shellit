@@ -27,7 +27,8 @@ class KeychainScreen extends ConsumerWidget {
     final keysAsync = ref.watch(keychainListProvider);
     final vaultState = ref.watch(vaultProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700 ||
+    final isMobile =
+        screenWidth < 700 ||
         ((defaultTargetPlatform == TargetPlatform.android ||
                 defaultTargetPlatform == TargetPlatform.iOS) &&
             screenWidth < 900);
@@ -83,7 +84,9 @@ class KeychainScreen extends ConsumerWidget {
                         : ShellitColors.accentBlue,
                     size: 20,
                   ),
-                  tooltip: !vaultState.isUnlocked ? 'Unlock Vault' : 'Vault Unlocked',
+                  tooltip: !vaultState.isUnlocked
+                      ? 'Unlock Vault'
+                      : 'Vault Unlocked',
                   onPressed: () async {
                     if (!vaultState.isUnlocked) {
                       await showUnlockVaultDialog(context, ref);
@@ -108,7 +111,10 @@ class KeychainScreen extends ConsumerWidget {
                     color: ShellitColors.accentCyan,
                   ),
                   label: Text(
-                    context.tr('keychain.btn_import', defaultText: 'Import ~/.ssh'),
+                    context.tr(
+                      'keychain.btn_import',
+                      defaultText: 'Import ~/.ssh',
+                    ),
                     style: const TextStyle(
                       color: ShellitColors.accentCyan,
                       fontSize: 12,
@@ -116,7 +122,10 @@ class KeychainScreen extends ConsumerWidget {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: ShellitColors.accentCyan),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                   ),
                   onPressed: () async {
                     await ImportSshKeysDialog.show(context);
@@ -127,13 +136,19 @@ class KeychainScreen extends ConsumerWidget {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.bolt, size: 16),
                   label: Text(
-                    context.tr('keychain.btn_generate', defaultText: 'Generate Key'),
+                    context.tr(
+                      'keychain.btn_generate',
+                      defaultText: 'Generate Key',
+                    ),
                     style: const TextStyle(fontSize: 12),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ShellitColors.accentBlue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                   ),
                   onPressed: () async {
                     await GenerateKeyDialog.show(context);
@@ -470,8 +485,7 @@ class KeychainScreen extends ConsumerWidget {
                             ),
                             tooltip: context.tr(
                               'keychain.btn_deploy_key',
-                              defaultText:
-                                  'Deploy Key to Server (ssh-copy-id)',
+                              defaultText: 'Deploy Key to Server (ssh-copy-id)',
                             ),
                             onPressed: () async {
                               await DeployKeyDialog.show(context, key);
@@ -630,9 +644,7 @@ class KeychainScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              context.tr('keychain.btn_close', defaultText: 'Close'),
-            ),
+            child: Text(context.tr('keychain.btn_close', defaultText: 'Close')),
           ),
         ],
       ),
@@ -649,15 +661,23 @@ class KeychainScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         title: Text(
-          context.tr('keychain.delete_dialog_title', defaultText: 'Delete SSH Key?'),
-          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+          context.tr(
+            'keychain.delete_dialog_title',
+            defaultText: 'Delete SSH Key?',
+          ),
+          style: const TextStyle(
+            color: ShellitColors.textPrimary,
+            fontSize: 16,
+          ),
         ),
         content: Text(
-          context.tr(
-            'keychain.delete_dialog_message',
-            defaultText:
-                'Are you sure you want to delete "{label}"? Any servers relying exclusively on this key will need another authentication method.',
-          ).replaceAll('{label}', key.label),
+          context
+              .tr(
+                'keychain.delete_dialog_message',
+                defaultText:
+                    'Are you sure you want to delete "{label}"? Any servers relying exclusively on this key will need another authentication method.',
+              )
+              .replaceAll('{label}', key.label),
           style: const TextStyle(
             color: ShellitColors.textSecondary,
             fontSize: 13,
@@ -706,7 +726,10 @@ class KeychainScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           title: Text(
-            context.tr('keychain.add_dialog_title', defaultText: 'Add SSH Key Manually (PEM)'),
+            context.tr(
+              'keychain.add_dialog_title',
+              defaultText: 'Add SSH Key Manually (PEM)',
+            ),
             style: const TextStyle(
               color: ShellitColors.textPrimary,
               fontSize: 16,
@@ -744,8 +767,14 @@ class KeychainScreen extends ConsumerWidget {
                     fontSize: 13,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('keychain.add_label_field', defaultText: 'Key Label *'),
-                    hintText: context.tr('keychain.add_label_hint', defaultText: 'e.g. id_ed25519_custom'),
+                    labelText: context.tr(
+                      'keychain.add_label_field',
+                      defaultText: 'Key Label *',
+                    ),
+                    hintText: context.tr(
+                      'keychain.add_label_hint',
+                      defaultText: 'e.g. id_ed25519_custom',
+                    ),
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -760,7 +789,10 @@ class KeychainScreen extends ConsumerWidget {
                     color: ShellitColors.textPrimary,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('keychain.add_pem_field', defaultText: 'Private Key PEM Content *'),
+                    labelText: context.tr(
+                      'keychain.add_pem_field',
+                      defaultText: 'Private Key PEM Content *',
+                    ),
                     hintText: '-----BEGIN OPENSSH PRIVATE KEY-----\n...',
                     border: const OutlineInputBorder(),
                   ),
@@ -774,7 +806,10 @@ class KeychainScreen extends ConsumerWidget {
                     fontSize: 13,
                   ),
                   decoration: InputDecoration(
-                    labelText: context.tr('keychain.add_passphrase_field', defaultText: 'Passphrase (if key is encrypted)'),
+                    labelText: context.tr(
+                      'keychain.add_passphrase_field',
+                      defaultText: 'Passphrase (if key is encrypted)',
+                    ),
                     border: const OutlineInputBorder(),
                     isDense: true,
                   ),
@@ -820,7 +855,10 @@ class KeychainScreen extends ConsumerWidget {
                   setState(
                     () => errorText =
                         parseRes.failureOrNull?.message ??
-                        context.tr('keychain.error_parsing', defaultText: 'Error parsing key'),
+                        context.tr(
+                          'keychain.error_parsing',
+                          defaultText: 'Error parsing key',
+                        ),
                   );
                   return;
                 }
@@ -844,7 +882,10 @@ class KeychainScreen extends ConsumerWidget {
                     setState(
                       () => errorText =
                           saveRes.failureOrNull?.message ??
-                          context.tr('keychain.error_saving', defaultText: 'Error saving to Vault'),
+                          context.tr(
+                            'keychain.error_saving',
+                            defaultText: 'Error saving to Vault',
+                          ),
                     );
                     return;
                   }
@@ -866,7 +907,10 @@ class KeychainScreen extends ConsumerWidget {
                 if (ctx.mounted) Navigator.pop(ctx);
               },
               child: Text(
-                context.tr('keychain.add_btn_save', defaultText: 'Validate & Save'),
+                context.tr(
+                  'keychain.add_btn_save',
+                  defaultText: 'Validate & Save',
+                ),
               ),
             ),
           ],

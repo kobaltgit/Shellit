@@ -208,9 +208,11 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
           height: 36,
           child: Row(
             children: [
-              const Icon(Icons.download, size: 16, color: ShellitColors.accentCyan),
+              const Icon(Icons.download,
+                  size: 16, color: ShellitColors.accentCyan),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.download', defaultText: 'Download'), style: const TextStyle(fontSize: 12)),
+              Text(context.tr('sftp.download', defaultText: 'Download'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -219,9 +221,13 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
           height: 36,
           child: Row(
             children: [
-              const Icon(Icons.security, size: 16, color: ShellitColors.accentCyan),
+              const Icon(Icons.security,
+                  size: 16, color: ShellitColors.accentCyan),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.permissions_chmod', defaultText: 'Permissions (chmod)'), style: const TextStyle(fontSize: 12)),
+              Text(
+                  context.tr('sftp.permissions_chmod',
+                      defaultText: 'Permissions (chmod)'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -230,9 +236,13 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
           height: 36,
           child: Row(
             children: [
-              const Icon(Icons.copy, size: 16, color: ShellitColors.textSecondary),
+              const Icon(Icons.copy,
+                  size: 16, color: ShellitColors.textSecondary),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.copy_remote_path', defaultText: 'Copy Remote Path'), style: const TextStyle(fontSize: 12)),
+              Text(
+                  context.tr('sftp.copy_remote_path',
+                      defaultText: 'Copy Remote Path'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -245,7 +255,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
               const Icon(Icons.edit_outlined,
                   size: 16, color: ShellitColors.accentBlue),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.rename', defaultText: 'Rename'), style: const TextStyle(fontSize: 12)),
+              Text(context.tr('sftp.rename', defaultText: 'Rename'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -258,8 +269,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                   size: 16, color: ShellitColors.statusRed),
               const SizedBox(width: 8),
               Text(context.tr('common.delete', defaultText: 'Delete'),
-                  style:
-                      const TextStyle(fontSize: 12, color: ShellitColors.statusRed)),
+                  style: const TextStyle(
+                      fontSize: 12, color: ShellitColors.statusRed)),
             ],
           ),
         ),
@@ -294,7 +305,9 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(context.tr('sftp.copied_path', defaultText: 'Copied: {path}', namedArgs: {'path': item.path})),
+              content: Text(context.tr('sftp.copied_path',
+                  defaultText: 'Copied: {path}',
+                  namedArgs: {'path': item.path})),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -366,7 +379,10 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
               const Icon(Icons.create_new_folder_outlined,
                   size: 16, color: ShellitColors.accentCyan),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.new_directory', defaultText: 'New Directory'), style: const TextStyle(fontSize: 12)),
+              Text(
+                  context.tr('sftp.new_directory',
+                      defaultText: 'New Directory'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -378,7 +394,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
               const Icon(Icons.note_add_outlined,
                   size: 16, color: ShellitColors.accentBlue),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.new_file', defaultText: 'New File'), style: const TextStyle(fontSize: 12)),
+              Text(context.tr('sftp.new_file', defaultText: 'New File'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -388,9 +405,11 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
           height: 36,
           child: Row(
             children: [
-              const Icon(Icons.refresh, size: 16, color: ShellitColors.textSecondary),
+              const Icon(Icons.refresh,
+                  size: 16, color: ShellitColors.textSecondary),
               const SizedBox(width: 8),
-              Text(context.tr('common.refresh', defaultText: 'Refresh'), style: const TextStyle(fontSize: 12)),
+              Text(context.tr('common.refresh', defaultText: 'Refresh'),
+                  style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -407,8 +426,10 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
               const SizedBox(width: 8),
               Text(
                 _showHiddenFiles
-                    ? context.tr('sftp.hide_hidden_files', defaultText: 'Hide Hidden Files')
-                    : context.tr('sftp.show_hidden_files', defaultText: 'Show Hidden Files'),
+                    ? context.tr('sftp.hide_hidden_files',
+                        defaultText: 'Hide Hidden Files')
+                    : context.tr('sftp.show_hidden_files',
+                        defaultText: 'Show Hidden Files'),
                 style: const TextStyle(fontSize: 12),
               ),
             ],
@@ -459,7 +480,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                 const SizedBox(width: 8),
                 Text(
                   context.tr('sftp.remote_title', defaultText: 'Remote'),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 const SizedBox(width: 8),
                 IconButton(
@@ -483,8 +505,10 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                         : ShellitColors.textMuted,
                   ),
                   tooltip: _showHiddenFiles
-                      ? context.tr('sftp.hide_hidden_files', defaultText: 'Hide Hidden Files')
-                      : context.tr('sftp.show_hidden_files', defaultText: 'Show Hidden Files'),
+                      ? context.tr('sftp.hide_hidden_files',
+                          defaultText: 'Hide Hidden Files')
+                      : context.tr('sftp.show_hidden_files',
+                          defaultText: 'Show Hidden Files'),
                   onPressed: () {
                     setState(() {
                       _showHiddenFiles = !_showHiddenFiles;
@@ -495,7 +519,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.create_new_folder_outlined, size: 16),
-                  tooltip: context.tr('sftp.new_directory', defaultText: 'New Directory'),
+                  tooltip: context.tr('sftp.new_directory',
+                      defaultText: 'New Directory'),
                   onPressed: _createNewDirectory,
                   visualDensity: VisualDensity.compact,
                 ),
@@ -571,8 +596,11 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                             ? Center(
                                 child: Text(
                                   _showHiddenFiles
-                                      ? context.tr('sftp.empty_folder', defaultText: 'Empty folder')
-                                      : context.tr('sftp.no_items_hidden', defaultText: 'No items (hidden files excluded)'),
+                                      ? context.tr('sftp.empty_folder',
+                                          defaultText: 'Empty folder')
+                                      : context.tr('sftp.no_items_hidden',
+                                          defaultText:
+                                              'No items (hidden files excluded)'),
                                   style: const TextStyle(
                                       color: ShellitColors.textMuted,
                                       fontSize: 12),

@@ -696,4 +696,43 @@ const Map<String, String> defaultEnglishStrings = {
   'vault.unlock_btn': 'Unlock Vault',
   'vault.unlocked_success': 'Vault unlocked successfully.',
   'vault.unlock_failed': 'Invalid master password. Please try again.',
+
+  // Local Terminal & Shells
+  'local_terminal.btn.label': 'Terminal',
+  'local_terminal.tooltip.open_default': 'Open Local Terminal ({shell})',
+  'local_terminal.tooltip.select_shell': 'Select local shell',
+  'local_terminal.menu.default_tag': 'Default',
+  'local_terminal.menu.set_default': 'Set as default',
+  'local_terminal.tab.title': 'Terminal ({shell})',
+  'local_terminal.tab.badge': 'LOCAL',
+  'local_terminal.status.process_exited': 'Process exited with code {code}',
+  'local_terminal.error.launch_failed': 'Failed to launch local shell: {error}',
+  'omni.action.open_local_terminal': 'Open Local Terminal ({shell})',
+
+  // About Shellit Card
+  'settings.about.section_title': 'About Shellit',
+  'settings.about.version_tag': 'v{version}',
+  'settings.about.status_preview': 'Preview',
+  'settings.about.check_updates_btn': 'Check for updates',
+  'settings.about.checking_updates': 'Checking for updates...',
+  'settings.about.latest_version_installed':
+      'You have the latest version of Shellit installed ({version}).',
+  'settings.about.update_available_title': 'Update Available',
+  'settings.about.update_available_msg':
+      'A new version of Shellit is available: {version}',
+  'settings.about.download_update_btn': 'Download Update',
+  'settings.about.report_issue_title': 'Report an Issue',
+  'settings.about.report_issue_subtitle': 'Open pre-filled report on GitHub',
+  'settings.about.community_title': 'Community',
+  'settings.about.community_subtitle': 'Telegram (Coming soon)',
+  'settings.about.community_planned_msg':
+      'Telegram community chat is in preparation and will launch with the public release.',
+  'settings.about.github_title': 'GitHub',
+  'settings.about.github_subtitle': 'Source code repository',
+  'settings.about.changelog_title': "What's New",
+  'settings.about.changelog_subtitle': 'View release highlights and changes',
+  'settings.about.changelog_dialog_title': "What's New in Shellit",
+  'settings.about.view_all_releases_btn': 'All Releases on GitHub',
+  'settings.about.error_checking_updates':
+      'Could not check for updates. Check your internet connection.',
 };

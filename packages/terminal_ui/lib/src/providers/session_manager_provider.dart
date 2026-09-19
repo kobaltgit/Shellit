@@ -1,12 +1,14 @@
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/local_terminal_session.dart';
 
 /// Type of session displayed inside a tab.
 enum TabType {
   terminal,
   sftp,
   splitTerminal,
+  localTerminal,
 }
 
 /// Layout for matrix split terminals.
@@ -36,6 +38,7 @@ class SessionTab {
   final bool isConnecting;
   final String? connectionStatus;
   final String? connectionError;
+  final LocalShellProfile? localShellProfile;
 
   const SessionTab({
     required this.id,
@@ -54,6 +57,7 @@ class SessionTab {
     this.isConnecting = false,
     this.connectionStatus,
     this.connectionError,
+    this.localShellProfile,
   });
 
   String get displayTitle => customTitle ?? title;
@@ -83,6 +87,7 @@ class SessionTab {
     bool clearConnectionStatus = false,
     String? connectionError,
     bool clearConnectionError = false,
+    LocalShellProfile? localShellProfile,
   }) {
     return SessionTab(
       id: id ?? this.id,
@@ -107,6 +112,7 @@ class SessionTab {
       connectionError: clearConnectionError
           ? null
           : (connectionError ?? this.connectionError),
+      localShellProfile: localShellProfile ?? this.localShellProfile,
     );
   }
 }
@@ -341,6 +347,64 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
       activeTabId: () => tabId,
     );
     return tabId;
+  }
+
+  /// Opens a local pseudo-terminal tab for the specified [profile].
+  Future<String> openLocalTerminalTab({
+    required LocalShellProfile profile,
+    TerminalDimensions initialDimensions =
+        const TerminalDimensions(cols: 80, rows: 24),
+    String? customWorkingDirectory,
+  }) async {
+    final seq = ++_tabCounter;
+    final tabId = 'local-${DateTime.now().millisecondsSinceEpoch}-$seq';
+    final title = 'Terminal (${profile.name})';
+
+    try {
+      final session = await LocalTerminalSession.start(
+        profile: profile,
+        initialDimensions: initialDimensions,
+        customWorkingDirectory: customWorkingDirectory,
+        onExit: (exitCode) {
+          if (exitCode == 0) {
+            closeTab(tabId);
+          } else {
+            setTabConnectionError(
+              tabId: tabId,
+              errorMessage: 'Process exited with code $exitCode',
+            );
+          }
+        },
+      );
+
+      final tab = SessionTab(
+        id: tabId,
+        title: title,
+        type: TabType.localTerminal,
+        terminalSession: session,
+        splitSessions: [session],
+        localShellProfile: profile,
+      );
+
+      state = state.copyWith(
+        tabs: [...state.tabs, tab],
+        activeTabId: () => tabId,
+      );
+      return tabId;
+    } catch (e) {
+      final tab = SessionTab(
+        id: tabId,
+        title: title,
+        type: TabType.localTerminal,
+        localShellProfile: profile,
+        connectionError: 'Failed to launch ${profile.name}: $e',
+      );
+      state = state.copyWith(
+        tabs: [...state.tabs, tab],
+        activeTabId: () => tabId,
+      );
+      return tabId;
+    }
   }
 
   String openSplitTab({

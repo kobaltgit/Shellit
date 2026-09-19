@@ -59,3 +59,15 @@ enum PluginTarget {
   headless,
   localization,
 }
+
+/// Local shell type supported on Desktop systems.
+enum ShellType {
+  powershell,
+  pwsh,
+  cmd,
+  wsl,
+  gitBash,
+  bash,
+  zsh,
+  custom,
+}

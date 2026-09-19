@@ -26,7 +26,7 @@ void main() {
             'displayName': 'Text Embedding',
             'supportedGenerationMethods': ['embedContent'],
           },
-        ]
+        ],
       };
 
       final client = MockClient((request) async {
@@ -45,47 +45,58 @@ void main() {
       expect(models[1].isRecommended, isTrue);
     });
 
-    test('generateSnippet sends structured schema and parses response', () async {
-      final mockSnippetResponse = {
-        'candidates': [
-          {
-            'content': {
-              'parts': [
-                {
-                  'text': jsonEncode({
-                    'title': 'Top Memory Processes',
-                    'command': 'ps aux --sort=-%mem | head -n 11',
-                    'description': 'Displays the top 10 memory-consuming processes.',
-                    'tags': ['memory', 'monitoring', 'processes'],
-                    'explanation': 'Uses ps aux and sorts by mem usage descending.',
-                    'isDangerous': false,
-                  })
-                }
-              ]
-            }
-          }
-        ]
-      };
+    test(
+      'generateSnippet sends structured schema and parses response',
+      () async {
+        final mockSnippetResponse = {
+          'candidates': [
+            {
+              'content': {
+                'parts': [
+                  {
+                    'text': jsonEncode({
+                      'title': 'Top Memory Processes',
+                      'command': 'ps aux --sort=-%mem | head -n 11',
+                      'description':
+                          'Displays the top 10 memory-consuming processes.',
+                      'tags': ['memory', 'monitoring', 'processes'],
+                      'explanation':
+                          'Uses ps aux and sorts by mem usage descending.',
+                      'isDangerous': false,
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        };
 
-      final client = MockClient((request) async {
-        expect(request.url.path, contains('gemini-2.5-flash:generateContent'));
-        final body = jsonDecode(request.body);
-        expect(body['generationConfig']['responseMimeType'], equals('application/json'));
-        return http.Response(jsonEncode(mockSnippetResponse), 200);
-      });
+        final client = MockClient((request) async {
+          expect(
+            request.url.path,
+            contains('gemini-2.5-flash:generateContent'),
+          );
+          final body = jsonDecode(request.body);
+          expect(
+            body['generationConfig']['responseMimeType'],
+            equals('application/json'),
+          );
+          return http.Response(jsonEncode(mockSnippetResponse), 200);
+        });
 
-      final apiClient = GeminiApiClient(client: client);
-      final snippet = await apiClient.generateSnippet(
-        apiKey: 'fake-key',
-        modelId: 'gemini-2.5-flash',
-        history: [],
-        prompt: 'show top 10 processes by ram',
-      );
+        final apiClient = GeminiApiClient(client: client);
+        final snippet = await apiClient.generateSnippet(
+          apiKey: 'fake-key',
+          modelId: 'gemini-2.5-flash',
+          history: [],
+          prompt: 'show top 10 processes by ram',
+        );
 
-      expect(snippet.title, equals('Top Memory Processes'));
-      expect(snippet.command, equals('ps aux --sort=-%mem | head -n 11'));
-      expect(snippet.tags, contains('memory'));
-      expect(snippet.isDangerous, isFalse);
-    });
+        expect(snippet.title, equals('Top Memory Processes'));
+        expect(snippet.command, equals('ps aux --sort=-%mem | head -n 11'));
+        expect(snippet.tags, contains('memory'));
+        expect(snippet.isDangerous, isFalse);
+      },
+    );
   });
 }

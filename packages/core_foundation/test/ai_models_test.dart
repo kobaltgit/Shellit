@@ -20,7 +20,8 @@ void main() {
       expect(response.command, equals('find . -size +100M'));
       expect(response.description, equals('Finds files larger than 100MB'));
       expect(response.tags, equals(['disk', 'find']));
-      expect(response.explanation, equals('Uses find utility with -size parameter'));
+      expect(response.explanation,
+          equals('Uses find utility with -size parameter'));
       expect(response.isDangerous, isFalse);
       expect(response.dangerWarning, isNull);
     });
@@ -39,7 +40,8 @@ void main() {
       expect(response.title, equals('Remove All'));
       expect(response.tags, isEmpty);
       expect(response.isDangerous, isTrue);
-      expect(response.dangerWarning, equals('Permanently removes files recursively'));
+      expect(response.dangerWarning,
+          equals('Permanently removes files recursively'));
     });
   });
 

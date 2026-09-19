@@ -37,7 +37,10 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestableWidget(Widget child, {List<Override> overrides = const []}) {
+  Widget buildTestableWidget(
+    Widget child, {
+    List<Override> overrides = const [],
+  }) {
     final localizationService = AppLocalizationService();
 
     return ProviderScope(
@@ -65,7 +68,10 @@ void main() {
 
       expect(find.text('Enable AI Snippet Assistant'), findsOneWidget);
       expect(find.text('Gemini API Key'), findsOneWidget);
-      expect(find.text('Get free API key at Google AI Studio ↗'), findsOneWidget);
+      expect(
+        find.text('Get free API key at Google AI Studio ↗'),
+        findsOneWidget,
+      );
       expect(find.text('AI Model'), findsOneWidget);
       expect(find.text('Test Connection'), findsOneWidget);
       expect(find.text('Save AI Settings'), findsOneWidget);
@@ -73,11 +79,11 @@ void main() {
   });
 
   group('AiSnippetChatView', () {
-    testWidgets('shows warning when Gemini API key is not configured', (tester) async {
+    testWidgets('shows warning when Gemini API key is not configured', (
+      tester,
+    ) async {
       await tester.pumpWidget(
-        buildTestableWidget(
-          AiSnippetChatView(onOpenSettings: () {}),
-        ),
+        buildTestableWidget(AiSnippetChatView(onOpenSettings: () {})),
       );
       await tester.pumpAndSettle();
 
@@ -85,7 +91,9 @@ void main() {
       expect(find.text('Open Settings'), findsOneWidget);
     });
 
-    testWidgets('renders chat interface with quick prompts when key is set', (tester) async {
+    testWidgets('renders chat interface with quick prompts when key is set', (
+      tester,
+    ) async {
       // Configure API key
       await vaultRepo.updateSettings(
         const VaultSettingsEntity(
@@ -97,9 +105,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        buildTestableWidget(
-          AiSnippetChatView(onOpenSettings: () {}),
-        ),
+        buildTestableWidget(AiSnippetChatView(onOpenSettings: () {})),
       );
       await tester.pumpAndSettle();
 
@@ -111,7 +117,9 @@ void main() {
   });
 
   group('SnippetsScreen with AI tab', () {
-    testWidgets('switches between Library and AI Assistant tabs', (tester) async {
+    testWidgets('switches between Library and AI Assistant tabs', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestableWidget(const SnippetsScreen()));
       await tester.pumpAndSettle();
 

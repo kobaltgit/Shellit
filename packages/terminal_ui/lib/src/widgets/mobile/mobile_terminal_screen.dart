@@ -58,10 +58,11 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
       }
     };
 
-    _sessionCloseSubscription = widget.session.outputStream.listen(
-      null,
-      onDone: () {
-        if (mounted) {
+    _sessionCloseSubscription = widget.session.stateStream.listen(
+      (state) {
+        if (mounted &&
+            (state == SessionState.disconnected ||
+                state == SessionState.error)) {
           setState(() {
             _isDisconnected = true;
           });
@@ -102,7 +103,8 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
         title: Text(
           context.tr('terminal.disconnect_title',
               defaultText: 'Disconnect from $hostLabel?'),
-          style: const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
+          style:
+              const TextStyle(color: ShellitColors.textPrimary, fontSize: 16),
         ),
         content: Text(
           context.tr('terminal.disconnect_prompt',
@@ -126,8 +128,7 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              context.tr('terminal.disconnect_btn',
-                  defaultText: 'Disconnect'),
+              context.tr('terminal.disconnect_btn', defaultText: 'Disconnect'),
             ),
           ),
         ],
@@ -179,8 +180,7 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                       icon: const Icon(Icons.arrow_back,
                           color: ShellitColors.textPrimary, size: 20),
                       onPressed: _handleBackPress,
-                      tooltip:
-                          context.tr('common.back', defaultText: 'Back'),
+                      tooltip: context.tr('common.back', defaultText: 'Back'),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
