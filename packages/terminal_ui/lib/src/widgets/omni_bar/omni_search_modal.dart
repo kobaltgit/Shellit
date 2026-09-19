@@ -70,11 +70,19 @@ class OmniSearchModal extends ConsumerStatefulWidget {
 
 class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _keyboardFocusNode = FocusNode();
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _keyboardFocusNode.requestFocus();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _keyboardFocusNode.dispose();
     super.dispose();
   }
 
@@ -307,7 +315,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       child: KeyboardListener(
-        focusNode: FocusNode()..requestFocus(),
+        focusNode: _keyboardFocusNode,
         onKeyEvent: _handleKey,
         child: Container(
           width: 580,

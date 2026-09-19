@@ -317,15 +317,26 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // 4. Copy:
     // Ctrl + Shift + C
+    final isKeyC = key == LogicalKeyboardKey.keyC ||
+        event.physicalKey == PhysicalKeyboardKey.keyC;
+    final isKeyV = key == LogicalKeyboardKey.keyV ||
+        event.physicalKey == PhysicalKeyboardKey.keyV;
+    final isKeyA = key == LogicalKeyboardKey.keyA ||
+        event.physicalKey == PhysicalKeyboardKey.keyA;
+    final isKeyK = key == LogicalKeyboardKey.keyK ||
+        event.physicalKey == PhysicalKeyboardKey.keyK;
+
+    // 4. Copy:
+    // Ctrl + Shift + C
     // Ctrl + Insert
     // Or Ctrl + C / Cmd + C when there IS an active selection!
     final isCopyShortcut =
-        (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyC) ||
+        (isCmdOrCtrl && isShift && isKeyC) ||
             (isCtrl && key == LogicalKeyboardKey.insert);
     final isSmartCtrlC = isCmdOrCtrl &&
         !isShift &&
         !isAlt &&
-        key == LogicalKeyboardKey.keyC &&
+        isKeyC &&
         _controller.selection != null;
 
     if (isCopyShortcut || isSmartCtrlC) {
@@ -339,8 +350,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // Shift + Insert
     // Cmd + V
     final isPasteShortcut =
-        (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyV) ||
-            (isCmdOrCtrl && !isAlt && key == LogicalKeyboardKey.keyV) ||
+        (isCmdOrCtrl && isShift && isKeyV) ||
+            (isCmdOrCtrl && !isAlt && isKeyV) ||
             (isShift && key == LogicalKeyboardKey.insert);
 
     if (isPasteShortcut) {
@@ -350,15 +361,15 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // 6. Select All:
     // Ctrl + Shift + A or Cmd + A
-    if ((isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyA) ||
-        (isMeta && key == LogicalKeyboardKey.keyA)) {
+    if ((isCmdOrCtrl && isShift && isKeyA) ||
+        (isMeta && isKeyA)) {
       _selectAll();
       return KeyEventResult.handled;
     }
 
     // 7. Clear buffer:
     // Ctrl + Shift + K
-    if (isCmdOrCtrl && isShift && key == LogicalKeyboardKey.keyK) {
+    if (isCmdOrCtrl && isShift && isKeyK) {
       _clearTerminalBuffer();
       return KeyEventResult.handled;
     }

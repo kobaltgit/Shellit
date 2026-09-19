@@ -65,10 +65,12 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   final FocusNode _shellFocusNode =
       FocusNode(canRequestFocus: false, skipTraversal: true);
   late final PingMonitorNotifier _pingNotifier;
+  bool _isOmniBarOpen = false;
 
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(_handleGlobalHardwareKey);
     _pingNotifier = ref.read(pingMonitorProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pingNotifier.startMonitoring();
@@ -77,18 +79,40 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleGlobalHardwareKey);
     _shellFocusNode.dispose();
     _pingNotifier.stopMonitoring();
     super.dispose();
   }
 
+  bool _handleGlobalHardwareKey(KeyEvent event) {
+    if (event is KeyDownEvent) {
+      final isCtrlOrCmd = HardwareKeyboard.instance.isControlPressed ||
+          HardwareKeyboard.instance.isMetaPressed;
+      final isKeyK = event.logicalKey == LogicalKeyboardKey.keyK ||
+          event.physicalKey == PhysicalKeyboardKey.keyK;
+
+      if (isCtrlOrCmd && isKeyK) {
+        if (!_isOmniBarOpen) {
+          _openOmniBar();
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   void _openOmniBar() {
+    if (_isOmniBarOpen) return;
+    _isOmniBarOpen = true;
     OmniSearchModal.show(
       context,
       onSelectHost: _handleConnectHost,
       snippets: widget.snippets,
       onExecuteSnippet: widget.onExecuteSnippet ?? _handleExecuteSnippet,
-    );
+    ).whenComplete(() {
+      _isOmniBarOpen = false;
+    });
   }
 
   void _handleExecuteSnippet(SnippetEntity snippet) {
@@ -299,9 +323,11 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
     if (event is KeyDownEvent) {
       final isCtrlOrCmd = HardwareKeyboard.instance.isControlPressed ||
           HardwareKeyboard.instance.isMetaPressed;
+      final isKeyK = event.logicalKey == LogicalKeyboardKey.keyK ||
+          event.physicalKey == PhysicalKeyboardKey.keyK;
 
       // Ctrl+K / Cmd+K -> Omni-Bar
-      if (isCtrlOrCmd && event.logicalKey == LogicalKeyboardKey.keyK) {
+      if (isCtrlOrCmd && isKeyK) {
         _openOmniBar();
         return KeyEventResult.handled;
       }
