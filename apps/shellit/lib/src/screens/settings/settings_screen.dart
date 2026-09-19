@@ -23,10 +23,10 @@ class SettingsScreen extends ConsumerWidget {
     final activeLocale = ref.watch(activeLocaleProvider);
     final availableLocales = ref.watch(availableLocalesProvider);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 700 ||
-        ((defaultTargetPlatform == TargetPlatform.android ||
-                defaultTargetPlatform == TargetPlatform.iOS) &&
-            screenWidth < 900);
+    final isMobilePlatform = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+    final isMobile = screenWidth < 700 || (isMobilePlatform && screenWidth < 900);
+    final showDesktopExtensions = !isMobile && !isMobilePlatform;
 
     return Scaffold(
       backgroundColor: ShellitColors.obsidianBackground,
@@ -358,8 +358,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          if (defaultTargetPlatform != TargetPlatform.android &&
-              defaultTargetPlatform != TargetPlatform.iOS) ...[
+          if (showDesktopExtensions) ...[
             // Section: Language & Translation
             _buildSectionHeader(
               context.tr('settings.language_title', defaultText: 'Language & Translation'),
@@ -472,7 +471,7 @@ class SettingsScreen extends ConsumerWidget {
           const SyncSettingsCard(),
           const SizedBox(height: 24),
 
-          if (!isMobile) ...[
+          if (showDesktopExtensions) ...[
             // Section 5: Logs & Diagnostics
             _buildSectionHeader(
               context.tr('settings.logs_title',
