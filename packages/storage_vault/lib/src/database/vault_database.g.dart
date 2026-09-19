@@ -2242,6 +2242,36 @@ class $VaultSettingsTableTable extends VaultSettingsTable
   late final GeneratedColumn<String> registrationToken =
       GeneratedColumn<String>('registration_token', aliasedName, true,
           type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _encryptedGeminiApiKeyMeta =
+      const VerificationMeta('encryptedGeminiApiKey');
+  @override
+  late final GeneratedColumn<Uint8List> encryptedGeminiApiKey =
+      GeneratedColumn<Uint8List>('encrypted_gemini_api_key', aliasedName, true,
+          type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _geminiApiKeyMeta =
+      const VerificationMeta('geminiApiKey');
+  @override
+  late final GeneratedColumn<String> geminiApiKey = GeneratedColumn<String>(
+      'gemini_api_key', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _geminiModelIdMeta =
+      const VerificationMeta('geminiModelId');
+  @override
+  late final GeneratedColumn<String> geminiModelId = GeneratedColumn<String>(
+      'gemini_model_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('gemini-2.5-flash'));
+  static const VerificationMeta _isAiSnippetEnabledMeta =
+      const VerificationMeta('isAiSnippetEnabled');
+  @override
+  late final GeneratedColumn<bool> isAiSnippetEnabled = GeneratedColumn<bool>(
+      'is_ai_snippet_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_ai_snippet_enabled" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -2260,7 +2290,11 @@ class $VaultSettingsTableTable extends VaultSettingsTable
         lastSyncedAt,
         encryptedSyncPassphrase,
         syncPassphrase,
-        registrationToken
+        registrationToken,
+        encryptedGeminiApiKey,
+        geminiApiKey,
+        geminiModelId,
+        isAiSnippetEnabled
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2372,6 +2406,30 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           registrationToken.isAcceptableOrUnknown(
               data['registration_token']!, _registrationTokenMeta));
     }
+    if (data.containsKey('encrypted_gemini_api_key')) {
+      context.handle(
+          _encryptedGeminiApiKeyMeta,
+          encryptedGeminiApiKey.isAcceptableOrUnknown(
+              data['encrypted_gemini_api_key']!, _encryptedGeminiApiKeyMeta));
+    }
+    if (data.containsKey('gemini_api_key')) {
+      context.handle(
+          _geminiApiKeyMeta,
+          geminiApiKey.isAcceptableOrUnknown(
+              data['gemini_api_key']!, _geminiApiKeyMeta));
+    }
+    if (data.containsKey('gemini_model_id')) {
+      context.handle(
+          _geminiModelIdMeta,
+          geminiModelId.isAcceptableOrUnknown(
+              data['gemini_model_id']!, _geminiModelIdMeta));
+    }
+    if (data.containsKey('is_ai_snippet_enabled')) {
+      context.handle(
+          _isAiSnippetEnabledMeta,
+          isAiSnippetEnabled.isAcceptableOrUnknown(
+              data['is_ai_snippet_enabled']!, _isAiSnippetEnabledMeta));
+    }
     return context;
   }
 
@@ -2419,6 +2477,15 @@ class $VaultSettingsTableTable extends VaultSettingsTable
           .read(DriftSqlType.string, data['${effectivePrefix}sync_passphrase']),
       registrationToken: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}registration_token']),
+      encryptedGeminiApiKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.blob,
+          data['${effectivePrefix}encrypted_gemini_api_key']),
+      geminiApiKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}gemini_api_key']),
+      geminiModelId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}gemini_model_id'])!,
+      isAiSnippetEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}is_ai_snippet_enabled'])!,
     );
   }
 
@@ -2447,6 +2514,10 @@ class VaultSettingsRecord extends DataClass
   final Uint8List? encryptedSyncPassphrase;
   final String? syncPassphrase;
   final String? registrationToken;
+  final Uint8List? encryptedGeminiApiKey;
+  final String? geminiApiKey;
+  final String geminiModelId;
+  final bool isAiSnippetEnabled;
   const VaultSettingsRecord(
       {required this.id,
       required this.idleLockTimeoutMinutes,
@@ -2464,7 +2535,11 @@ class VaultSettingsRecord extends DataClass
       this.lastSyncedAt,
       this.encryptedSyncPassphrase,
       this.syncPassphrase,
-      this.registrationToken});
+      this.registrationToken,
+      this.encryptedGeminiApiKey,
+      this.geminiApiKey,
+      required this.geminiModelId,
+      required this.isAiSnippetEnabled});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2499,6 +2574,15 @@ class VaultSettingsRecord extends DataClass
     if (!nullToAbsent || registrationToken != null) {
       map['registration_token'] = Variable<String>(registrationToken);
     }
+    if (!nullToAbsent || encryptedGeminiApiKey != null) {
+      map['encrypted_gemini_api_key'] =
+          Variable<Uint8List>(encryptedGeminiApiKey);
+    }
+    if (!nullToAbsent || geminiApiKey != null) {
+      map['gemini_api_key'] = Variable<String>(geminiApiKey);
+    }
+    map['gemini_model_id'] = Variable<String>(geminiModelId);
+    map['is_ai_snippet_enabled'] = Variable<bool>(isAiSnippetEnabled);
     return map;
   }
 
@@ -2533,6 +2617,14 @@ class VaultSettingsRecord extends DataClass
       registrationToken: registrationToken == null && nullToAbsent
           ? const Value.absent()
           : Value(registrationToken),
+      encryptedGeminiApiKey: encryptedGeminiApiKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(encryptedGeminiApiKey),
+      geminiApiKey: geminiApiKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(geminiApiKey),
+      geminiModelId: Value(geminiModelId),
+      isAiSnippetEnabled: Value(isAiSnippetEnabled),
     );
   }
 
@@ -2565,6 +2657,11 @@ class VaultSettingsRecord extends DataClass
       syncPassphrase: serializer.fromJson<String?>(json['syncPassphrase']),
       registrationToken:
           serializer.fromJson<String?>(json['registrationToken']),
+      encryptedGeminiApiKey:
+          serializer.fromJson<Uint8List?>(json['encryptedGeminiApiKey']),
+      geminiApiKey: serializer.fromJson<String?>(json['geminiApiKey']),
+      geminiModelId: serializer.fromJson<String>(json['geminiModelId']),
+      isAiSnippetEnabled: serializer.fromJson<bool>(json['isAiSnippetEnabled']),
     );
   }
   @override
@@ -2590,6 +2687,11 @@ class VaultSettingsRecord extends DataClass
           serializer.toJson<Uint8List?>(encryptedSyncPassphrase),
       'syncPassphrase': serializer.toJson<String?>(syncPassphrase),
       'registrationToken': serializer.toJson<String?>(registrationToken),
+      'encryptedGeminiApiKey':
+          serializer.toJson<Uint8List?>(encryptedGeminiApiKey),
+      'geminiApiKey': serializer.toJson<String?>(geminiApiKey),
+      'geminiModelId': serializer.toJson<String>(geminiModelId),
+      'isAiSnippetEnabled': serializer.toJson<bool>(isAiSnippetEnabled),
     };
   }
 
@@ -2610,7 +2712,11 @@ class VaultSettingsRecord extends DataClass
           Value<DateTime?> lastSyncedAt = const Value.absent(),
           Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
           Value<String?> syncPassphrase = const Value.absent(),
-          Value<String?> registrationToken = const Value.absent()}) =>
+          Value<String?> registrationToken = const Value.absent(),
+          Value<Uint8List?> encryptedGeminiApiKey = const Value.absent(),
+          Value<String?> geminiApiKey = const Value.absent(),
+          String? geminiModelId,
+          bool? isAiSnippetEnabled}) =>
       VaultSettingsRecord(
         id: id ?? this.id,
         idleLockTimeoutMinutes:
@@ -2639,6 +2745,13 @@ class VaultSettingsRecord extends DataClass
         registrationToken: registrationToken.present
             ? registrationToken.value
             : this.registrationToken,
+        encryptedGeminiApiKey: encryptedGeminiApiKey.present
+            ? encryptedGeminiApiKey.value
+            : this.encryptedGeminiApiKey,
+        geminiApiKey:
+            geminiApiKey.present ? geminiApiKey.value : this.geminiApiKey,
+        geminiModelId: geminiModelId ?? this.geminiModelId,
+        isAiSnippetEnabled: isAiSnippetEnabled ?? this.isAiSnippetEnabled,
       );
   VaultSettingsRecord copyWithCompanion(VaultSettingsTableCompanion data) {
     return VaultSettingsRecord(
@@ -2688,6 +2801,18 @@ class VaultSettingsRecord extends DataClass
       registrationToken: data.registrationToken.present
           ? data.registrationToken.value
           : this.registrationToken,
+      encryptedGeminiApiKey: data.encryptedGeminiApiKey.present
+          ? data.encryptedGeminiApiKey.value
+          : this.encryptedGeminiApiKey,
+      geminiApiKey: data.geminiApiKey.present
+          ? data.geminiApiKey.value
+          : this.geminiApiKey,
+      geminiModelId: data.geminiModelId.present
+          ? data.geminiModelId.value
+          : this.geminiModelId,
+      isAiSnippetEnabled: data.isAiSnippetEnabled.present
+          ? data.isAiSnippetEnabled.value
+          : this.isAiSnippetEnabled,
     );
   }
 
@@ -2710,30 +2835,39 @@ class VaultSettingsRecord extends DataClass
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('encryptedSyncPassphrase: $encryptedSyncPassphrase, ')
           ..write('syncPassphrase: $syncPassphrase, ')
-          ..write('registrationToken: $registrationToken')
+          ..write('registrationToken: $registrationToken, ')
+          ..write('encryptedGeminiApiKey: $encryptedGeminiApiKey, ')
+          ..write('geminiApiKey: $geminiApiKey, ')
+          ..write('geminiModelId: $geminiModelId, ')
+          ..write('isAiSnippetEnabled: $isAiSnippetEnabled')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      idleLockTimeoutMinutes,
-      isBiometricsEnabled,
-      isPinEnabled,
-      themeId,
-      terminalFontFamily,
-      terminalFontSize,
-      enableLiveLatencyPing,
-      pingIntervalSeconds,
-      syncServerUrl,
-      isSyncEnabled,
-      syncVaultId,
-      allowInsecureCertificates,
-      lastSyncedAt,
-      $driftBlobEquality.hash(encryptedSyncPassphrase),
-      syncPassphrase,
-      registrationToken);
+  int get hashCode => Object.hashAll([
+        id,
+        idleLockTimeoutMinutes,
+        isBiometricsEnabled,
+        isPinEnabled,
+        themeId,
+        terminalFontFamily,
+        terminalFontSize,
+        enableLiveLatencyPing,
+        pingIntervalSeconds,
+        syncServerUrl,
+        isSyncEnabled,
+        syncVaultId,
+        allowInsecureCertificates,
+        lastSyncedAt,
+        $driftBlobEquality.hash(encryptedSyncPassphrase),
+        syncPassphrase,
+        registrationToken,
+        $driftBlobEquality.hash(encryptedGeminiApiKey),
+        geminiApiKey,
+        geminiModelId,
+        isAiSnippetEnabled
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2755,7 +2889,12 @@ class VaultSettingsRecord extends DataClass
           $driftBlobEquality.equals(
               other.encryptedSyncPassphrase, this.encryptedSyncPassphrase) &&
           other.syncPassphrase == this.syncPassphrase &&
-          other.registrationToken == this.registrationToken);
+          other.registrationToken == this.registrationToken &&
+          $driftBlobEquality.equals(
+              other.encryptedGeminiApiKey, this.encryptedGeminiApiKey) &&
+          other.geminiApiKey == this.geminiApiKey &&
+          other.geminiModelId == this.geminiModelId &&
+          other.isAiSnippetEnabled == this.isAiSnippetEnabled);
 }
 
 class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
@@ -2776,6 +2915,10 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
   final Value<Uint8List?> encryptedSyncPassphrase;
   final Value<String?> syncPassphrase;
   final Value<String?> registrationToken;
+  final Value<Uint8List?> encryptedGeminiApiKey;
+  final Value<String?> geminiApiKey;
+  final Value<String> geminiModelId;
+  final Value<bool> isAiSnippetEnabled;
   const VaultSettingsTableCompanion({
     this.id = const Value.absent(),
     this.idleLockTimeoutMinutes = const Value.absent(),
@@ -2794,6 +2937,10 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.encryptedSyncPassphrase = const Value.absent(),
     this.syncPassphrase = const Value.absent(),
     this.registrationToken = const Value.absent(),
+    this.encryptedGeminiApiKey = const Value.absent(),
+    this.geminiApiKey = const Value.absent(),
+    this.geminiModelId = const Value.absent(),
+    this.isAiSnippetEnabled = const Value.absent(),
   });
   VaultSettingsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -2813,6 +2960,10 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     this.encryptedSyncPassphrase = const Value.absent(),
     this.syncPassphrase = const Value.absent(),
     this.registrationToken = const Value.absent(),
+    this.encryptedGeminiApiKey = const Value.absent(),
+    this.geminiApiKey = const Value.absent(),
+    this.geminiModelId = const Value.absent(),
+    this.isAiSnippetEnabled = const Value.absent(),
   });
   static Insertable<VaultSettingsRecord> custom({
     Expression<int>? id,
@@ -2832,6 +2983,10 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     Expression<Uint8List>? encryptedSyncPassphrase,
     Expression<String>? syncPassphrase,
     Expression<String>? registrationToken,
+    Expression<Uint8List>? encryptedGeminiApiKey,
+    Expression<String>? geminiApiKey,
+    Expression<String>? geminiModelId,
+    Expression<bool>? isAiSnippetEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2858,6 +3013,12 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
         'encrypted_sync_passphrase': encryptedSyncPassphrase,
       if (syncPassphrase != null) 'sync_passphrase': syncPassphrase,
       if (registrationToken != null) 'registration_token': registrationToken,
+      if (encryptedGeminiApiKey != null)
+        'encrypted_gemini_api_key': encryptedGeminiApiKey,
+      if (geminiApiKey != null) 'gemini_api_key': geminiApiKey,
+      if (geminiModelId != null) 'gemini_model_id': geminiModelId,
+      if (isAiSnippetEnabled != null)
+        'is_ai_snippet_enabled': isAiSnippetEnabled,
     });
   }
 
@@ -2878,7 +3039,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
       Value<DateTime?>? lastSyncedAt,
       Value<Uint8List?>? encryptedSyncPassphrase,
       Value<String?>? syncPassphrase,
-      Value<String?>? registrationToken}) {
+      Value<String?>? registrationToken,
+      Value<Uint8List?>? encryptedGeminiApiKey,
+      Value<String?>? geminiApiKey,
+      Value<String>? geminiModelId,
+      Value<bool>? isAiSnippetEnabled}) {
     return VaultSettingsTableCompanion(
       id: id ?? this.id,
       idleLockTimeoutMinutes:
@@ -2901,6 +3066,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
           encryptedSyncPassphrase ?? this.encryptedSyncPassphrase,
       syncPassphrase: syncPassphrase ?? this.syncPassphrase,
       registrationToken: registrationToken ?? this.registrationToken,
+      encryptedGeminiApiKey:
+          encryptedGeminiApiKey ?? this.encryptedGeminiApiKey,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+      geminiModelId: geminiModelId ?? this.geminiModelId,
+      isAiSnippetEnabled: isAiSnippetEnabled ?? this.isAiSnippetEnabled,
     );
   }
 
@@ -2962,6 +3132,19 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
     if (registrationToken.present) {
       map['registration_token'] = Variable<String>(registrationToken.value);
     }
+    if (encryptedGeminiApiKey.present) {
+      map['encrypted_gemini_api_key'] =
+          Variable<Uint8List>(encryptedGeminiApiKey.value);
+    }
+    if (geminiApiKey.present) {
+      map['gemini_api_key'] = Variable<String>(geminiApiKey.value);
+    }
+    if (geminiModelId.present) {
+      map['gemini_model_id'] = Variable<String>(geminiModelId.value);
+    }
+    if (isAiSnippetEnabled.present) {
+      map['is_ai_snippet_enabled'] = Variable<bool>(isAiSnippetEnabled.value);
+    }
     return map;
   }
 
@@ -2984,7 +3167,11 @@ class VaultSettingsTableCompanion extends UpdateCompanion<VaultSettingsRecord> {
           ..write('lastSyncedAt: $lastSyncedAt, ')
           ..write('encryptedSyncPassphrase: $encryptedSyncPassphrase, ')
           ..write('syncPassphrase: $syncPassphrase, ')
-          ..write('registrationToken: $registrationToken')
+          ..write('registrationToken: $registrationToken, ')
+          ..write('encryptedGeminiApiKey: $encryptedGeminiApiKey, ')
+          ..write('geminiApiKey: $geminiApiKey, ')
+          ..write('geminiModelId: $geminiModelId, ')
+          ..write('isAiSnippetEnabled: $isAiSnippetEnabled')
           ..write(')'))
         .toString();
   }
@@ -4461,6 +4648,10 @@ typedef $$VaultSettingsTableTableCreateCompanionBuilder
   Value<Uint8List?> encryptedSyncPassphrase,
   Value<String?> syncPassphrase,
   Value<String?> registrationToken,
+  Value<Uint8List?> encryptedGeminiApiKey,
+  Value<String?> geminiApiKey,
+  Value<String> geminiModelId,
+  Value<bool> isAiSnippetEnabled,
 });
 typedef $$VaultSettingsTableTableUpdateCompanionBuilder
     = VaultSettingsTableCompanion Function({
@@ -4481,6 +4672,10 @@ typedef $$VaultSettingsTableTableUpdateCompanionBuilder
   Value<Uint8List?> encryptedSyncPassphrase,
   Value<String?> syncPassphrase,
   Value<String?> registrationToken,
+  Value<Uint8List?> encryptedGeminiApiKey,
+  Value<String?> geminiApiKey,
+  Value<String> geminiModelId,
+  Value<bool> isAiSnippetEnabled,
 });
 
 class $$VaultSettingsTableTableFilterComposer
@@ -4551,6 +4746,20 @@ class $$VaultSettingsTableTableFilterComposer
 
   ColumnFilters<String> get registrationToken => $composableBuilder(
       column: $table.registrationToken,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<Uint8List> get encryptedGeminiApiKey => $composableBuilder(
+      column: $table.encryptedGeminiApiKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get geminiApiKey => $composableBuilder(
+      column: $table.geminiApiKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get geminiModelId => $composableBuilder(
+      column: $table.geminiModelId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isAiSnippetEnabled => $composableBuilder(
+      column: $table.isAiSnippetEnabled,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -4627,6 +4836,22 @@ class $$VaultSettingsTableTableOrderingComposer
   ColumnOrderings<String> get registrationToken => $composableBuilder(
       column: $table.registrationToken,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<Uint8List> get encryptedGeminiApiKey => $composableBuilder(
+      column: $table.encryptedGeminiApiKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get geminiApiKey => $composableBuilder(
+      column: $table.geminiApiKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get geminiModelId => $composableBuilder(
+      column: $table.geminiModelId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isAiSnippetEnabled => $composableBuilder(
+      column: $table.isAiSnippetEnabled,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$VaultSettingsTableTableAnnotationComposer
@@ -4688,6 +4913,18 @@ class $$VaultSettingsTableTableAnnotationComposer
 
   GeneratedColumn<String> get registrationToken => $composableBuilder(
       column: $table.registrationToken, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get encryptedGeminiApiKey => $composableBuilder(
+      column: $table.encryptedGeminiApiKey, builder: (column) => column);
+
+  GeneratedColumn<String> get geminiApiKey => $composableBuilder(
+      column: $table.geminiApiKey, builder: (column) => column);
+
+  GeneratedColumn<String> get geminiModelId => $composableBuilder(
+      column: $table.geminiModelId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAiSnippetEnabled => $composableBuilder(
+      column: $table.isAiSnippetEnabled, builder: (column) => column);
 }
 
 class $$VaultSettingsTableTableTableManager extends RootTableManager<
@@ -4736,6 +4973,10 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
             Value<String?> syncPassphrase = const Value.absent(),
             Value<String?> registrationToken = const Value.absent(),
+            Value<Uint8List?> encryptedGeminiApiKey = const Value.absent(),
+            Value<String?> geminiApiKey = const Value.absent(),
+            Value<String> geminiModelId = const Value.absent(),
+            Value<bool> isAiSnippetEnabled = const Value.absent(),
           }) =>
               VaultSettingsTableCompanion(
             id: id,
@@ -4755,6 +4996,10 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             encryptedSyncPassphrase: encryptedSyncPassphrase,
             syncPassphrase: syncPassphrase,
             registrationToken: registrationToken,
+            encryptedGeminiApiKey: encryptedGeminiApiKey,
+            geminiApiKey: geminiApiKey,
+            geminiModelId: geminiModelId,
+            isAiSnippetEnabled: isAiSnippetEnabled,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -4774,6 +5019,10 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             Value<Uint8List?> encryptedSyncPassphrase = const Value.absent(),
             Value<String?> syncPassphrase = const Value.absent(),
             Value<String?> registrationToken = const Value.absent(),
+            Value<Uint8List?> encryptedGeminiApiKey = const Value.absent(),
+            Value<String?> geminiApiKey = const Value.absent(),
+            Value<String> geminiModelId = const Value.absent(),
+            Value<bool> isAiSnippetEnabled = const Value.absent(),
           }) =>
               VaultSettingsTableCompanion.insert(
             id: id,
@@ -4793,6 +5042,10 @@ class $$VaultSettingsTableTableTableManager extends RootTableManager<
             encryptedSyncPassphrase: encryptedSyncPassphrase,
             syncPassphrase: syncPassphrase,
             registrationToken: registrationToken,
+            encryptedGeminiApiKey: encryptedGeminiApiKey,
+            geminiApiKey: geminiApiKey,
+            geminiModelId: geminiModelId,
+            isAiSnippetEnabled: isAiSnippetEnabled,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

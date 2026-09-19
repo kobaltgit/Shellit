@@ -21,6 +21,11 @@ class VaultSettingsEntity {
   final String? syncPassphrase;
   final String? registrationToken;
 
+  // AI & Gemini settings
+  final String? geminiApiKey;
+  final String geminiModelId;
+  final bool isAiSnippetEnabled;
+
   const VaultSettingsEntity({
     this.idleLockTimeoutMinutes = 15,
     this.isBiometricsEnabled = false,
@@ -37,6 +42,9 @@ class VaultSettingsEntity {
     this.lastSyncedAt,
     this.syncPassphrase,
     this.registrationToken,
+    this.geminiApiKey,
+    this.geminiModelId = 'gemini-2.5-flash',
+    this.isAiSnippetEnabled = false,
   });
 
   VaultSettingsEntity copyWith({
@@ -55,6 +63,9 @@ class VaultSettingsEntity {
     DateTime? lastSyncedAt,
     String? syncPassphrase,
     String? registrationToken,
+    String? geminiApiKey,
+    String? geminiModelId,
+    bool? isAiSnippetEnabled,
   }) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes:
@@ -75,6 +86,9 @@ class VaultSettingsEntity {
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       syncPassphrase: syncPassphrase ?? this.syncPassphrase,
       registrationToken: registrationToken ?? this.registrationToken,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
+      geminiModelId: geminiModelId ?? this.geminiModelId,
+      isAiSnippetEnabled: isAiSnippetEnabled ?? this.isAiSnippetEnabled,
     );
   }
 
@@ -93,7 +107,10 @@ class VaultSettingsEntity {
           allowInsecureCertificates == other.allowInsecureCertificates &&
           lastSyncedAt == other.lastSyncedAt &&
           syncPassphrase == other.syncPassphrase &&
-          registrationToken == other.registrationToken;
+          registrationToken == other.registrationToken &&
+          geminiApiKey == other.geminiApiKey &&
+          geminiModelId == other.geminiModelId &&
+          isAiSnippetEnabled == other.isAiSnippetEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -108,5 +125,8 @@ class VaultSettingsEntity {
         lastSyncedAt,
         syncPassphrase,
         registrationToken,
+        geminiApiKey,
+        geminiModelId,
+        isAiSnippetEnabled,
       );
 }

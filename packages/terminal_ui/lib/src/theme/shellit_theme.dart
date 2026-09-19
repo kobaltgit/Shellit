@@ -113,6 +113,18 @@ class ShellitTheme {
           side: const BorderSide(color: ShellitColors.border),
         ),
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: ShellitColors.obsidianCard,
+        contentTextStyle: const TextStyle(
+          color: ShellitColors.textPrimary,
+          fontSize: 13,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: ShellitColors.border),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }

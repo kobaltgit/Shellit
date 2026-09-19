@@ -12,6 +12,7 @@ import 'package:terminal_ui/terminal_ui.dart';
 import 'package:webview_windows/webview_windows.dart';
 
 import '../di/app_providers.dart';
+import '../localization/localization_providers.dart';
 import '../mcp/mcp_provider.dart';
 
 /// Desktop host container that renders a `.shellit` plugin in an isolated WebView2 sandbox
@@ -95,6 +96,9 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
         setState(() {
           _isInitialized = true;
         });
+        // Notify the plugin of the current active host immediately after init
+        final activeTab = ref.read(sessionManagerProvider).activeTab;
+        _notifyHostChanged(activeTab);
       }
     } catch (e, st) {
       AppLogger.e(
@@ -173,10 +177,12 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
     // 4. mcp.toggleServer
     bridge.registerHandler('mcp.toggleServer', (pluginId, params) async {
       final mcp = ref.read(mcpServerServiceProvider);
-      final shouldRun =
-          params is Map ? params['running'] == true : !mcp.isRunning;
-      final port =
-          params is Map ? (params['port'] as int? ?? mcp.port) : mcp.port;
+      final shouldRun = params is Map
+          ? params['running'] == true
+          : !mcp.isRunning;
+      final port = params is Map
+          ? (params['port'] as int? ?? mcp.port)
+          : mcp.port;
       if (shouldRun) {
         await mcp.start(port: port);
       } else {
@@ -192,9 +198,7 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
     // 5. mcp.getAuditLogs
     bridge.registerHandler('mcp.getAuditLogs', (pluginId, params) async {
       final mcp = ref.read(mcpServerServiceProvider);
-      return {
-        'logs': mcp.auditLogs.map((e) => e.toJson()).toList(),
-      };
+      return {'logs': mcp.auditLogs.map((e) => e.toJson()).toList()};
     });
 
     // 6. mcp.clearLogs
@@ -242,6 +246,22 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
         Process.run('xdg-open', [url]);
         return {'status': 'opened', 'mode': 'browser'};
       }
+    });
+
+    // 8. i18n.getTranslations
+    bridge.registerHandler('i18n.getTranslations', (pluginId, params) async {
+      final locService = ref.read(localizationServiceProvider);
+      final activeLocale = ref.read(activeLocaleProvider);
+      final keys = (params is Map && params['keys'] is List)
+          ? (params['keys'] as List).cast<String>()
+          : null;
+      final Map<String, String> dict = {};
+      if (keys != null) {
+        for (final k in keys) {
+          dict[k] = locService.translate(k);
+        }
+      }
+      return {'locale': activeLocale, 'translations': dict};
     });
   }
 
@@ -349,6 +369,26 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
       }
     });
 
+    // Listen for language/locale switching to dynamically update plugin UI
+    ref.listen<String>(activeLocaleProvider, (previous, next) {
+      if (previous != next && _isInitialized) {
+        try {
+          final notification = json.encode({
+            'jsonrpc': '2.0',
+            'method': 'i18n.localeChanged',
+            'params': {'locale': next},
+          });
+          _controller.postWebMessage(notification);
+        } catch (_) {}
+      }
+    });
+
+    // Ensure RPC handlers are registered (for hot-reload and reactivity)
+    final bridge = ref.read(appPluginBridgeProvider);
+    if (bridge is DesktopPluginBridge) {
+      _registerRpcHandlers(bridge);
+    }
+
     final defaultNoSession = context.tr(
       'plugins.no_active_session',
       defaultText: 'No Active Session',
@@ -369,20 +409,24 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
               children: [
                 // Sub-header showing which server the plugin is bound to
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: const BoxDecoration(
                     color: ShellitColors.obsidianCard,
-                    border:
-                        Border(bottom: BorderSide(color: ShellitColors.border)),
+                    border: Border(
+                      bottom: BorderSide(color: ShellitColors.border),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color:
-                              ShellitColors.accentCyan.withValues(alpha: 0.15),
+                          color: ShellitColors.accentCyan.withValues(
+                            alpha: 0.15,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Icon(
@@ -513,17 +557,16 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
               behavior: HitTestBehavior.translucent,
               onHorizontalDragUpdate: (details) {
                 setState(() {
-                  _sidebarWidth =
-                      (_sidebarWidth - details.delta.dx).clamp(280.0, 950.0);
+                  _sidebarWidth = (_sidebarWidth - details.delta.dx).clamp(
+                    280.0,
+                    950.0,
+                  );
                   _isExpanded = _sidebarWidth > 500.0;
                 });
               },
               child: MouseRegion(
                 cursor: SystemMouseCursors.resizeLeftRight,
-                child: Container(
-                  width: 6,
-                  color: Colors.transparent,
-                ),
+                child: Container(width: 6, color: Colors.transparent),
               ),
             ),
           ),

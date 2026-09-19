@@ -497,22 +497,41 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     _pasteFromClipboard();
                   }
                 },
-                child: TerminalView(
-                  _terminal,
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  autofocus: widget.autoFocus,
-                  hardwareKeyboardOnly: isDesktop,
-                  onKeyEvent: _handleTerminalKeyEvent,
-                  onSecondaryTapUp: (details, offset) {
-                    _showContextMenu(details.globalPosition);
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Proactively sync terminal size whenever Flutter layout changes
+                    // This ensures the terminal expands when the window grows,
+                    // not just when it shrinks.
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted &&
+                          _terminal.viewWidth > 0 &&
+                          _terminal.viewHeight > 0) {
+                        widget.session.resize(
+                          TerminalDimensions(
+                            cols: _terminal.viewWidth,
+                            rows: _terminal.viewHeight,
+                          ),
+                        );
+                      }
+                    });
+                    return TerminalView(
+                      _terminal,
+                      controller: _controller,
+                      focusNode: _focusNode,
+                      autofocus: widget.autoFocus,
+                      hardwareKeyboardOnly: isDesktop,
+                      onKeyEvent: _handleTerminalKeyEvent,
+                      onSecondaryTapUp: (details, offset) {
+                        _showContextMenu(details.globalPosition);
+                      },
+                      theme: terminalTheme,
+                      textStyle: TerminalStyle(
+                        fontSize: _fontSize,
+                        fontFamily: 'JetBrains Mono',
+                      ),
+                      backgroundOpacity: 1.0,
+                    );
                   },
-                  theme: terminalTheme,
-                  textStyle: TerminalStyle(
-                    fontSize: _fontSize,
-                    fontFamily: 'JetBrains Mono',
-                  ),
-                  backgroundOpacity: 1.0,
                 ),
               ),
             ),

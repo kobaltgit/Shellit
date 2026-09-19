@@ -216,6 +216,7 @@ class ShellitApp extends ConsumerWidget {
                 }
 
                 return DesktopPluginHostView(
+                  key: ValueKey(activePlugin.manifest.id),
                   plugin: activePlugin,
                   onClose: () =>
                       ref.read(activeSidebarPluginProvider.notifier).state = null,

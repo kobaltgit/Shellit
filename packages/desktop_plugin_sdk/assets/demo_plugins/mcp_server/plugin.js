@@ -29,6 +29,114 @@
 
   let currentAuditLogs = [];
 
+  // Localization Support for Language Plugins (Zero Hardcoded UI Strings)
+  const I18N_FALLBACKS = {
+    'mcp.logs.title': 'Live AI Activity Log',
+    'mcp.logs.tooltip_popout': 'Open detached log monitor on second monitor',
+    'mcp.logs.tooltip_save': 'Save logs to .log file',
+    'mcp.logs.tooltip_copy': 'Copy all logs to clipboard',
+    'mcp.logs.tooltip_clear': 'Clear activity logs',
+  };
+  let currentTranslations = {};
+
+  async function initI18n() {
+    try {
+      const res = await callRpc('i18n.getTranslations', {
+        keys: Object.keys(I18N_FALLBACKS),
+      });
+      if (res && res.translations) {
+        currentTranslations = res.translations;
+      }
+    } catch (e) {
+      // Graceful fallback per Localization Guide Section 5
+    }
+    applyI18n();
+  }
+
+  function tr(key) {
+    return currentTranslations[key] || I18N_FALLBACKS[key] || key;
+  }
+
+  function applyI18n() {
+    document.querySelectorAll('[data-i18n-tooltip]').forEach((el) => {
+      const key = el.getAttribute('data-i18n-tooltip');
+      const text = tr(key);
+      el.setAttribute('aria-label', text);
+      el.dataset.tooltipText = text;
+    });
+    document.querySelectorAll('[data-i18n]').forEach((el) => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = tr(key);
+    });
+  }
+
+  // Reliable In-DOM Floating Tooltip Engine (bypasses Windows WebView2 HWND tooltip suppression)
+  const tooltipEl = document.getElementById('pluginTooltip');
+  let activeTooltipTarget = null;
+
+  function showTooltip(el) {
+    if (!tooltipEl) return;
+    const key = el.getAttribute('data-i18n-tooltip');
+    const text = key ? tr(key) : (el.dataset.tooltipText || el.getAttribute('title') || el.getAttribute('aria-label'));
+    if (!text) return;
+
+    activeTooltipTarget = el;
+    if (el.hasAttribute('title')) {
+      el.dataset.nativeTitle = el.getAttribute('title');
+      el.removeAttribute('title');
+    }
+
+    tooltipEl.textContent = text;
+    tooltipEl.classList.add('visible');
+
+    const rect = el.getBoundingClientRect();
+    const ttRect = tooltipEl.getBoundingClientRect();
+
+    let top = rect.bottom + 6;
+    let left = rect.left + (rect.width / 2) - (ttRect.width / 2);
+
+    if (left < 6) left = 6;
+    if (left + ttRect.width > window.innerWidth - 6) {
+      left = window.innerWidth - ttRect.width - 6;
+    }
+    if (top + ttRect.height > window.innerHeight - 6) {
+      top = rect.top - ttRect.height - 6;
+    }
+
+    tooltipEl.style.top = top + 'px';
+    tooltipEl.style.left = left + 'px';
+  }
+
+  function hideTooltip(el) {
+    if (!tooltipEl) return;
+    tooltipEl.classList.remove('visible');
+    if (el && el.dataset.nativeTitle) {
+      el.setAttribute('title', el.dataset.nativeTitle);
+      delete el.dataset.nativeTitle;
+    }
+    activeTooltipTarget = null;
+  }
+
+  document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('[data-i18n-tooltip], [data-tooltip]');
+    if (target) {
+      showTooltip(target);
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const target = e.target.closest('[data-i18n-tooltip], [data-tooltip]');
+    if (target) {
+      hideTooltip(target);
+    }
+  });
+
+  document.addEventListener('mousedown', () => {
+    if (activeTooltipTarget) {
+      hideTooltip(activeTooltipTarget);
+    }
+  });
+
   // JSON-RPC 2.0 Call Helper
   function callRpc(method, params = {}) {
     return new Promise((resolve, reject) => {
@@ -52,6 +160,8 @@
             resolve({ running: true, port: currentPort, activeClients: 0 });
           } else if (method === 'mcp.getAuditLogs') {
             resolve({ logs: [] });
+          } else if (method === 'i18n.getTranslations') {
+            resolve({ locale: 'en', translations: I18N_FALLBACKS });
           } else {
             resolve({ status: 'ok' });
           }
@@ -60,13 +170,19 @@
     });
   }
 
-  // Receive JSON-RPC responses from Shellit host
+  // Receive JSON-RPC responses and notifications from Shellit host
   if (window.chrome && window.chrome.webview) {
     window.chrome.webview.addEventListener('message', (event) => {
       try {
         let msg = event.data;
         if (typeof msg === 'string') {
           msg = JSON.parse(msg);
+        }
+
+        // Notification from host (e.g. locale change)
+        if (msg.method === 'i18n.localeChanged') {
+          initI18n();
+          return;
         }
 
         if (msg.id && pendingRequests.has(msg.id)) {
@@ -325,6 +441,7 @@
   });
 
   // Initial Run
+  initI18n();
   updateUiState();
   refreshStatus();
   refreshLogs();

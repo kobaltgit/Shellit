@@ -795,6 +795,7 @@ class VaultRepository implements IVaultRepository {
     }
 
     String? decryptedPassphrase;
+    String? decryptedGeminiApiKey;
     final activeKey = await _getActiveOrOpenKey();
 
     if (record.encryptedSyncPassphrase != null && activeKey != null) {
@@ -825,9 +826,52 @@ class VaultRepository implements IVaultRepository {
           );
         } catch (_) {}
       }
+    } else if (record.encryptedSyncPassphrase != null && activeKey == null) {
+      // Fallback in case raw UTF-8 bytes were written when activeKey was null
+      try {
+        decryptedPassphrase = utf8.decode(record.encryptedSyncPassphrase!);
+      } catch (_) {}
     }
 
-    final settings = record.toEntity(decryptedPassphrase: decryptedPassphrase);
+    if (record.encryptedGeminiApiKey != null && activeKey != null) {
+      try {
+        final clearBytes = await _cryptoService.decryptBytes(
+          encryptedData: record.encryptedGeminiApiKey!,
+          secretKey: activeKey,
+        );
+        decryptedGeminiApiKey = utf8.decode(clearBytes);
+        VaultCryptoService.zeroize(clearBytes);
+      } catch (_) {}
+    } else if (record.geminiApiKey != null &&
+        record.geminiApiKey!.isNotEmpty) {
+      decryptedGeminiApiKey = record.geminiApiKey;
+      if (activeKey != null) {
+        try {
+          final encryptedBytes = await _cryptoService.encryptBytes(
+            clearText: utf8.encode(decryptedGeminiApiKey!),
+            secretKey: activeKey,
+          );
+          await (_db.update(_db.vaultSettingsTable)
+                ..where((t) => t.id.equals(1)))
+              .write(
+            VaultSettingsTableCompanion(
+              encryptedGeminiApiKey: Value(encryptedBytes),
+              geminiApiKey: const Value(null),
+            ),
+          );
+        } catch (_) {}
+      }
+    } else if (record.encryptedGeminiApiKey != null && activeKey == null) {
+      // Fallback in case raw UTF-8 bytes were written when activeKey was null
+      try {
+        decryptedGeminiApiKey = utf8.decode(record.encryptedGeminiApiKey!);
+      } catch (_) {}
+    }
+
+    final settings = record.toEntity(
+      decryptedPassphrase: decryptedPassphrase,
+      decryptedGeminiApiKey: decryptedGeminiApiKey,
+    );
     _cachedSettings = settings;
     return settings;
   }
@@ -837,6 +881,7 @@ class VaultRepository implements IVaultRepository {
       VaultSettingsEntity settings) async {
     try {
       Uint8List? encryptedPassphraseBytes;
+      Uint8List? encryptedGeminiKeyBytes;
       final activeKey = await _getActiveOrOpenKey();
 
       if (settings.syncPassphrase != null &&
@@ -844,6 +889,15 @@ class VaultRepository implements IVaultRepository {
           activeKey != null) {
         encryptedPassphraseBytes = await _cryptoService.encryptBytes(
           clearText: utf8.encode(settings.syncPassphrase!),
+          secretKey: activeKey,
+        );
+      }
+
+      if (settings.geminiApiKey != null &&
+          settings.geminiApiKey!.isNotEmpty &&
+          activeKey != null) {
+        encryptedGeminiKeyBytes = await _cryptoService.encryptBytes(
+          clearText: utf8.encode(settings.geminiApiKey!),
           secretKey: activeKey,
         );
       }
@@ -868,8 +922,22 @@ class VaultRepository implements IVaultRepository {
               encryptedSyncPassphrase: encryptedPassphraseBytes != null
                   ? Value(encryptedPassphraseBytes)
                   : const Value(null),
-              syncPassphrase: const Value(null),
+              syncPassphrase: activeKey == null &&
+                      settings.syncPassphrase != null &&
+                      settings.syncPassphrase!.isNotEmpty
+                  ? Value(settings.syncPassphrase)
+                  : const Value(null),
               registrationToken: Value(settings.registrationToken),
+              encryptedGeminiApiKey: encryptedGeminiKeyBytes != null
+                  ? Value(encryptedGeminiKeyBytes)
+                  : const Value(null),
+              geminiApiKey: activeKey == null &&
+                      settings.geminiApiKey != null &&
+                      settings.geminiApiKey!.isNotEmpty
+                  ? Value(settings.geminiApiKey)
+                  : const Value(null),
+              geminiModelId: Value(settings.geminiModelId),
+              isAiSnippetEnabled: Value(settings.isAiSnippetEnabled),
             ),
           );
       _cachedSettings = settings;

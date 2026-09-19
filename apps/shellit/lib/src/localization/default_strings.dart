@@ -170,8 +170,7 @@ const Map<String, String> defaultEnglishStrings = {
   'hosts.form.username_required': 'Username is required',
   'hosts.form.auth_method': 'Auth Method',
   'hosts.form.password_field': 'SSH Password',
-  'hosts.form.password_edit_hint':
-      'SSH Password (leave blank to keep current)',
+  'hosts.form.password_edit_hint': 'SSH Password (leave blank to keep current)',
   'hosts.form.password_hint': 'Enter server password',
   'hosts.form.key_field': 'SSH Key (from Keychain)',
   'hosts.form.key_none': 'None (Use system agent or prompt)',
@@ -252,8 +251,7 @@ const Map<String, String> defaultEnglishStrings = {
       'Key Passphrase (required to decrypt)',
   'keychain.import_dialog_btn_import_selected': 'Import Selected',
   'keychain.import_dialog_btn_importing': 'Importing...',
-  'keychain.import_dialog_success_msg':
-      'Successfully imported keys: {count}',
+  'keychain.import_dialog_success_msg': 'Successfully imported keys: {count}',
   'keychain.deploy_dialog_title': 'Deploy Key to Server (ssh-copy-id)',
   'keychain.deploy_dialog_deploying_label': 'Deploying: {label} ({type})',
   'keychain.deploy_dialog_tab_saved_host': 'Saved Host',
@@ -298,8 +296,7 @@ const Map<String, String> defaultEnglishStrings = {
   'plugins.install_dialog_path_field': 'Plugin Archive File Path',
   'plugins.install_dialog_path_hint': 'C:\\path\\to\\plugin.shellit',
   'plugins.install_dialog_btn_install': 'Install',
-  'plugins.install_dialog_success':
-      'Plugin "{name}" installed safely!',
+  'plugins.install_dialog_success': 'Plugin "{name}" installed safely!',
   'plugins.install_dialog_failed': 'Failed: {error}',
   'plugins.mcp_short_name': 'MCP AI',
   'plugins.docker_short_name': 'Docker',
@@ -312,6 +309,16 @@ const Map<String, String> defaultEnglishStrings = {
   'plugins.unsupported_platform':
       'Desktop plugins are currently supported on Windows (WebView2).',
   'plugins.launch_failed': 'Failed to launch plugin: {error}',
+
+  // MCP Server & AI Gateway Plugin
+  'mcp.logs.title': 'Live AI Activity Log',
+  'mcp.logs.tooltip_popout': 'Open detached log monitor on second monitor',
+  'mcp.logs.tooltip_save': 'Save logs to .log file',
+  'mcp.logs.tooltip_copy': 'Copy all logs to clipboard',
+  'mcp.logs.tooltip_clear': 'Clear activity logs',
+  'mcp.logs.btn_save': 'Save Logs (.log)',
+  'mcp.logs.btn_copy_all': 'Copy All',
+  'mcp.logs.btn_clear': 'Clear',
 
   // Snippets
   'snippets.title': 'Command Snippets Library',
@@ -430,14 +437,12 @@ const Map<String, String> defaultEnglishStrings = {
   'sync.syncing': 'Synchronizing with server...',
   'sync.sync_success':
       'Synced successfully (Rev {rev}, Pulled {pulled}, Pushed {pushed})',
-  'sync.sync_complete_msg':
-      'Sync complete: {pulled} pulled, {pushed} pushed',
+  'sync.sync_complete_msg': 'Sync complete: {pulled} pulled, {pushed} pushed',
   'sync.sync_failed': 'Sync failed: {error}',
 
   // Tabs & OmniBar
   'omni.command_palette_tooltip': 'Command Palette (Ctrl+K)',
-  'omni.search_placeholder':
-      'Type a command, host, or action (Ctrl+K)...',
+  'omni.search_placeholder': 'Type a command, host, or action (Ctrl+K)...',
   'omni.no_results': 'No matching commands or hosts found',
   'omni.hint_navigate': '↑↓ Navigate',
   'omni.hint_select': '↵ Select',
@@ -446,15 +451,13 @@ const Map<String, String> defaultEnglishStrings = {
   'omni.action_switch_tab': 'Switch Tab ({target})',
   'omni.action_connect_host': 'Connect SSH ({target})',
   'omni.action_split_h_title': 'Split Horizontally',
-  'omni.action_split_h_desc':
-      'Split active terminal pane horizontally',
+  'omni.action_split_h_desc': 'Split active terminal pane horizontally',
   'omni.action_split_v_title': 'Split Vertically',
   'omni.action_split_v_desc': 'Split active terminal pane vertically',
   'omni.action_split_2x2_title': 'Split 2x2 Grid',
   'omni.action_split_2x2_desc': 'Split into 4 terminal panes',
   'omni.action_lock_vault_title': 'Lock Vault',
-  'omni.action_lock_vault_desc':
-      'Secure database and wipe keys from memory',
+  'omni.action_lock_vault_desc': 'Secure database and wipe keys from memory',
   'omni.theme_title': 'Set Terminal Theme: {theme}',
   'omni.theme_desc': 'Switch active color scheme',
   'tabs.new_tab_tooltip': 'New Tab (Open Hosts Catalog)',
@@ -475,8 +478,7 @@ const Map<String, String> defaultEnglishStrings = {
   'tabs.menu_close_right': 'Close Tabs to the Right',
   'tabs.menu_close_disconnected': 'Close Disconnected Sessions',
   'tabs.rename_dialog_title': 'Rename Tab',
-  'tabs.rename_dialog_hint':
-      'Enter custom tab name (e.g. Docker Logs)',
+  'tabs.rename_dialog_hint': 'Enter custom tab name (e.g. Docker Logs)',
   'tabs.rename_dialog_reset': 'Reset to Default',
   'tabs.color_dialog_title': 'Set Tab Color Tag',
   'tabs.overflow_search_placeholder': 'Search open tabs...',
@@ -494,13 +496,11 @@ const Map<String, String> defaultEnglishStrings = {
   'terminal.shortcuts_tooltip': 'Keyboard Shortcuts (F1)',
   'terminal.sftp_tooltip': 'Open SFTP for this host',
   'terminal.rec_start_tooltip': 'Start Session Recording',
-  'terminal.rec_stop_tooltip':
-      'Session Recording Active (Click to Stop)',
+  'terminal.rec_stop_tooltip': 'Session Recording Active (Click to Stop)',
 
   // Prod Guard & Connecting View
   'prod_guard.dialog_title': 'PROD GUARD: Destructive Command',
-  'prod_guard.warn_prefix':
-      'You are about to execute a dangerous command on ',
+  'prod_guard.warn_prefix': 'You are about to execute a dangerous command on ',
   'prod_guard.warn_suffix': ' (PRODUCTION):',
   'prod_guard.warn_footer':
       'This action may lead to data loss or service unavailability. Are you absolutely sure?',
@@ -531,8 +531,7 @@ const Map<String, String> defaultEnglishStrings = {
   'splits.broadcast_alert': 'INPUT SENT TO ALL PANES',
   'splits.nav_hint': 'Alt + Arrows to navigate splits',
   'splits.picker_title': 'Connect Host to Split Pane {index}',
-  'splits.picker_search':
-      'Search hosts by label, IP, username, or tag...',
+  'splits.picker_search': 'Search hosts by label, IP, username, or tag...',
   'splits.picker_no_hosts': 'No matching hosts found',
   'splits.picker_quick_title': 'Quick Connect: {target}',
   'splits.picker_quick_subtitle':
@@ -628,10 +627,61 @@ const Map<String, String> defaultEnglishStrings = {
   'settings.export_template.description':
       'Export complete master strings dictionary (JSON) to create custom language plugins or submit community translations:',
   'settings.export_template.path_label': 'Output File Path (Optional)',
-  'settings.export_template.path_hint': 'Leave empty for default Downloads folder',
-  'settings.export_template.success_msg': 'Template exported successfully to: {path}',
+  'settings.export_template.path_hint':
+      'Leave empty for default Downloads folder',
+  'settings.export_template.success_msg':
+      'Template exported successfully to: {path}',
   'settings.export_template.error_msg': 'Export failed: {err}',
   'settings.export_template.btn_export': 'Export Template',
+
+  // AI Assistant & Gemini Settings
+  'settings.ai.section_title': 'AI Assistant & Gemini',
+  'settings.ai.enable_title': 'Enable AI Snippet Assistant',
+  'settings.ai.enable_subtitle':
+      'Use Google Gemini to generate, explain, and optimize terminal commands',
+  'settings.ai.api_key_label': 'Gemini API Key',
+  'settings.ai.api_key_hint': 'AIzaSy...',
+  'settings.ai.get_key_link': 'Get free API key at Google AI Studio ↗',
+  'settings.ai.model_label': 'AI Model',
+  'settings.ai.refresh_models_tooltip':
+      'Refresh available models from Gemini API',
+  'settings.ai.test_connection_btn': 'Test Connection',
+  'settings.ai.test_success':
+      'Successfully connected! {count} models available.',
+  'settings.ai.test_failed': 'Connection failed: {error}',
+  'settings.ai.recommended_badge': 'Recommended',
+  'settings.ai.save_btn': 'Save AI Settings',
+  'settings.ai.saved_msg': 'AI settings saved successfully',
+
+  // Snippets AI Chat
+  'snippets.tab_library': 'Library',
+  'snippets.tab_ai_assistant': 'AI Assistant',
+  'snippets.ai.welcome_title': 'AI Snippet Assistant',
+  'snippets.ai.welcome_desc':
+      'Describe any task or command you need in plain English or Russian, and Gemini will generate ready-to-run shell scripts.',
+  'snippets.ai.need_key_title': 'Gemini API Key Required',
+  'snippets.ai.need_key_desc':
+      'Please configure your free Gemini API key in Settings to use the AI Snippet Assistant.',
+  'snippets.ai.btn_open_settings': 'Open Settings',
+  'snippets.ai.chat_placeholder':
+      'Ask for a snippet (e.g. find files >100MB, docker cleanup, kill port 8080)...',
+  'snippets.ai.btn_send': 'Send',
+  'snippets.ai.btn_clear_chat': 'Clear Chat',
+  'snippets.ai.active_model': 'Model: {model}',
+  'snippets.ai.btn_save_snippet': 'Save to Snippets',
+  'snippets.ai.btn_run_terminal': 'Run in Terminal',
+  'snippets.ai.saved_success': 'Snippet "{title}" saved to library',
+  'snippets.ai.executed_success': 'Command sent to terminal ({tab})',
+  'snippets.ai.no_active_terminal':
+      'No active terminal session to execute command',
+  'snippets.ai.danger_badge': 'DESTRUCTIVE COMMAND',
+  'snippets.ai.quick_docker': 'Docker clean stopped containers',
+  'snippets.ai.quick_large_files': 'Find files >100MB',
+  'snippets.ai.quick_ports': 'List listening TCP ports',
+  'snippets.ai.quick_ram': 'Top 10 memory consuming processes',
+  'snippets.ai.quick_logs': 'Compress logs older than 7 days',
+  'snippets.ai.error_prefix': 'AI Error: {error}',
+  'snippets.ai.thinking': 'Generating snippet...',
 
   // Hosts error
   'hosts.failed_to_connect': 'Failed to connect: {err}',
@@ -647,4 +697,3 @@ const Map<String, String> defaultEnglishStrings = {
   'vault.unlocked_success': 'Vault unlocked successfully.',
   'vault.unlock_failed': 'Invalid master password. Please try again.',
 };
-

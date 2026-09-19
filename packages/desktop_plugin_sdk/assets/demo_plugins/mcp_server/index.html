@@ -222,6 +222,76 @@
       background: rgba(239, 68, 68, 0.2);
     }
 
+    .btn-icon {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-icon:hover {
+      background: var(--border);
+      color: var(--text-main);
+      border-color: var(--text-muted);
+    }
+
+    .btn-icon-accent {
+      color: var(--accent-cyan);
+      border-color: rgba(0, 240, 255, 0.4);
+      background: rgba(0, 240, 255, 0.05);
+    }
+
+    .btn-icon-accent:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-icon-danger {
+      color: var(--text-muted);
+    }
+
+    .btn-icon-danger:hover {
+      color: var(--accent-red);
+      border-color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    /* In-DOM Floating Tooltip */
+    .plugin-tooltip {
+      position: fixed;
+      z-index: 9999;
+      background: #0B0D14;
+      color: #E2E8F0;
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7), 0 0 8px rgba(0, 240, 255, 0.2);
+      padding: 5px 9px;
+      border-radius: 5px;
+      font-size: 11px;
+      line-height: 1.25;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+
+    .plugin-tooltip.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .config-code {
       background: var(--bg-base);
       border: 1px solid var(--border);
@@ -390,12 +460,34 @@
     <!-- Live Activity Log Card -->
     <div class="card">
       <div class="card-title">
-        <span>Live AI Activity Log</span>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <button id="popoutLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px; color: var(--accent-cyan); border-color: var(--accent-cyan);" title="Open detached log monitor on second monitor">⤢ Pop-out</button>
-          <button id="exportLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px;" title="Save logs to .log file">📥 Save</button>
-          <button id="copyLogsBtn" class="btn" style="padding: 2px 7px; font-size: 10px;" title="Copy all logs">📋 Copy</button>
-          <button id="clearLogsBtn" style="background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; padding: 2px 4px;">Clear</button>
+        <span data-i18n="mcp.logs.title">Live AI Activity Log</span>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <button id="popoutLogsBtn" class="btn-icon btn-icon-accent" data-i18n-tooltip="mcp.logs.tooltip_popout" title="Open detached log monitor on second monitor" aria-label="Open detached log monitor on second monitor">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </button>
+          <button id="exportLogsBtn" class="btn-icon" data-i18n-tooltip="mcp.logs.tooltip_save" title="Save logs to .log file" aria-label="Save logs to .log file">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </button>
+          <button id="copyLogsBtn" class="btn-icon" data-i18n-tooltip="mcp.logs.tooltip_copy" title="Copy all logs to clipboard" aria-label="Copy all logs to clipboard">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          <button id="clearLogsBtn" class="btn-icon btn-icon-danger" data-i18n-tooltip="mcp.logs.tooltip_clear" title="Clear activity logs" aria-label="Clear activity logs">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
         </div>
       </div>
       <div id="logList" class="log-list">
@@ -403,6 +495,8 @@
       </div>
     </div>
   </div>
+
+  <div id="pluginTooltip" class="plugin-tooltip"></div>
 
   <script src="plugin.js"></script>
 </body>

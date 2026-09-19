@@ -101,6 +101,14 @@ class VaultSettingsTable extends Table {
   TextColumn get syncPassphrase => text().nullable()();
   TextColumn get registrationToken => text().nullable()();
 
+  // AI & Gemini settings
+  BlobColumn get encryptedGeminiApiKey => blob().nullable()();
+  TextColumn get geminiApiKey => text().nullable()();
+  TextColumn get geminiModelId =>
+      text().withDefault(const Constant('gemini-2.5-flash'))();
+  BoolColumn get isAiSnippetEnabled =>
+      boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -137,7 +145,7 @@ class VaultDatabase extends _$VaultDatabase {
   VaultDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -157,6 +165,8 @@ class VaultDatabase extends _$VaultDatabase {
               pingIntervalSeconds: Value(45),
               isSyncEnabled: Value(false),
               allowInsecureCertificates: Value(false),
+              geminiModelId: Value('gemini-2.5-flash'),
+              isAiSnippetEnabled: Value(false),
             ),
             mode: InsertMode.insertOrIgnore,
           );
@@ -195,6 +205,24 @@ class VaultDatabase extends _$VaultDatabase {
             try {
               await m.addColumn(
                   vaultSettingsTable, vaultSettingsTable.registrationToken);
+            } catch (_) {}
+          }
+          if (from < 3) {
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.encryptedGeminiApiKey);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.geminiApiKey);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.geminiModelId);
+            } catch (_) {}
+            try {
+              await m.addColumn(
+                  vaultSettingsTable, vaultSettingsTable.isAiSnippetEnabled);
             } catch (_) {}
           }
         },
@@ -237,6 +265,22 @@ class VaultDatabase extends _$VaultDatabase {
           try {
             await customStatement(
                 'ALTER TABLE "vault_settings_table" ADD COLUMN "registration_token" TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "encrypted_gemini_api_key" BLOB;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "gemini_api_key" TEXT;');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "gemini_model_id" TEXT NOT NULL DEFAULT \'gemini-2.5-flash\';');
+          } catch (_) {}
+          try {
+            await customStatement(
+                'ALTER TABLE "vault_settings_table" ADD COLUMN "is_ai_snippet_enabled" INTEGER NOT NULL DEFAULT 0;');
           } catch (_) {}
         },
       );
@@ -348,7 +392,10 @@ extension SnippetRecordMapper on SnippetRecord {
 
 /// Mapper extension to convert [VaultSettingsRecord] to/from [VaultSettingsEntity].
 extension VaultSettingsRecordMapper on VaultSettingsRecord {
-  VaultSettingsEntity toEntity({String? decryptedPassphrase}) {
+  VaultSettingsEntity toEntity({
+    String? decryptedPassphrase,
+    String? decryptedGeminiApiKey,
+  }) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes: idleLockTimeoutMinutes,
       isBiometricsEnabled: isBiometricsEnabled,
@@ -365,6 +412,9 @@ extension VaultSettingsRecordMapper on VaultSettingsRecord {
       lastSyncedAt: lastSyncedAt,
       syncPassphrase: decryptedPassphrase ?? syncPassphrase,
       registrationToken: registrationToken,
+      geminiApiKey: decryptedGeminiApiKey ?? geminiApiKey,
+      geminiModelId: geminiModelId,
+      isAiSnippetEnabled: isAiSnippetEnabled,
     );
   }
 }

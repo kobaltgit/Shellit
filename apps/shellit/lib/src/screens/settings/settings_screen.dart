@@ -8,6 +8,7 @@ import '../../controllers/recording_settings_provider.dart';
 import '../../di/app_providers.dart';
 import '../../localization/localization_providers.dart';
 import '../../localization/template_exporter.dart';
+import 'ai_settings_card.dart';
 import 'sync_settings_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -358,6 +359,22 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          // Section: Cross-Device Sync (E2EE)
+          _buildSectionHeader(
+            context.tr('settings.sync.title', defaultText: 'Cross-Device Sync (E2EE)'),
+          ),
+          const SizedBox(height: 8),
+          const SyncSettingsCard(),
+          const SizedBox(height: 24),
+
+          // Section: AI Assistant & Gemini
+          _buildSectionHeader(
+            context.tr('settings.ai.section_title', defaultText: 'AI Assistant & Gemini'),
+          ),
+          const SizedBox(height: 8),
+          const AiSettingsCard(),
+          const SizedBox(height: 24),
+
           if (showDesktopExtensions) ...[
             // Section: Language & Translation
             _buildSectionHeader(
@@ -461,15 +478,6 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
         ],
-
-          // Section 4: Synchronization
-          _buildSectionHeader(
-            context.tr('settings.sync_title',
-                defaultText: 'Synchronization & Multi-Device'),
-          ),
-          const SizedBox(height: 8),
-          const SyncSettingsCard(),
-          const SizedBox(height: 24),
 
           if (showDesktopExtensions) ...[
             // Section 5: Logs & Diagnostics
