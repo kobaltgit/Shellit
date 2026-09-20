@@ -474,3 +474,5 @@
   - [x] Полный прогон тестов приложения (48/48 успешно).
   - [x] Чистый `flutter analyze` (0 warnings, 0 errors).
 - [x] Релиз v0.8.0: успешное прохождение всех тестов монорепозитория, чистый `flutter analyze` и запуск мультиплатформенной сборки в GitHub Actions.
+- [x] Релиз v0.8.1 (Hotfix): обновление плагиновых бандлов (`mcp_server.shellit`, `russian_lang_pack.shellit`, `docker_monitor.shellit`), патч `McpServerService`; 48/48 тестов, 0 ошибок анализатора.
+
