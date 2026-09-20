@@ -223,12 +223,17 @@
       {
         mcpServers: {
           shellit: {
-            type: 'sse',
-            url: sseUrl,
+            // Antigravity IDE uses 'serverUrl' for SSE transport
             serverUrl: sseUrl,
           },
         },
       },
+      null,
+      2
+    );
+    // Strip comments from displayed JSON (JSON.stringify doesn't include them)
+    configCode.textContent = JSON.stringify(
+      { mcpServers: { shellit: { serverUrl: sseUrl } } },
       null,
       2
     );
@@ -356,6 +361,7 @@
       {
         mcpServers: {
           shellit: {
+            // Claude Desktop uses 'url' for SSE transport
             url: `http://127.0.0.1:${currentPort}/sse`,
           },
         },
@@ -363,7 +369,13 @@
       null,
       2
     );
-    copyToClipboard(claudeJson, 'Copied Claude Desktop configuration');
+    // Clean JSON (no comments)
+    const cleanClaudeJson = JSON.stringify(
+      { mcpServers: { shellit: { url: `http://127.0.0.1:${currentPort}/sse` } } },
+      null,
+      2
+    );
+    copyToClipboard(cleanClaudeJson, 'Copied Claude Desktop configuration');
   });
 
   popoutLogsBtn.addEventListener('click', () => {

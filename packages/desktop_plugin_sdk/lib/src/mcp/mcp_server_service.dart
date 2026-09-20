@@ -20,6 +20,7 @@ class McpServerService {
 
   HttpServer? _httpServer;
   int _port = defaultPort;
+  int _sessionCounter = 0;
   McpToolHandler? _toolHandler;
 
   final Map<String, McpToolDefinition> _registeredTools = {};
@@ -112,7 +113,10 @@ class McpServerService {
     if (request.method == 'GET' && (path == '/sse' || path == '/')) {
       await _handleSseConnection(request);
     } else if (request.method == 'POST' &&
-        (path == '/message' || path == '/rpc')) {
+        (path == '/message' || path == '/rpc' ||
+            path == '/sse' || path == '/')) {
+      // Also accept POST to /sse and / for Streamable HTTP transport compatibility
+      // (used by Antigravity IDE and other clients implementing the newer MCP spec).
       await _handlePostMessage(request);
     } else if (request.method == 'GET' && path == '/health') {
       response.statusCode = HttpStatus.ok;
@@ -148,8 +152,9 @@ class McpServerService {
   /// Handles incoming SSE stream requests from AI clients (GET /sse).
   Future<void> _handleSseConnection(HttpRequest request) async {
     final response = request.response;
+    // Use a counter to ensure the session ID is always positive and unique.
     final sessionId =
-        'session_${DateTime.now().millisecondsSinceEpoch}_${request.hashCode}';
+        'session_${DateTime.now().millisecondsSinceEpoch}_${++_sessionCounter}';
 
     response.statusCode = HttpStatus.ok;
     response.bufferOutput = false;
@@ -160,8 +165,11 @@ class McpServerService {
 
     _connectedSseClients[sessionId] = response;
 
-    // Send initial endpoint event informing client where to send POST messages
-    final endpointData = '/message?sessionId=$sessionId';
+    // Send initial endpoint event informing client where to send POST messages.
+    // Must be an absolute URL — some clients (Antigravity, Cursor, Claude Desktop)
+    // cannot reconstruct a full URL from a relative path and drop the sessionId.
+    final endpointData =
+        'http://127.0.0.1:$_port/message?sessionId=$sessionId';
     response.write('event: endpoint\ndata: $endpointData\n\n');
     await response.flush();
 
@@ -178,7 +186,10 @@ class McpServerService {
 
   /// Handles incoming JSON-RPC 2.0 messages from AI clients (POST /message).
   Future<void> _handlePostMessage(HttpRequest request) async {
-    final sessionId = request.uri.queryParameters['sessionId'];
+    // Accept session ID from URL query param (old SSE transport)
+    // or from the Mcp-Session-Id request header (Streamable HTTP transport).
+    final sessionId = request.uri.queryParameters['sessionId'] ??
+        request.headers.value('Mcp-Session-Id');
     final sseResponse =
         sessionId != null ? _connectedSseClients[sessionId] : null;
 
@@ -383,6 +394,10 @@ class McpServerService {
     // 2. Also return in the HTTP response for maximum client compatibility
     request.response.statusCode = HttpStatus.ok;
     request.response.headers.contentType = ContentType.json;
+    // Return the session ID in the response header for Streamable HTTP clients.
+    if (sessionId != null && sessionId.isNotEmpty) {
+      request.response.headers.set('Mcp-Session-Id', sessionId);
+    }
     if (rpcResponse != null) {
       request.response.write(json.encode(rpcResponse));
     } else {
