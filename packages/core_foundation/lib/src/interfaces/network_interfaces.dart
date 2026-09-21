@@ -97,6 +97,16 @@ abstract class ISftpSession {
   /// Creates an empty file at the remote path.
   Future<Result<void, SftpFailure>> createFile(String remotePath);
 
+  /// Returns the default starting directory path for the user (e.g. user home directory or '/').
+  Future<Result<String, SftpFailure>> getDefaultPath();
+
+  /// Reads entire file content from remote path into memory (e.g. for editor or preview).
+  Future<Result<Uint8List, SftpFailure>> readFile(String remotePath);
+
+  /// Writes binary data or text to a remote file.
+  Future<Result<void, SftpFailure>> writeFile(
+      String remotePath, Uint8List data);
+
   /// Streams file download from remote to local disk with transfer progress (0.0 to 1.0).
   Stream<double> downloadFile({
     required String remotePath,

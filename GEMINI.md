@@ -67,9 +67,11 @@ We use `raw-sources/reference.png` solely as an ergonomic guideline (sidebar lay
 5. **Realtime Bug Tracker Protocol:**
    * Any detected bug or breaking issue must be immediately registered in `docs/BUGS_AND_ISSUES.md`.
    * When resolved, update status to `RESOLVED`, add regression unit test, and describe root cause and fix.
-6. **Checklist & Chronicle Protocol:**
-   * Mark completed tasks in `docs/CHECKLIST.md`.
-   * Invoke `chronicle_writer` or update `docs/CHRONICLE.md` upon completing milestones or major fixes.
+6. **Checklist, Backlog & Bilingual Chronicle Protocol:**
+   * Mark completed tasks in `docs/CHECKLIST.md` and keep feature statuses in `docs/IDEAS_AND_BACKLOG.md` up to date (`IN_PROGRESS`, `IMPLEMENTED`).
+   * Keep BOTH Russian (`docs/CHRONICLE.md`) and English (`docs/CHRONICLE.en.md`) chronicles strictly synchronized.
+   * Always include canonical timestamps (`*Время: ...*` / `*Timestamp: ...*`).
+   * Adhere to refined author style without colloquial clichés («по ходу пьесы») or repetitive phrasing.
 7. **Zero Hardcoded UI Strings & I18n Ready:**
    * Never hardcode user-visible strings (labels, buttons, tooltips, dialogs, errors) in Flutter widgets.
    * All UI text must use `context.tr('key')` and support fallback to English and community localization plugins (see `docs/LOCALIZATION_AND_I18N_GUIDE.md`).

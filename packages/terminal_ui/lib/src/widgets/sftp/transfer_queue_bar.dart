@@ -4,7 +4,7 @@ import '../../theme/shellit_theme.dart';
 
 enum TransferDirection { upload, download }
 
-enum TransferStatus { queued, inProgress, completed, failed }
+enum TransferStatus { queued, inProgress, completed, failed, cancelled }
 
 class FileTransferItem {
   final String id;
@@ -48,11 +48,15 @@ class FileTransferItem {
 class TransferQueueBar extends StatelessWidget {
   final List<FileTransferItem> transfers;
   final VoidCallback? onClearCompleted;
+  final ValueChanged<String>? onCancelTransfer;
+  final VoidCallback? onCancelAll;
 
   const TransferQueueBar({
     super.key,
     required this.transfers,
     this.onClearCompleted,
+    this.onCancelTransfer,
+    this.onCancelAll,
   });
 
   @override
@@ -68,7 +72,7 @@ class TransferQueueBar extends StatelessWidget {
         .toList();
 
     return Container(
-      height: 42,
+      height: 44,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: const BoxDecoration(
         color: ShellitColors.obsidianHeader,
@@ -102,6 +106,24 @@ class TransferQueueBar extends StatelessWidget {
                 final item = transfers[index];
                 final isUpload = item.direction == TransferDirection.upload;
                 final pct = (item.progress * 100).toInt();
+                final isActive = item.status == TransferStatus.inProgress ||
+                    item.status == TransferStatus.queued;
+
+                Color statusColor;
+                String statusLabel;
+                if (item.status == TransferStatus.completed) {
+                  statusColor = ShellitColors.statusGreen;
+                  statusLabel = '100%';
+                } else if (item.status == TransferStatus.failed) {
+                  statusColor = ShellitColors.statusRed;
+                  statusLabel = 'ERR';
+                } else if (item.status == TransferStatus.cancelled) {
+                  statusColor = ShellitColors.statusYellow;
+                  statusLabel = 'CANCEL';
+                } else {
+                  statusColor = ShellitColors.accentBlue;
+                  statusLabel = '$pct%';
+                }
 
                 return Container(
                   padding:
@@ -112,7 +134,9 @@ class TransferQueueBar extends StatelessWidget {
                     border: Border.all(
                       color: item.status == TransferStatus.failed
                           ? ShellitColors.statusRed
-                          : ShellitColors.border,
+                          : (item.status == TransferStatus.cancelled
+                              ? ShellitColors.statusYellow.withValues(alpha: 0.5)
+                              : ShellitColors.border),
                     ),
                   ),
                   child: Row(
@@ -133,7 +157,7 @@ class TransferQueueBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       SizedBox(
-                        width: 50,
+                        width: 46,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(2),
                           child: LinearProgressIndicator(
@@ -142,39 +166,59 @@ class TransferQueueBar extends StatelessWidget {
                                 : item.progress,
                             minHeight: 4,
                             backgroundColor: ShellitColors.border,
-                            valueColor: AlwaysStoppedAnimation(
-                              item.status == TransferStatus.failed
-                                  ? ShellitColors.statusRed
-                                  : (item.status == TransferStatus.completed
-                                      ? ShellitColors.statusGreen
-                                      : ShellitColors.accentBlue),
-                            ),
+                            valueColor: AlwaysStoppedAnimation(statusColor),
                           ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        item.status == TransferStatus.completed
-                            ? '100%'
-                            : (item.status == TransferStatus.failed
-                                ? 'ERR'
-                                : '$pct%'),
+                        statusLabel,
                         style: TextStyle(
                           fontSize: 10,
                           fontFamily: 'JetBrains Mono',
-                          color: item.status == TransferStatus.failed
-                              ? ShellitColors.statusRed
-                              : (item.status == TransferStatus.completed
-                                  ? ShellitColors.statusGreen
-                                  : ShellitColors.textSecondary),
+                          color: statusColor,
                         ),
                       ),
+                      if (isActive && onCancelTransfer != null) ...[
+                        const SizedBox(width: 6),
+                        InkWell(
+                          onTap: () => onCancelTransfer!(item.id),
+                          borderRadius: BorderRadius.circular(10),
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Icon(Icons.close,
+                                size: 12, color: ShellitColors.textMuted),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );
               },
             ),
           ),
+
+          if (onCancelAll != null && activeTransfers.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.stop_circle_outlined,
+                  size: 14, color: ShellitColors.statusRed),
+              label: Text(
+                context.tr('sftp.cancel_all', defaultText: 'Cancel All'),
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: ShellitColors.statusRed),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: ShellitColors.statusRed),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: onCancelAll,
+            ),
+          ],
 
           if (onClearCompleted != null)
             TextButton(

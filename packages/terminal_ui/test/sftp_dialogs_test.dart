@@ -113,5 +113,87 @@ void main() {
 
       expect(resultConfirm, isTrue);
     });
+
+    testWidgets('SftpConflictDialog returns overwrite decision and applyToAll flag',
+        (tester) async {
+      SftpConflictResult? conflictResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  conflictResult = await showDialog<SftpConflictResult>(
+                    context: context,
+                    builder: (_) => SftpConflictDialog(
+                      fileName: 'conflict_file.txt',
+                      sourceSizeBytes: 2048,
+                      sourceModified: DateTime(2026, 9, 21, 10, 0),
+                      destSizeBytes: 1024,
+                      destModified: DateTime(2026, 9, 20, 10, 0),
+                    ),
+                  );
+                },
+                child: const Text('Open Conflict Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Conflict Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('File Conflict: conflict_file.txt'), findsOneWidget);
+      expect(find.textContaining('2.0 KB'), findsOneWidget);
+      expect(find.textContaining('1.0 KB'), findsOneWidget);
+
+      // Toggle Apply to all
+      await tester.tap(find.byType(Checkbox));
+      await tester.pumpAndSettle();
+
+      // Tap Overwrite
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Overwrite'));
+      await tester.pumpAndSettle();
+
+      expect(conflictResult, isNotNull);
+      expect(conflictResult!.decision, equals(SftpConflictDecision.overwrite));
+      expect(conflictResult!.applyToAll, isTrue);
+    });
+
+    testWidgets('SftpConflictDialog returns skip decision', (tester) async {
+      SftpConflictResult? conflictResult;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  conflictResult = await showDialog<SftpConflictResult>(
+                    context: context,
+                    builder: (_) => const SftpConflictDialog(
+                      fileName: 'skip_file.txt',
+                    ),
+                  );
+                },
+                child: const Text('Open Skip Dialog'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Skip Dialog'));
+      await tester.pumpAndSettle();
+
+      // Tap Skip
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Skip'));
+      await tester.pumpAndSettle();
+
+      expect(conflictResult, isNotNull);
+      expect(conflictResult!.decision, equals(SftpConflictDecision.skip));
+    });
   });
 }

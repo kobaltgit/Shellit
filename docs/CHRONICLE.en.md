@@ -951,3 +951,119 @@ A well-designed "About" section anchors an application's identity. Instead of st
 - Features the SVG `ShellitLogo`, `Shellit` title with superscript `α`, and version badge `0.7.3`.
 - Added modal dialog for "What's New in Shellit" summarizing milestones (Matrix splits, SQLCipher, E2EE sync, Gemini AI, Plugin SDK).
 - Fully covered by widget tests (`about_settings_card_test.dart`, 5/5 passing) and zero analyzer warnings.
+
+---
+
+## Entry 35. Native Dual-Pane SFTP Pro Suite: Elevating the File Manager into a Pro Tool
+
+*Timestamp: September 21, 2026, 22:35 (~30 minutes)*
+
+### 1. The Context: Overcoming SFTP Usability Hurdles
+
+When we first introduced SFTP to Shellit, it was a minimal proof-of-concept: two panes, flat lists, and single-file uploads. However, using it for real-world maintenance revealed significant friction points:
+- The remote pane rigidly defaulted to root `/` instead of the user's actual home directory (`/home/username` or `/root`), forcing manual path navigation on every connection.
+- Folder transfers failed silently (`BUG-025`): handlers checked `isDirectory` and dropped execution.
+- Multi-selection via `Shift` or `Ctrl` was unsupported (`BUG-026`), forcing users to transfer items one by one.
+- Conflicting file names resulted in silent destination overwrites without user confirmation (`BUG-027`).
+- Quick configuration edits (such as updating `nginx.conf`) required downloading files locally, editing them in external tools, and uploading them back.
+
+We elevated `IDEA-027` (*Native Dual-Pane SFTP Pro Suite*) to completely modernize the SFTP subsystem.
+
+---
+
+### 2. Architectural Decisions & Implementation
+
+#### User Home Resolution (`getDefaultPath`)
+Via SFTP OpenSSH protocol, the server resolves `.` to the user's home directory (`sftp.absolute('.')`). We expanded the `ISftpSession` contract in `core_foundation` with `getDefaultPath()` and implemented it in `ssh_network_core`. The remote pane now boots directly into the remote user's home directory, and the breadcrumbs bar provides a `~` shortcut for instant returns.
+
+#### Interactive Breadcrumbs & In-Place Editing (`SftpBreadcrumbsBar`)
+Replaced the static path text with interactive breadcrumbs:
+- Each path segment is an isolated button to navigate up any number of directory levels in a single click.
+- Features back/forward navigation history (`<` and `>`), parent directory jump (`↑`), root jump (`/`), and home jump (`~`).
+- Clicking the edit icon toggles an in-place `TextField` for direct path pasting and keyboard navigation with `Enter`.
+
+#### Multi-Selection & Floating Batch Action Bar
+Eliminated the single-selection limitation:
+- `Shift+Click` selects contiguous ranges between the anchor element and the clicked item.
+- `Ctrl+Click` (or `Cmd+Click` on macOS) toggles individual item selections.
+- `Ctrl+A` selects all items in the active directory view.
+- Selecting multiple items activates a floating **Batch Action Bar** showing item count with batch upload, download, and delete actions.
+
+#### Recursive Folder Transfers (BUG-025)
+Replaced the single-file limitation with robust recursive directory traversal:
+- Local uploads recursively scan all subdirectories (`listSync(recursive: true)`), replicate the directory hierarchy remotely via `session.createDirectory`, and stream files sequentially.
+- Remote downloads recursively query directories via `session.listDirectory`, create local folders, and download files with real-time transfer tracking.
+
+#### Conflict Resolution Modal (BUG-027)
+Before transmitting files, the system checks for destination existence (utilizing remote folder caching to eliminate redundant roundtrips). If a collision is detected, `SftpConflictDialog` appears:
+- Displays source and destination file sizes and modification timestamps.
+- Offers Overwrite, Skip, and Rename decisions.
+- An "Apply to all conflicts" checkbox persists the decision across all remaining items in the transfer queue.
+
+#### Embedded Remote & Local File Editor (`SftpFileEditorDialog`)
+Double-clicking or pressing `Space` on any text file opens a full modal editor:
+- Synchronized line numbers gutter.
+- Monospace typography (JetBrains Mono), word-wrap toggle, and UTF-8 encoding indicator.
+- In-place saving via `Ctrl+S` through new `readFile` and `writeFile` session contracts.
+- Binary file detection with protective user warnings.
+- Unsaved changes guard preventing accidental data loss on modal dismissal.
+
+#### Bidirectional Inter-Pane Drag & Drop
+Wrapped list items in strongly typed `Draggable<SftpLocalDragPayload>` and `Draggable<SftpRemoteDragPayload>`. Panes serve as mutual `DragTarget` drop zones:
+- Dragging local files over the remote pane renders an active accent-blue boundary and uploads to the active remote folder.
+- Dragging remote items over the local pane highlights an accent-cyan boundary and downloads to the active local folder.
+
+---
+
+### 3. Verification & Results
+
+- Registered and resolved `BUG-025`, `BUG-026`, and `BUG-027`.
+- Promoted `IDEA-027` from active backlog to `IMPLEMENTED`.
+- Created comprehensive test suite in `sftp_suite_test.dart` and expanded `sftp_dialogs_test.dart`.
+- All 291 unit and widget tests passed across all 6 packages:
+  - `terminal_ui`: 84 tests
+  - `ssh_network_core`: 60 tests
+  - `apps/shellit`: 48 tests
+  - `desktop_plugin_sdk`: 43 tests
+  - `storage_vault`: 36 tests
+  - `core_foundation`: 20 tests
+- `flutter analyze` passed with 0 errors and 0 warnings.
+
+---
+
+## Entry 36. Refining SFTP in Battle: Batch Conflict Decisions and Instant Transfer Cancellation
+
+*Timestamp: September 21, 2026, 23:05 (~15 minutes)*
+
+### 1. Motivation: Field Testing Uncovers UX Gaps
+
+Following the release of the SFTP Pro Suite with multi-selection, in-place file editing, and conflict dialogs, live dogfooding revealed two friction points:
+1. **"Apply to all" ignored on Skip:** When syncing a directory with existing files, selecting "Skip" with the "Apply to all conflicts" checkbox failed to suppress subsequent modals (`BUG-028`). The dialog kept reappearing for every colliding file.
+2. **Inability to abort transfers:** When accidentally transferring a large directory or initiating an unwanted upload/download, users had no mechanism to cancel or abort the active transfer without terminating the entire session (`BUG-029`).
+
+### 2. Root Cause Analysis & Architecture Fixes
+
+#### Batch Conflict Decision Persistence (BUG-028)
+In `sftp_tab_view.dart` (`_uploadSingleFileWithConflict` and `_downloadSingleFileWithConflict`), the guard `if (result == null || result.decision == SftpConflictDecision.skip) return;` preceded `if (result.applyToAll) setBatchDecision(result.decision);`.
+- Consequently, selecting `skip` triggered an immediate `return` prior to saving the choice to `_batchConflictDecision`. Subsequent files found `batchDecision == null` and prompted the user again.
+- Relocating `if (result.applyToAll) setBatchDecision(result.decision);` before the skip evaluation ensures the batch decision is reliably remembered across the remainder of the transfer queue.
+
+#### Responsive Transfer Cancellation & Queue Abort (BUG-029)
+We engineered responsive transfer cancellation across the UI and streaming layers:
+1. **Queue Bar Ergonomics (`TransferQueueBar`):**
+   - Introduced `TransferStatus.cancelled`.
+   - Added a prominent **[✕ Cancel All]** action button in the queue bar whenever active transfers are processing.
+   - Added individual close icons (`Icons.close`) on active file chips to support granular single-item aborts.
+2. **Stream Abort & Loop Guards (`SftpTabView`):**
+   - Added `_cancelRequested`, `StreamSubscription<double>? _currentStreamSub`, and `Completer<void>? _currentCompleter`.
+   - Calling cancel invokes `_currentStreamSub?.cancel()`, updates the item status to `cancelled`, and resolves the completer immediately.
+   - In recursive and batch routines (`_uploadPaths`, `_downloadPaths`, `_uploadDirectoryRecursively`, `_downloadRemoteDirectoryRecursively`), `if (_cancelRequested) break;` guards guarantee immediate termination of subsequent queue items.
+
+### 3. Verification & Results
+
+- Verified and resolved `BUG-028` and `BUG-029`.
+- Added unit tests for cancellation in `TransferQueueBar` within `sftp_suite_test.dart`.
+- Total test count in `terminal_ui` increased to **86** (100% passing).
+- Windows debug executable compiled cleanly via Safe Build protocol and relaunched.
+
+

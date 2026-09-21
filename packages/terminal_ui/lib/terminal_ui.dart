@@ -48,6 +48,10 @@ export 'src/widgets/sftp/sftp_tab_view.dart';
 export 'src/widgets/sftp/local_file_pane.dart';
 export 'src/widgets/sftp/remote_file_pane.dart';
 export 'src/widgets/sftp/transfer_queue_bar.dart';
+export 'src/widgets/sftp/sftp_breadcrumbs.dart';
+export 'src/widgets/sftp/sftp_dialogs.dart';
+export 'src/widgets/sftp/sftp_drag_payload.dart';
+export 'src/widgets/sftp/sftp_file_editor_dialog.dart';
 
 // Matrix Splits & Broadcast
 export 'src/widgets/splits/split_matrix_view.dart';

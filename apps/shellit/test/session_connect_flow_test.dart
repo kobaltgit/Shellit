@@ -107,6 +107,21 @@ class FakeSftpSession implements ISftpSession {
   @override
   Future<Result<void, SftpFailure>> createFile(String remotePath) async =>
       const Result.success(null);
+
+  @override
+  Future<Result<String, SftpFailure>> getDefaultPath() async =>
+      const Result.success('/home/user');
+
+  @override
+  Future<Result<Uint8List, SftpFailure>> readFile(String remotePath) async =>
+      Result.success(Uint8List.fromList('content'.codeUnits));
+
+  @override
+  Future<Result<void, SftpFailure>> writeFile(
+    String remotePath,
+    Uint8List data,
+  ) async =>
+      const Result.success(null);
 }
 
 class FakeHostRepository implements IHostRepository {

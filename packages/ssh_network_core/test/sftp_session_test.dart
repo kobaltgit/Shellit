@@ -44,6 +44,11 @@ class FakeSftpFile implements SftpFile {
   }
 
   @override
+  Future<Uint8List> readBytes({int? length, int offset = 0}) async {
+    return data;
+  }
+
+  @override
   Future<void> writeBytes(Uint8List data, {int offset = 0}) async {
     writtenChunks.add(data);
   }
@@ -65,7 +70,14 @@ class FakeSftpClient implements SftpClient {
   final List<String> deletedDirs = [];
   final Map<String, String> renamedPaths = {};
   final Map<String, SftpFileAttrs> fileStats = {};
+  final Map<String, FakeSftpFile> openFiles = {};
+  String homePath = '/home/testuser';
   bool isClosed = false;
+
+  @override
+  Future<String> absolute(String path) async {
+    return homePath;
+  }
 
   @override
   Future<void> setStat(String path, SftpFileAttrs attrs) async {
@@ -116,10 +128,11 @@ class FakeSftpClient implements SftpClient {
     String path, {
     SftpFileOpenMode mode = SftpFileOpenMode.read,
   }) async {
-    if (files.containsKey(path)) {
-      return FakeSftpFile(data: files[path]!);
-    }
-    return FakeSftpFile(data: Uint8List(0));
+    final file = files.containsKey(path)
+        ? FakeSftpFile(data: files[path]!)
+        : FakeSftpFile(data: Uint8List(0));
+    openFiles[path] = file;
+    return file;
   }
 
   @override
@@ -330,6 +343,30 @@ void main() {
         () async {
       final res = await session.createFile('/remote/newfile.txt');
       expect(res.isSuccess, isTrue);
+    });
+
+    test('getDefaultPath returns resolved home directory', () async {
+      final res = await session.getDefaultPath();
+      expect(res.isSuccess, isTrue);
+      expect(res.valueOrNull, equals('/home/testuser'));
+    });
+
+    test('readFile reads full remote file bytes into memory', () async {
+      fakeSftp.files['/remote/app.conf'] =
+          Uint8List.fromList('server_name test;'.codeUnits);
+      final res = await session.readFile('/remote/app.conf');
+      expect(res.isSuccess, isTrue);
+      expect(String.fromCharCodes(res.valueOrNull!), equals('server_name test;'));
+    });
+
+    test('writeFile writes bytes to remote file via open and writeBytes',
+        () async {
+      final data = Uint8List.fromList('updated_content'.codeUnits);
+      final res = await session.writeFile('/remote/output.log', data);
+      expect(res.isSuccess, isTrue);
+      final written = fakeSftp.openFiles['/remote/output.log']?.writtenChunks;
+      expect(written, isNotNull);
+      expect(written!.first, equals(data));
     });
 
     test('close closes SFTP and SSHClient and blocks subsequent requests',

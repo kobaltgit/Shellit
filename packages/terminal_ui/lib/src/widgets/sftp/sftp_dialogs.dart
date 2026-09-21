@@ -589,3 +589,211 @@ class SftpDeleteConfirmDialog extends StatelessWidget {
     );
   }
 }
+
+/// Action decision for file conflict resolution.
+enum SftpConflictDecision { overwrite, skip, rename }
+
+/// Result payload from [SftpConflictDialog].
+class SftpConflictResult {
+  final SftpConflictDecision decision;
+  final bool applyToAll;
+  final String? newName;
+
+  const SftpConflictResult({
+    required this.decision,
+    this.applyToAll = false,
+    this.newName,
+  });
+}
+
+/// Dialog presented when a file already exists at destination.
+class SftpConflictDialog extends StatefulWidget {
+  final String fileName;
+  final int? sourceSizeBytes;
+  final DateTime? sourceModified;
+  final int? destSizeBytes;
+  final DateTime? destModified;
+
+  const SftpConflictDialog({
+    super.key,
+    required this.fileName,
+    this.sourceSizeBytes,
+    this.sourceModified,
+    this.destSizeBytes,
+    this.destModified,
+  });
+
+  @override
+  State<SftpConflictDialog> createState() => _SftpConflictDialogState();
+}
+
+class _SftpConflictDialogState extends State<SftpConflictDialog> {
+  bool _applyToAll = false;
+
+  String _formatSize(int? bytes) {
+    if (bytes == null) return '-';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    }
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: ShellitColors.obsidianCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: ShellitColors.statusYellow),
+      ),
+      title: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              size: 22, color: ShellitColors.statusYellow),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              context.tr('sftp.conflict_title',
+                  defaultText: 'File Conflict: {name}',
+                  namedArgs: {'name': widget.fileName}),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 380,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr('sftp.conflict_message',
+                  defaultText:
+                      'A file with this name already exists in the destination:'),
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+
+            // Comparison box
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: ShellitColors.obsidianBackground,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: ShellitColors.border),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.upload_file,
+                          size: 15, color: ShellitColors.accentCyan),
+                      const SizedBox(width: 6),
+                      Text(
+                        context.tr('sftp.source_file', defaultText: 'Source:'),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${_formatSize(widget.sourceSizeBytes)}  |  ${_formatDate(widget.sourceModified)}',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'JetBrains Mono',
+                            color: ShellitColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 12, color: ShellitColors.border),
+                  Row(
+                    children: [
+                      const Icon(Icons.insert_drive_file_outlined,
+                          size: 15, color: ShellitColors.textMuted),
+                      const SizedBox(width: 6),
+                      Text(
+                        context.tr('sftp.dest_file', defaultText: 'Existing:'),
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${_formatSize(widget.destSizeBytes)}  |  ${_formatDate(widget.destModified)}',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontFamily: 'JetBrains Mono',
+                            color: ShellitColors.textSecondary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Apply to all checkbox
+            Row(
+              children: [
+                Checkbox(
+                  value: _applyToAll,
+                  activeColor: ShellitColors.accentCyan,
+                  onChanged: (v) => setState(() => _applyToAll = v ?? false),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _applyToAll = !_applyToAll),
+                    child: Text(
+                      context.tr('sftp.apply_to_all_conflicts',
+                          defaultText:
+                              'Apply decision to all remaining conflicts in this transfer'),
+                      style: const TextStyle(
+                          fontSize: 12, color: ShellitColors.textSecondary),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(null),
+          child: Text(context.tr('common.cancel', defaultText: 'Cancel')),
+        ),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(
+            SftpConflictResult(
+              decision: SftpConflictDecision.skip,
+              applyToAll: _applyToAll,
+            ),
+          ),
+          child: Text(context.tr('sftp.skip', defaultText: 'Skip')),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: ShellitColors.accentCyan,
+            foregroundColor: Colors.black,
+          ),
+          onPressed: () => Navigator.of(context).pop(
+            SftpConflictResult(
+              decision: SftpConflictDecision.overwrite,
+              applyToAll: _applyToAll,
+            ),
+          ),
+          child: Text(context.tr('sftp.overwrite', defaultText: 'Overwrite')),
+        ),
+      ],
+    );
+  }
+}
+

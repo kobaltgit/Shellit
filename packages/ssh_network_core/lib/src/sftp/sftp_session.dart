@@ -280,6 +280,98 @@ class SftpSession implements ISftpSession {
   }
 
   @override
+  Future<Result<String, SftpFailure>> getDefaultPath() async {
+    if (_isClosed) {
+      return const Result.error(
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
+      );
+    }
+
+    try {
+      final home = await _sftp.absolute('.');
+      if (home.isNotEmpty) {
+        AppLogger.d('Resolved SFTP home directory: $home', tag: 'SftpSession');
+        return Result.success(home);
+      }
+      return const Result.success('/');
+    } catch (e) {
+      AppLogger.w('Failed to resolve SFTP home path, falling back to /: $e',
+          tag: 'SftpSession');
+      return const Result.success('/');
+    }
+  }
+
+  @override
+  Future<Result<Uint8List, SftpFailure>> readFile(String remotePath) async {
+    if (_isClosed) {
+      return const Result.error(
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
+      );
+    }
+
+    SftpFile? remoteFile;
+    try {
+      remoteFile = await _sftp.open(remotePath, mode: SftpFileOpenMode.read);
+      final bytes = await remoteFile.readBytes();
+      return Result.success(bytes);
+    } on SftpStatusError catch (e, stack) {
+      return Result.error(_mapSftpStatusError(e, remotePath, stack));
+    } catch (e, stack) {
+      return Result.error(
+        SftpFailure(
+          'Error reading file: $e',
+          type: SftpFailureType.unknown,
+          cause: e,
+          stackTrace: stack,
+        ),
+      );
+    } finally {
+      try {
+        await remoteFile?.close();
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<Result<void, SftpFailure>> writeFile(
+      String remotePath, Uint8List data) async {
+    if (_isClosed) {
+      return const Result.error(
+        SftpFailure('SFTP session is closed.', type: SftpFailureType.unknown),
+      );
+    }
+
+    SftpFile? remoteFile;
+    try {
+      remoteFile = await _sftp.open(
+        remotePath,
+        mode: SftpFileOpenMode.create |
+            SftpFileOpenMode.truncate |
+            SftpFileOpenMode.write,
+      );
+      await remoteFile.writeBytes(data);
+      AppLogger.d('Wrote ${data.length} bytes to $remotePath',
+          tag: 'SftpSession');
+      return const Result.success(null);
+    } on SftpStatusError catch (e, stack) {
+      return Result.error(_mapSftpStatusError(e, remotePath, stack));
+    } catch (e, stack) {
+      return Result.error(
+        SftpFailure(
+          'Error writing file: $e',
+          type: SftpFailureType.unknown,
+          cause: e,
+          stackTrace: stack,
+        ),
+      );
+    } finally {
+      try {
+        await remoteFile?.close();
+      } catch (_) {}
+    }
+  }
+
+  @override
   Stream<double> downloadFile({
     required String remotePath,
     required String localPath,
