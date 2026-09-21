@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:terminal_ui/terminal_ui.dart';
+import 'package:window_manager/window_manager.dart';
 import 'controllers/session_connect_controller.dart';
+import 'di/app_providers.dart';
 import 'localization/localization_providers.dart';
 import 'mcp/mcp_icon.dart';
 import 'mcp/mcp_provider.dart';
@@ -16,11 +19,104 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/snippets/snippets_screen.dart';
 import 'screens/tunnels/tunnels_screen.dart';
 
-class ShellitApp extends ConsumerWidget {
+class ShellitApp extends ConsumerStatefulWidget {
   const ShellitApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShellitApp> createState() => _ShellitAppState();
+}
+
+class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
+  bool _isWindowMaximized = false;
+  bool _hasRestoredWorkspace = false;
+
+  bool get _isDesktop =>
+      !kIsWeb &&
+      !Platform.environment.containsKey('FLUTTER_TEST') &&
+      (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isDesktop) {
+      windowManager.addListener(this);
+      _checkWindowMaximized();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_isDesktop) {
+      windowManager.removeListener(this);
+    }
+    super.dispose();
+  }
+
+  Future<void> _checkWindowMaximized() async {
+    try {
+      final maximized = await windowManager.isMaximized();
+      if (mounted) {
+        setState(() {
+          _isWindowMaximized = maximized;
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void onWindowMaximize() {
+    if (mounted) setState(() => _isWindowMaximized = true);
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    if (mounted) setState(() => _isWindowMaximized = false);
+  }
+
+  Future<void> _tryRestoreWorkspace(List<HostEntity> hosts) async {
+    if (_hasRestoredWorkspace) return;
+    final vaultRepo = ref.read(appVaultRepositoryProvider);
+    try {
+      final settings = await vaultRepo.getSettings();
+      if (!settings.restoreWorkspaceSessions) {
+        _hasRestoredWorkspace = true;
+        return;
+      }
+
+      final savedJson = await vaultRepo.getMetadata('workspace_tabs');
+      if (savedJson != null && savedJson.isNotEmpty) {
+        final tabStates = WorkspaceTabState.decodeList(savedJson);
+        if (tabStates.isNotEmpty && mounted) {
+          _hasRestoredWorkspace = true;
+          ref.read(sessionManagerProvider.notifier).restoreWorkspaceTabs(
+                tabStates,
+                hosts,
+                autoReconnect: settings.autoReconnectOnRestore,
+              );
+        }
+      } else {
+        _hasRestoredWorkspace = true;
+      }
+    } catch (_) {
+      _hasRestoredWorkspace = true;
+    }
+  }
+
+  Future<void> _persistWorkspaceTabs(List<SessionTab> tabs) async {
+    try {
+      final vaultRepo = ref.read(appVaultRepositoryProvider);
+      final settings = await vaultRepo.getSettings();
+      if (!settings.restoreWorkspaceSessions) return;
+
+      final tabStates =
+          ref.read(sessionManagerProvider.notifier).exportWorkspaceState();
+      final jsonStr = WorkspaceTabState.encodeList(tabStates);
+      await vaultRepo.setMetadata('workspace_tabs', jsonStr);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final connectController = ref.read(sessionConnectControllerProvider);
     final snippets = ref.watch(snippetsListProvider).valueOrNull ?? [];
     final localizationService = ref.watch(localizationServiceProvider);
@@ -34,6 +130,112 @@ class ShellitApp extends ConsumerWidget {
     // Automatically start MCP Server on desktop platforms
     if (!isMobilePlatform) {
       ref.watch(mcpServerServiceProvider);
+    }
+
+    // Attempt workspace restoration once vault is unlocked and hosts are loaded (Desktop only)
+    final vaultState = ref.watch(vaultProvider);
+    final hosts = ref.watch(hostsProvider);
+    if (!isMobilePlatform &&
+        !_hasRestoredWorkspace &&
+        vaultState.isUnlocked &&
+        hosts.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_hasRestoredWorkspace) {
+          _tryRestoreWorkspace(hosts);
+        }
+      });
+    }
+
+    // Auto-save tabs on change (Desktop only)
+    ref.listen<SessionManagerState>(sessionManagerProvider, (prev, next) {
+      if (!isMobilePlatform && prev?.tabs != next.tabs) {
+        _persistWorkspaceTabs(next.tabs);
+      }
+    });
+
+    // Build right activity rail items for sidebar plugins
+    List<PluginActivityRailItem>? pluginRailItems;
+    if (!isMobilePlatform) {
+      final activePlugin = ref.watch(activeSidebarPluginProvider);
+      final pluginsAsync = ref.watch(pluginManagerProvider);
+      final installedPlugins = pluginsAsync.valueOrNull ?? [];
+      final enabledSidebarPlugins = installedPlugins
+          .where(
+            (p) =>
+                p.isEnabled && p.manifest.target == PluginTarget.sidebar,
+          )
+          .toList();
+
+      if (enabledSidebarPlugins.isNotEmpty) {
+        pluginRailItems = enabledSidebarPlugins.map<PluginActivityRailItem>((plugin) {
+          final isSelected = activePlugin?.manifest.id == plugin.manifest.id;
+          final isMcp = plugin.manifest.id == 'com.shellit.mcp-server';
+          final isDocker = plugin.manifest.id == 'com.shellit.docker-monitor';
+          final label = isMcp
+              ? localizationService.translate(
+                  'plugins.mcp_short_name',
+                  defaultText: 'MCP AI',
+                )
+              : (isDocker
+                  ? localizationService.translate(
+                      'plugins.docker_short_name',
+                      defaultText: 'Docker',
+                    )
+                  : plugin.manifest.name);
+
+          return PluginActivityRailItem(
+            id: plugin.manifest.id,
+            label: label,
+            icon: isMcp
+                ? McpVectorIcon(
+                    size: 16,
+                    color: isSelected
+                        ? ShellitColors.accentPurple
+                        : ShellitColors.textMuted,
+                  )
+                : Text(
+                    isDocker ? '🐳' : '🧩',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+            tooltip: label,
+            isSelected: isSelected,
+            onTap: () {
+              if (isSelected) {
+                ref.read(activeSidebarPluginProvider.notifier).state = null;
+                return;
+              }
+
+              if (isDocker) {
+                final sessionState = ref.read(sessionManagerProvider);
+                if (sessionState.activeTab == null) {
+                  if (sessionState.tabs.isNotEmpty) {
+                    ref.read(sessionManagerProvider.notifier).setActiveTab(
+                          sessionState.tabs.last.id,
+                        );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          localizationService.translate(
+                            'plugins.docker_connect_ssh_first',
+                            defaultText:
+                                'Connect to an SSH host first to use Docker plugin',
+                          ),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                    return;
+                  }
+                }
+              }
+
+              ref.read(activeSidebarPluginProvider.notifier).state = plugin;
+            },
+          );
+        }).toList();
+      }
     }
 
     return LocalizationScope(
@@ -50,186 +252,33 @@ class ShellitApp extends ConsumerWidget {
           onConnectSftp: isMobilePlatform
               ? null
               : (host, {onProgress}) =>
-                    connectController.connectSftp(host, onProgress: onProgress),
+                  connectController.connectSftp(host, onProgress: onProgress),
           onToggleRecording: (session, host) =>
               connectController.toggleRecording(session, host),
-          topBarTrailing: isMobilePlatform
-              ? null
-              : Consumer(
-                  builder: (context, ref, _) {
-                    final activePlugin = ref.watch(activeSidebarPluginProvider);
-                    final pluginsAsync = ref.watch(pluginManagerProvider);
-                    final installedPlugins = pluginsAsync.valueOrNull ?? [];
-                    final enabledSidebarPlugins = installedPlugins
-                        .where(
-                          (p) =>
-                              p.isEnabled &&
-                              p.manifest.target == PluginTarget.sidebar,
-                        )
-                        .toList();
-
-                    if (enabledSidebarPlugins.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: enabledSidebarPlugins.map((plugin) {
-                        final isSelected =
-                            activePlugin?.manifest.id == plugin.manifest.id;
-                        final isMcp =
-                            plugin.manifest.id == 'com.shellit.mcp-server';
-                        final isDocker =
-                            plugin.manifest.id == 'com.shellit.docker-monitor';
-                        final label = isMcp
-                            ? context.tr(
-                                'plugins.mcp_short_name',
-                                defaultText: 'MCP AI',
-                              )
-                            : (isDocker
-                                  ? context.tr(
-                                      'plugins.docker_short_name',
-                                      defaultText: 'Docker',
-                                    )
-                                  : plugin.manifest.name);
-
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: Tooltip(
-                            message: isSelected
-                                ? context.tr(
-                                    'plugins.close_plugin',
-                                    defaultText: 'Close {name}',
-                                    params: {'name': label},
-                                  )
-                                : context.tr(
-                                    'plugins.open_plugin',
-                                    defaultText: 'Open {name}',
-                                    params: {'name': label},
-                                  ),
-                            child: InkWell(
-                              onTap: () {
-                                // If plugin is already open, clicking toggles it closed
-                                if (isSelected) {
-                                  ref
-                                          .read(
-                                            activeSidebarPluginProvider
-                                                .notifier,
-                                          )
-                                          .state =
-                                      null;
-                                  return;
-                                }
-
-                                // For Docker, check if an active tab exists or switch to one
-                                if (isDocker) {
-                                  final sessionState = ref.read(
-                                    sessionManagerProvider,
-                                  );
-                                  if (sessionState.activeTab == null) {
-                                    if (sessionState.tabs.isNotEmpty) {
-                                      ref
-                                          .read(sessionManagerProvider.notifier)
-                                          .setActiveTab(
-                                            sessionState.tabs.last.id,
-                                          );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            context.tr(
-                                              'plugins.docker_connect_ssh_first',
-                                              defaultText:
-                                                  'Connect to an SSH host first to use Docker plugin',
-                                            ),
-                                          ),
-                                          behavior: SnackBarBehavior.floating,
-                                          duration: const Duration(seconds: 2),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                  }
-                                }
-
-                                ref
-                                        .read(
-                                          activeSidebarPluginProvider.notifier,
-                                        )
-                                        .state =
-                                    plugin;
-                              },
-                              borderRadius: BorderRadius.circular(6),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? (isMcp
-                                            ? ShellitColors.accentPurple
-                                                  .withValues(alpha: 0.18)
-                                            : ShellitColors.accentCyan
-                                                  .withValues(alpha: 0.15))
-                                      : ShellitColors.obsidianBackground,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? (isMcp
-                                              ? ShellitColors.accentPurple
-                                              : ShellitColors.accentCyan)
-                                        : ShellitColors.border,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (isMcp)
-                                      McpVectorIcon(
-                                        size: 13,
-                                        color: isSelected
-                                            ? ShellitColors.accentPurple
-                                            : ShellitColors.accentCyan,
-                                      )
-                                    else
-                                      Text(
-                                        isDocker ? '🐳' : '🧩',
-                                        style: const TextStyle(fontSize: 13),
-                                      ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      label,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected
-                                            ? (isMcp
-                                                  ? ShellitColors.accentPurple
-                                                  : ShellitColors.accentCyan)
-                                            : ShellitColors.textPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
+          onWindowMinimize: _isDesktop ? () => windowManager.minimize() : null,
+          onWindowMaximize: _isDesktop
+              ? () async {
+                  if (await windowManager.isMaximized()) {
+                    await windowManager.unmaximize();
+                  } else {
+                    await windowManager.maximize();
+                  }
+                }
+              : null,
+          onWindowClose: _isDesktop ? () => windowManager.close() : null,
+          isWindowMaximized: _isWindowMaximized,
+          dragAreaBuilder: _isDesktop
+              ? (context, child) => DragToMoveArea(child: child)
+              : null,
+          pluginRailItems: pluginRailItems,
           pluginSidebarBuilder: isMobilePlatform
               ? null
               : (context) {
                   final activePlugin = ref.watch(activeSidebarPluginProvider);
                   if (activePlugin == null) return const SizedBox.shrink();
 
-                  final activeTab = ref.watch(sessionManagerProvider).activeTab;
-                  // Docker monitor requires an active tab to query container stats
+                  final activeTab =
+                      ref.watch(sessionManagerProvider).activeTab;
                   if (activePlugin.manifest.id ==
                           'com.shellit.docker-monitor' &&
                       activeTab == null) {

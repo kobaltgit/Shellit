@@ -78,8 +78,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verify custom title is displayed
-      expect(find.text('My Custom Prod'), findsOneWidget);
+      // Verify pinned square tab is rendered with tooltip containing custom title
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Tooltip && (w.message?.contains('My Custom Prod') ?? false),
+        ),
+        findsWidgets,
+      );
+      // Verify unpinned tab title is displayed directly
+      expect(find.text('Server 2'), findsOneWidget);
       // Verify pin icon is rendered for tab1
       expect(find.byIcon(Icons.push_pin), findsOneWidget);
       // Verify overflow button is present because there are 3 tabs (> 2)

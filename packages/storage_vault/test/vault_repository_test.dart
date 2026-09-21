@@ -236,5 +236,34 @@ void main() {
       expect(fetched.themeId, equals('nord_night'));
       expect(fetched.terminalFontSize, equals(16.0));
     });
+
+    test('metadata get, set, delete and workspace settings persistence',
+        () async {
+      await vaultRepository.ensureOpenSession();
+
+      // Test metadata CRUD
+      expect(await vaultRepository.getMetadata('custom_key'), isNull);
+      await vaultRepository.setMetadata('custom_key', 'some_value');
+      expect(
+          await vaultRepository.getMetadata('custom_key'), equals('some_value'));
+      await vaultRepository.deleteMetadata('custom_key');
+      expect(await vaultRepository.getMetadata('custom_key'), isNull);
+
+      // Test workspace settings in getSettings and updateSettings
+      final initial = await vaultRepository.getSettings();
+      expect(initial.restoreWorkspaceSessions, isTrue);
+      expect(initial.autoReconnectOnRestore, isFalse);
+
+      final updated = initial.copyWith(
+        restoreWorkspaceSessions: false,
+        autoReconnectOnRestore: true,
+      );
+      final updateRes = await vaultRepository.updateSettings(updated);
+      expect(updateRes.isSuccess, isTrue);
+
+      final fetched = await vaultRepository.getSettings();
+      expect(fetched.restoreWorkspaceSessions, isFalse);
+      expect(fetched.autoReconnectOnRestore, isTrue);
+    });
   });
 }

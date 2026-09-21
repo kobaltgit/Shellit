@@ -125,6 +125,45 @@ void main() {
       await tester.pump();
       expect(closeCalled, isTrue);
     });
+
+    testWidgets(
+        'renders disconnected restored state with power icon, Connect and Close Tab buttons',
+        (tester) async {
+      bool connectCalled = false;
+      bool closeCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ShellitTheme.obsidianDarkTheme,
+          home: Scaffold(
+            body: TerminalConnectingView(
+              host: testHost,
+              isConnecting: false,
+              isDisconnected: true,
+              statusMessage: 'Session restored (Disconnected)',
+              onRetry: () => connectCalled = true,
+              onClose: () => closeCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Production Web 01'), findsOneWidget);
+      expect(find.text('Session restored (Disconnected)'), findsOneWidget);
+      expect(find.byIcon(Icons.power_settings_new_rounded), findsNWidgets(2));
+      expect(find.text('Connect'), findsOneWidget);
+      expect(find.text('Close Tab'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('Cancel Connection'), findsNothing);
+
+      await tester.tap(find.text('Connect'));
+      await tester.pump();
+      expect(connectCalled, isTrue);
+
+      await tester.tap(find.text('Close Tab'));
+      await tester.pump();
+      expect(closeCalled, isTrue);
+    });
   });
 
   group('SessionManagerNotifier Connecting Lifecycle Tests', () {

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:core_foundation/core_foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shellit/src/di/app_providers.dart';
 import 'package:shellit/src/screens/settings/settings_screen.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 
@@ -89,6 +91,21 @@ class MockVaultRepository implements IVaultRepository {
   @override
   Future<void> ensureOpenSession() async {}
 
+  final Map<String, String> _metadata = {};
+
+  @override
+  Future<String?> getMetadata(String key) async => _metadata[key];
+
+  @override
+  Future<void> setMetadata(String key, String value) async {
+    _metadata[key] = value;
+  }
+
+  @override
+  Future<void> deleteMetadata(String key) async {
+    _metadata.remove(key);
+  }
+
   @override
   Future<VaultSettingsEntity> getSettings() async =>
       const VaultSettingsEntity();
@@ -109,7 +126,10 @@ void main() {
 
     Widget createSettingsScreen() {
       return ProviderScope(
-        overrides: [vaultRepositoryProvider.overrideWithValue(mockVaultRepo)],
+        overrides: [
+          vaultRepositoryProvider.overrideWithValue(mockVaultRepo),
+          appVaultRepositoryProvider.overrideWithValue(mockVaultRepo),
+        ],
         child: const MaterialApp(home: SettingsScreen()),
       );
     }
@@ -280,5 +300,37 @@ void main() {
         expect(await mockVaultRepo.isVaultInitialized(), false);
       },
     );
+
+    testWidgets('Renders Workspace & Sessions settings card on desktop', (tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      try {
+        await tester.pumpWidget(createSettingsScreen());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Restore Open Tabs on Startup'), findsOneWidget);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    testWidgets('Hides Workspace & Sessions settings card on mobile', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        await tester.pumpWidget(createSettingsScreen());
+        await tester.pumpAndSettle();
+
+        expect(find.text('Restore Open Tabs on Startup'), findsNothing);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
   });
 }

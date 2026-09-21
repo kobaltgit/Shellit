@@ -53,6 +53,15 @@ abstract class IVaultRepository {
   /// Updates vault settings.
   Future<Result<void, VaultFailure>> updateSettings(
       VaultSettingsEntity settings);
+
+  /// Retrieves arbitrary metadata by key from the vault.
+  Future<String?> getMetadata(String key);
+
+  /// Saves arbitrary metadata key-value pair in the vault.
+  Future<void> setMetadata(String key, String value);
+
+  /// Removes metadata entry by key from the vault.
+  Future<void> deleteMetadata(String key);
 }
 
 /// Contract for Host operations.

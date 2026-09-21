@@ -64,6 +64,13 @@ class SessionTab {
 
   bool get isProduction => host?.isProduction ?? false;
 
+  bool get isDisconnected =>
+      terminalSession == null &&
+      sftpSession == null &&
+      splitSessions.isEmpty &&
+      !isConnecting &&
+      connectionError == null;
+
   SessionTab copyWith({
     String? id,
     String? title,
@@ -801,6 +808,98 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
   @visibleForTesting
   void addRawTab(SessionTab tab) {
     state = state.copyWith(tabs: [...state.tabs, tab]);
+  }
+
+  /// Converts current tabs to serializable [WorkspaceTabState] models.
+  List<WorkspaceTabState> exportWorkspaceState() {
+    return state.tabs.map((tab) {
+      String typeStr = 'terminal';
+      switch (tab.type) {
+        case TabType.terminal:
+          typeStr = 'terminal';
+          break;
+        case TabType.sftp:
+          typeStr = 'sftp';
+          break;
+        case TabType.splitTerminal:
+          typeStr = 'splitTerminal';
+          break;
+        case TabType.localTerminal:
+          typeStr = 'localTerminal';
+          break;
+      }
+
+      return WorkspaceTabState(
+        id: tab.id,
+        title: tab.title,
+        customTitle: tab.customTitle,
+        colorTagValue: tab.colorTag?.toARGB32(),
+        isPinned: tab.isPinned,
+        type: typeStr,
+        hostId: tab.host?.id,
+        splitLayout: tab.splitLayout.name,
+        localShellId: tab.localShellProfile?.id,
+      );
+    }).toList();
+  }
+
+  /// Restores session tabs from persistent storage in disconnected / lazy state.
+  void restoreWorkspaceTabs(
+    List<WorkspaceTabState> savedTabs,
+    List<HostEntity> allHosts, {
+    bool autoReconnect = false,
+  }) {
+    if (savedTabs.isEmpty) return;
+
+    final List<SessionTab> restored = [];
+    for (final saved in savedTabs) {
+      HostEntity? host;
+      if (saved.hostId != null) {
+        for (final h in allHosts) {
+          if (h.id == saved.hostId) {
+            host = h;
+            break;
+          }
+        }
+      }
+
+      TabType tabType = TabType.terminal;
+      if (saved.type == 'sftp') {
+        tabType = TabType.sftp;
+      } else if (saved.type == 'splitTerminal') {
+        tabType = TabType.splitTerminal;
+      } else if (saved.type == 'localTerminal') {
+        tabType = TabType.localTerminal;
+      }
+
+      SplitLayoutType layoutType = SplitLayoutType.single;
+      for (final l in SplitLayoutType.values) {
+        if (l.name == saved.splitLayout) {
+          layoutType = l;
+          break;
+        }
+      }
+
+      final restoredTab = SessionTab(
+        id: saved.id,
+        title: saved.title,
+        customTitle: saved.customTitle,
+        colorTag:
+            saved.colorTagValue != null ? Color(saved.colorTagValue!) : null,
+        isPinned: saved.isPinned,
+        type: tabType,
+        host: host,
+        splitLayout: layoutType,
+        isConnecting: autoReconnect,
+        connectionStatus: autoReconnect ? 'Connecting...' : null,
+      );
+      restored.add(restoredTab);
+    }
+
+    state = state.copyWith(
+      tabs: restored,
+      activeTabId: () => restored.isNotEmpty ? restored.first.id : null,
+    );
   }
 }
 

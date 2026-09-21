@@ -20,6 +20,7 @@ export 'src/domain/entities/vault_settings_entity.dart';
 export 'src/domain/entities/session_recording_entity.dart';
 export 'src/domain/entities/ai_models.dart';
 export 'src/domain/entities/local_shell_entity.dart';
+export 'src/domain/entities/workspace_tab_state.dart';
 
 // Interface Contracts (Contract-First Design)
 export 'src/interfaces/storage_interfaces.dart';

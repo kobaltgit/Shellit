@@ -1066,4 +1066,133 @@ We engineered responsive transfer cancellation across the UI and streaming layer
 - Total test count in `terminal_ui` increased to **86** (100% passing).
 - Windows debug executable compiled cleanly via Safe Build protocol and relaunched.
 
+---
+
+## Entry 37. Modern Workspace Redesign: Custom Titlebar, Right Activity Rail, and Session Persistence (IDEA-024)
+
+*Timestamp: September 21, 2026, 23:25 (~20 minutes)*
+
+### 1. Motivation: Tab Room and Context Preservation
+
+The user interface of an everyday SSH client must be unobtrusive, spacious, and resilient to application restarts. During routine dogfooding of Shellit, three ergonomic friction points became evident:
+1. **Heavyweight OS Window Borders and Cramped TopBar:** The standard Windows titlebar wasted vertical space, while the 220px Quick Connect input combined with plugin buttons (MCP AI, Docker) consumed vital horizontal space in the tab bar. With several sessions open, tabs compressed into unreadable slivers.
+2. **Context Loss on App Restart:** Exiting Shellit or closing the window obliterated all open terminal and SFTP tabs. Users were forced to relocate servers in the catalog and reconnect manually upon reopening.
+3. **Pinned Tabs Consumed Excessive Width:** The Hosts tab and pinned servers took almost as much space as regular sessions, losing the compact advantage of pinning.
+
+### 2. Architecture & Implementation
+
+#### Seamless Custom Titlebar (`WindowControls`)
+We integrated window frame control using `window_manager` while maintaining strict package boundaries (Desktop vs Mobile Hygiene):
+- Neither `terminal_ui` nor `core_foundation` depend on desktop native packages; they consume abstract callbacks (`onWindowMinimize`, `onWindowMaximize`, `onWindowClose`).
+- Designed `WindowControls` with native Windows 11 iconography, smooth hover transitions, and an accent red close button.
+- TopBarTabs supports dragging the window (`DragToMoveArea`), double-clicking to maximize/restore, and dynamically adjusts the maximize glyph to stacked squares when maximized.
+- Replaced the bulky 220px Quick Connect text box with a sleek popover button (`>_ Quick Connect`), revealing a focused connection dialog on click or `Ctrl+Q`.
+
+#### Right Plugin Activity Rail (`PluginActivityRail`, 40 px)
+To reclaim horizontal TopBar space, plugin icons were relocated to a dedicated 40px vertical rail on the right edge of the workspace:
+- MCP AI and Docker Monitor are immediately accessible in one click.
+- Features active indicator outlines and theme-aware accent colors.
+- Includes a gear icon in the footer for instant navigation to the Plugins Manager.
+
+#### Square Pinned Tabs (`_buildPinnedSquareTab`)
+Pinned server tabs are now rendered as compact square tiles (38–44 px) displaying the server's OS icon, pin badge 📌, environment color indicators, tooltip with full connection target, and protection against accidental closure.
+
+#### Workspace State Persistence & Lazy Restoration
+We enabled full workspace restoration without touching Drift database migrations:
+1. Created `WorkspaceTabState` in `core_foundation` with type-safe JSON list serialization.
+2. Leveraged `VaultMetadataTable` in `storage_vault` via generic `getMetadata` and `setMetadata` methods, auto-saving tab states on tab lifecycle changes.
+3. Expanded `SessionManagerNotifier` with `exportWorkspaceState()` and `restoreWorkspaceTabs()`: on relaunch, tabs open in a lightweight lazy disconnected state (`isDisconnected`) with an instant **[Reconnect]** action.
+4. Added **"Workspace & Sessions"** (`WorkspaceSettingsCard`) in Settings, offering toggles for session persistence and optional automatic reconnection on startup.
+
+### 3. Verification & Results
+
+- Promoted `IDEA-024` from active backlog to `IMPLEMENTED`.
+- Recorded Phase 16 in `CHECKLIST.md`.
+- Added components: `WindowControls`, `PluginActivityRail`, and `WorkspaceSettingsCard`.
+- Added unit and widget tests: `window_controls_test.dart`, `plugin_activity_rail_test.dart`, and `workspace_persistence_test.dart`.
+- All 303 tests across all 6 packages passed with 100% success (92 in `terminal_ui`, 60 in `ssh_network_core`, 49 in `apps/shellit`, 43 in `desktop_plugin_sdk`, 37 in `storage_vault`, 22 in `core_foundation`).
+- Static analysis via `flutter analyze` completed with 0 errors and 0 warnings.
+
+---
+
+## Entry 38. Two-Tier Top Layout: Full-Width Title Bar, Uncluttered Tab Bar, Instant Omni-Bar (Ctrl+K), and Mobile View Isolation
+
+*Timestamp: September 21, 2026, 23:50 (~25 minutes)*
+
+### 1. Two-Tier Top Architecture
+
+Testing the new ergonomics on desktop revealed a visual conflict: placing window controls, Quick Connect, and command palette triggers on the same row as session tabs squeezed the tabs into a narrow corridor. Furthermore, the tab bar was confined to the right workspace column, creating an unbalanced top layout relative to the left navigation sidebar.
+
+We addressed this with a clean, classic two-tier hierarchy:
+1. **Full-Width Title Bar (`WindowHeaderBar`):** Spans across the entire window width from left to right.
+   - Left: Shellit brand logo (icon only, omitting the text label "Shellit" to eliminate visual clutter).
+   - Center: Unobstructed native window dragging region (`DragToMoveArea`).
+   - Right: `⚡ Quick Connect` button, `🔍 Ctrl+K` search button, MCP server status badge, and desktop window controls (`—`, `□ / ❐`, `✕`).
+2. **Dedicated Uncluttered Tab Bar (`TopBarTabs`):** Sits directly underneath the title bar above the terminal workspace.
+   - Completely freed from action buttons and window controls.
+   - Allocates 100% of horizontal space exclusively to pinned tabs (`[Hosts]`), active terminal and SFTP sessions, drag-and-drop reordering, scroll buttons, and the new tab `[+]` button.
+3. **Clean Sidebar Without Logo Duplication:** Because the official Shellit logo is permanently situated at the top-left of the global window titlebar, the redundant logo and title container was removed from `NavigationSidebar`. The sidebar now starts immediately with navigation sections (`Hosts`, `Keychain`, etc.), giving a sleek, cohesive aesthetic.
+
+### 2. Eliminating Omni-Bar (Ctrl+K) Latency
+
+Investigating responsiveness when pressing `Ctrl+K` revealed that `OmniSearchModal.show()` relied on standard Flutter `showDialog()`. The default Material page route introduced an animated transition of 250–300ms with deceleration curves.
+
+For a developer utility intended to match the feel of Raycast or Spotlight, this delay created noticeable friction. We replaced `showDialog` with `showGeneralDialog` configured with a 60ms linear fade transition. The command palette now appears instantaneously the moment `Ctrl+K` is pressed.
+
+### 3. Mobile View Isolation & Audit
+
+We audited the mobile environment (`MobileAppShell`) to ensure zero leakage of desktop multi-tab features:
+- In `SettingsScreen`, the `WorkspaceSettingsCard` is now guarded by `if (showDesktopExtensions) ...[`, ensuring mobile settings remain lightweight and relevant to mobile usage.
+- Background workspace tab restoration and auto-persistence are strictly disabled when `isMobilePlatform`.
+- All 7 mobile tests in `mobile_smoke_test.dart` and `mobile_shell_and_views_test.dart` passed with 100% success.
+
+### 4. Verification & Delivery
+
+1. Designed and integrated `WindowHeaderBar` in `packages/terminal_ui`.
+2. Cleared `TopBarTabs` of extraneous buttons, dedicating all space to session tabs.
+3. Removed redundant logo and title header container from `NavigationSidebar`.
+4. Added `window_header_bar_test.dart` covering all titlebar interactions and controls.
+5. Reduced `Ctrl+K` modal transition duration to 60ms.
+6. Rebuilt the Windows debug executable (`flutter build windows --debug`) with zero compiler warnings and 100% passing tests across the repository.
+
+---
+
+## Entry 39. Restored Session Standby Mode: TV Remote Power Button [ ⏻ Connect ], Eliminating False Spinners & True Auto-Reconnect
+
+*Timestamp: September 22, 2026, 00:10 (~15 minutes)*
+
+### 1. The Issue: Infinite Spinner in Idle Restored Tabs
+
+Upon reopening Shellit, open tabs were safely reconstructed from local database metadata, but users hit a UX dead end:
+- Restored tabs displayed an active loading spinner (`CircularProgressIndicator`) and a connection checklist, misleading users into believing a connection was actively underway.
+- In reality, no network packets were sent: tabs were restored in a lightweight offline state to preserve system and network bandwidth.
+- Worse, the screen lacked a "Connect" or "Reconnect" action button — offering only a "Cancel Connection" button which simply closed the tab.
+- When enabling "Auto-Reconnect Restored Tabs" in settings, the tabs updated their state to `isConnecting`, but the underlying socket connection routine `_connectTerminalWithStatus` was never kicked off in the background.
+
+### 2. The Solution: Dedicated Standby Mode with Power Button ⏻
+
+We refactored `TerminalConnectingView` and the workspace restoration lifecycle:
+
+1. **Explicit State Separation (Connecting vs Standby):**
+   - Clicking a host card in `Hosts` connects instantly without extra confirmation clicks, showing real-time handshake steps and the active neon spinner.
+   - Restored tabs without auto-reconnect now enter a clean standby mode (`_buildDisconnectedContent`):
+     - No misleading rotating spinner or progress bar.
+     - Centered circular standby badge with the universal TV power icon `Icons.power_settings_new_rounded`.
+     - Status: *"Session Restored (Disconnected)"* / *"Сессия восстановлена (Не подключено)"*.
+     - Prominent action button: **`[ ⏻ Connect ]`** (`Icons.power_settings_new_rounded`) in accent cyan, alongside a secondary **`[ Close Tab ]`** button.
+2. **Interactive Activation:**
+   - Clicking the Power button triggers the real SSH/SFTP connection pipeline, immediately transitioning the screen to the active connecting state.
+3. **Genuine Auto-Reconnect:**
+   - `ShellitAppShell` now tracks in-flight connection requests via `_inFlightTabIds` and triggers `_checkAutoConnectingTabs()` on the initial frame when `autoReconnectOnRestore: true` is configured.
+4. **Settings Hygiene:**
+   - Turning off session restoration in Settings clears cached workspace tabs from metadata, preventing stale tabs from lingering.
+
+### 3. Verification & Results
+
+1. Registered and resolved `BUG-030` in `docs/BUGS_AND_ISSUES.md`.
+2. Added `_buildDisconnectedContent` and `isDisconnected` in `TerminalConnectingView`.
+3. Added Russian (`ru.json`) and English (`default_strings.dart`) localization keys.
+4. Added widget regression test in `terminal_connecting_view_test.dart`.
+5. All 307 tests across the monorepo passed (100% green).
+6. Rebuilt the Windows debug executable (`apps/shellit/build/windows/x64/runner/Debug/shellit.exe`).
 

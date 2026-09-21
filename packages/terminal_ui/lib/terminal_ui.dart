@@ -20,6 +20,9 @@ export 'src/widgets/app_shell/shellit_app_shell.dart';
 export 'src/widgets/app_shell/shellit_logo.dart';
 export 'src/widgets/app_shell/navigation_sidebar.dart';
 export 'src/widgets/app_shell/top_bar_tabs.dart';
+export 'src/widgets/app_shell/window_controls.dart';
+export 'src/widgets/app_shell/window_header_bar.dart';
+export 'src/widgets/app_shell/plugin_activity_rail.dart';
 
 // Host Catalog Widgets
 export 'src/widgets/hosts/host_card.dart';

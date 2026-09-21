@@ -477,4 +477,39 @@
   - [x] Чистый `flutter analyze` (0 warnings, 0 errors).
 - [x] Релиз v0.8.0: успешное прохождение всех тестов монорепозитория, чистый `flutter analyze` и запуск мультиплатформенной сборки в GitHub Actions.
 - [x] Релиз v0.8.1 (Hotfix): обновление плагиновых бандлов (`mcp_server.shellit`, `russian_lang_pack.shellit`, `docker_monitor.shellit`), патч `McpServerService`; 48/48 тестов, 0 ошибок анализатора.
+- [x] Релиз v0.8.2: Modern Workspace & Custom Titlebar (IDEA-024, Фаза 16) + Native Dual-Pane SFTP Pro Suite (IDEA-027); 50/50 тестов, 0 ошибок анализатора.
+
+
+---
+
+## Фаза 16: Modern Workspace, Custom Titlebar, Right Activity Rail и персистентность сессий (IDEA-024)
+- [x] Доменное ядро и контракты (`packages/core_foundation`):
+  - [x] Модель `WorkspaceTabState` с сериализацией/десериализацией (JSON, `encodeList`/`decodeList`).
+  - [x] Расширение `IVaultRepository` методами `getMetadata`, `setMetadata`, `deleteMetadata`.
+  - [x] Поля `restoreWorkspaceSessions` и `autoReconnectOnRestore` в `VaultSettingsEntity`.
+  - [x] Комплект тестов `workspace_tab_state_test.dart` (22/22 успешно).
+- [x] Хранилище и метаданные (`packages/storage_vault`):
+  - [x] Реализация `getMetadata`, `setMetadata`, `deleteMetadata` в `VaultRepository` через `VaultMetadataTable`.
+  - [x] Поддержка сохранения и загрузки настроек сессий рабочей области в `VaultSettingsEntity`.
+  - [x] Тестирование `vault_repository_test.dart` (37/37 успешно).
+- [x] Компоненты интерфейса рабочей области (`packages/terminal_ui`):
+  - [x] Виджет `WindowControls`: десктопные кнопки управления окном (Свернуть, Развернуть/Восстановить, Закрыть) в стиле Windows 11 с hover-эффектами.
+  - [x] Правый рейл активности `PluginActivityRail` (40px): вертикальный блок быстрого доступа к плагинам (MCP AI, Docker) с кнопкой перехода в менеджер плагинов.
+  - [x] Квадратные закрепленные вкладки (`_buildPinnedSquareTab`): компактные табы 38-44px с монохромной иконкой, бейджем булавки 📌, индикатором `PROD`/`STAGE`/`DEV`, тултипом и защитой от случайного закрытия.
+  - [x] Полноразмерный заголовок окна `WindowHeaderBar` во всю ширину окна с логотипом Shellit (22px), DragToMoveArea, Quick Connect, поиском Ctrl+K и нативными кнопками окна.
+  - [x] Выделенная и разгруженная панель вкладок `TopBarTabs` под заголовком окна (100% ширины под сессии).
+  - [x] Очистка бокового меню `NavigationSidebar` от дублирующегося заголовка и логотипа.
+  - [x] Мгновенный вызов командной строки Omni-Bar (`Ctrl+K`) с анимацией 60 мс через `showGeneralDialog`.
+  - [x] Режим ожидания сохраненных сессий в `TerminalConnectingView`: кнопка питания `[ ⏻ Подключиться ]`, устранение ложного спиннера и честный фоновый автоконнект.
+  - [x] Поддержка восстановления вкладок в `SessionManagerNotifier`: методы `exportWorkspaceState()` и `restoreWorkspaceTabs()`, статус `isDisconnected` для ленивых вкладок с кнопкой Reconnect.
+  - [x] Комплект тестов `window_controls_test.dart`, `window_header_bar_test.dart`, `plugin_activity_rail_test.dart`, `workspace_persistence_test.dart`, `terminal_connecting_view_test.dart` (95/95 успешно).
+- [x] Интеграция в десктопное приложение (`apps/shellit`):
+  - [x] Добавление `window_manager: ^0.5.2`, инициализация в `main.dart` со скрытием системной рамки (`TitleBarStyle.hidden`).
+  - [x] Интеграция `WindowListener` в `ShellitApp`: отслеживание максимизации окна, обработка перемещения (`DragToMoveArea`), свертывания, развертывания и закрытия.
+  - [x] Автоматическое сохранение открытых сессий в метаданные хранилища при изменении вкладок.
+  - [x] Автоматическое восстановление сессий при запуске приложения после разблокировки сейфа с поддержкой авто-реконнекта.
+  - [x] Карточка `WorkspaceSettingsCard` в `SettingsScreen` для управления восстановлением сессий и авто-реконнектом.
+  - [x] Полная интернационализация (i18n): добавление ключей `settings.workspace.*` и `connecting.*` в `default_strings.dart` и `ru.json`.
+  - [x] Полный прогон тестов приложения `apps/shellit` (50/50 успешно).
+  - [x] 0 ошибок и предупреждений во `flutter analyze` по всему монорепозиторию (307/307 тестов).
 

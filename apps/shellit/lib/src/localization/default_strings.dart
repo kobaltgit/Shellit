@@ -58,6 +58,15 @@ const Map<String, String> defaultEnglishStrings = {
   'settings.vault.lock_now_subtitle':
       'Securely wipe encryption keys from active memory',
 
+  // Workspace & Sessions
+  'settings.workspace.title': 'Workspace & Sessions',
+  'settings.workspace.restore_tabs_title': 'Restore Open Tabs on Startup',
+  'settings.workspace.restore_tabs_subtitle':
+      'Preserve open terminal and SFTP tabs when closing and reopening Shellit',
+  'settings.workspace.auto_reconnect_title': 'Auto-Reconnect Restored Tabs',
+  'settings.workspace.auto_reconnect_subtitle':
+      'Automatically initiate SSH connections for restored tabs instead of waiting for click',
+
   // Terminal & Appearance
   'settings.terminal_appearance_title': 'Terminal Appearance',
   'settings.terminal.color_scheme_label': 'Color Scheme',
@@ -521,6 +530,10 @@ const Map<String, String> defaultEnglishStrings = {
   'connecting.btn_close_tab': 'Close Tab',
   'connecting.failed_title': 'Connection Failed',
   'connecting.btn_retry': 'Retry',
+  'connecting.session_restored': 'Session Restored (Disconnected)',
+  'connecting.session_restored_subtitle':
+      'Previous session tab was restored in standby mode.',
+  'connecting.connect_btn': 'Connect',
 
   // Splits & Broadcast
   'splits.single': 'Single Terminal',

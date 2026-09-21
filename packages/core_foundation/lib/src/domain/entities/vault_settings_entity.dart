@@ -26,6 +26,10 @@ class VaultSettingsEntity {
   final String geminiModelId;
   final bool isAiSnippetEnabled;
 
+  // Workspace restoration settings
+  final bool restoreWorkspaceSessions;
+  final bool autoReconnectOnRestore;
+
   const VaultSettingsEntity({
     this.idleLockTimeoutMinutes = 15,
     this.isBiometricsEnabled = false,
@@ -45,6 +49,8 @@ class VaultSettingsEntity {
     this.geminiApiKey,
     this.geminiModelId = 'gemini-2.5-flash',
     this.isAiSnippetEnabled = false,
+    this.restoreWorkspaceSessions = true,
+    this.autoReconnectOnRestore = false,
   });
 
   VaultSettingsEntity copyWith({
@@ -66,6 +72,8 @@ class VaultSettingsEntity {
     String? geminiApiKey,
     String? geminiModelId,
     bool? isAiSnippetEnabled,
+    bool? restoreWorkspaceSessions,
+    bool? autoReconnectOnRestore,
   }) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes:
@@ -89,6 +97,10 @@ class VaultSettingsEntity {
       geminiApiKey: geminiApiKey ?? this.geminiApiKey,
       geminiModelId: geminiModelId ?? this.geminiModelId,
       isAiSnippetEnabled: isAiSnippetEnabled ?? this.isAiSnippetEnabled,
+      restoreWorkspaceSessions:
+          restoreWorkspaceSessions ?? this.restoreWorkspaceSessions,
+      autoReconnectOnRestore:
+          autoReconnectOnRestore ?? this.autoReconnectOnRestore,
     );
   }
 
@@ -110,7 +122,9 @@ class VaultSettingsEntity {
           registrationToken == other.registrationToken &&
           geminiApiKey == other.geminiApiKey &&
           geminiModelId == other.geminiModelId &&
-          isAiSnippetEnabled == other.isAiSnippetEnabled;
+          isAiSnippetEnabled == other.isAiSnippetEnabled &&
+          restoreWorkspaceSessions == other.restoreWorkspaceSessions &&
+          autoReconnectOnRestore == other.autoReconnectOnRestore;
 
   @override
   int get hashCode => Object.hash(
@@ -128,5 +142,7 @@ class VaultSettingsEntity {
         geminiApiKey,
         geminiModelId,
         isAiSnippetEnabled,
+        restoreWorkspaceSessions,
+        autoReconnectOnRestore,
       );
 }

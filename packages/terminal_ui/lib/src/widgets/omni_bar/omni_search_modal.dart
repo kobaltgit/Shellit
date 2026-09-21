@@ -54,14 +54,23 @@ class OmniSearchModal extends ConsumerStatefulWidget {
     List<SnippetEntity>? snippets,
     ValueChanged<SnippetEntity>? onExecuteSnippet,
   }) {
-    return showDialog(
+    return showGeneralDialog(
       context: context,
+      barrierDismissible: true,
+      barrierLabel: 'OmniSearchModal',
       barrierColor: Colors.black.withValues(alpha: 0.6),
-      builder: (ctx) => OmniSearchModal(
+      transitionDuration: const Duration(milliseconds: 60),
+      pageBuilder: (ctx, anim1, anim2) => OmniSearchModal(
         onSelectHost: onSelectHost,
         snippets: snippets,
         onExecuteSnippet: onExecuteSnippet,
       ),
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOut),
+          child: child,
+        );
+      },
     );
   }
 

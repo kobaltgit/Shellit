@@ -6,6 +6,7 @@ import '../../localization/localization_scope.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/vault_provider.dart';
 import '../../theme/shellit_theme.dart';
+import '../hosts/os_icon_badge.dart';
 import 'tab_context_menu.dart';
 import 'tab_drag_payload.dart';
 import 'tab_overflow_menu.dart';
@@ -16,6 +17,12 @@ class TopBarTabs extends ConsumerStatefulWidget {
   final Future<void> Function(SessionTab)? onDuplicateTab;
   final Future<void> Function(HostEntity)? onOpenSftp;
   final Future<void> Function(SessionTab)? onReconnectTab;
+  final Widget? trailing;
+  final VoidCallback? onWindowMinimize;
+  final VoidCallback? onWindowMaximize;
+  final VoidCallback? onWindowClose;
+  final bool isWindowMaximized;
+  final Widget Function(BuildContext context, Widget child)? dragAreaBuilder;
 
   const TopBarTabs({
     super.key,
@@ -25,9 +32,12 @@ class TopBarTabs extends ConsumerStatefulWidget {
     this.onOpenSftp,
     this.onReconnectTab,
     this.trailing,
+    this.onWindowMinimize,
+    this.onWindowMaximize,
+    this.onWindowClose,
+    this.isWindowMaximized = false,
+    this.dragAreaBuilder,
   });
-
-  final Widget? trailing;
 
   @override
   ConsumerState<TopBarTabs> createState() => _TopBarTabsState();
@@ -76,13 +86,6 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
     );
   }
 
-  void _submitQuickConnect() {
-    final query = _quickConnectController.text.trim();
-    if (query.isNotEmpty) {
-      widget.onQuickConnect?.call(query);
-      _quickConnectController.clear();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +97,7 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
       _updateScrollIndicators();
     });
 
-    return Container(
+    final topBarContent = Container(
       height: 50,
       decoration: const BoxDecoration(
         color: ShellitColors.obsidianHeader,
@@ -154,6 +157,13 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                   }
                   final tab = sessionState.tabs[index];
                   final isActive = tab.id == sessionState.activeTabId;
+                  if (tab.isPinned) {
+                    return _buildPinnedSquareTab(
+                      tab: tab,
+                      isActive: isActive,
+                      onSelect: () => sessionNotifier.setActiveTab(tab.id),
+                    );
+                  }
                   return _buildTabItem(
                     tab: tab,
                     isActive: isActive,
@@ -225,24 +235,15 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
               ),
             ),
 
-          const VerticalDivider(width: 1),
-
-          // 3. Quick Connect bar
-          _buildQuickConnectBar(),
-
-          // 4. Omni-Bar shortcut / button (Ctrl+K)
-          IconButton(
-            icon: const Icon(Icons.search,
-                size: 20, color: ShellitColors.textSecondary),
-            tooltip: context.tr('omni.command_palette_tooltip',
-                defaultText: 'Command Palette (Ctrl+K)'),
-            onPressed: widget.onOmniBarOpen,
-          ),
-          if (widget.trailing != null) widget.trailing!,
           const SizedBox(width: 8),
         ],
       ),
     );
+
+    if (widget.dragAreaBuilder != null) {
+      return widget.dragAreaBuilder!(context, topBarContent);
+    }
+    return topBarContent;
   }
 
   Widget _buildCatalogTab({
@@ -839,29 +840,140 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
     );
   }
 
-  Widget _buildQuickConnectBar() {
-    return Container(
-      width: 250,
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: TextField(
-        controller: _quickConnectController,
-        style: const TextStyle(fontSize: 12, color: ShellitColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: context.tr('hosts.quick_connect_placeholder',
-              defaultText: 'ssh user@hostname'),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          prefixIcon:
-              const Icon(Icons.bolt, color: ShellitColors.accentBlue, size: 16),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.arrow_forward,
-                size: 14, color: ShellitColors.accentBlue),
-            tooltip: context.tr('common.connect', defaultText: 'Connect'),
-            onPressed: _submitQuickConnect,
+  Widget _buildPinnedSquareTab({
+    required SessionTab tab,
+    required bool isActive,
+    required VoidCallback onSelect,
+  }) {
+    final isProd = tab.isProduction;
+    final tabWidget = Tooltip(
+      message: '${tab.displayTitle}${isProd ? ' [PROD]' : ''} (Pinned)',
+      child: InkWell(
+        onTap: onSelect,
+        onSecondaryTapUp: (details) {
+          TabContextMenu.show(
+            context: context,
+            position: details.globalPosition,
+            tab: tab,
+            ref: ref,
+            onDuplicate: widget.onDuplicateTab != null
+                ? () => widget.onDuplicateTab!(tab)
+                : null,
+            onOpenSftp: widget.onOpenSftp != null && tab.host != null
+                ? () => widget.onOpenSftp!(tab.host!)
+                : null,
+            onReconnect: widget.onReconnectTab != null
+                ? () => widget.onReconnectTab!(tab)
+                : null,
+          );
+        },
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: isActive
+                ? ShellitColors.obsidianCard
+                : ShellitColors.obsidianBackground,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: tab.colorTag ??
+                  (tab.connectionError != null
+                      ? ShellitColors.statusRed
+                      : (tab.isConnecting
+                          ? ShellitColors.accentCyan
+                          : (isActive
+                              ? (isProd
+                                  ? ShellitColors.statusRed
+                                  : ShellitColors.accentBlue)
+                              : ShellitColors.border))),
+              width: tab.colorTag != null ? 1.8 : (isActive ? 1.5 : 1.0),
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (tab.host != null)
+                OsIconBadge(
+                  os: tab.host!.osType,
+                  size: 16,
+                )
+              else
+                Text(
+                  tab.displayTitle.isNotEmpty
+                      ? tab.displayTitle[0].toUpperCase()
+                      : 'T',
+                  style: TextStyle(
+                    color: isActive
+                        ? ShellitColors.accentBlue
+                        : ShellitColors.textSecondary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              const Positioned(
+                top: 2,
+                right: 2,
+                child: Icon(
+                  Icons.push_pin,
+                  size: 9,
+                  color: ShellitColors.accentBlue,
+                ),
+              ),
+              if (isProd)
+                Positioned(
+                  bottom: 2,
+                  child: Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      color: ShellitColors.statusRed,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
-        onSubmitted: (_) => _submitQuickConnect(),
       ),
+    );
+
+    return Draggable<TabDragPayload>(
+      data: TabDragPayload(
+        tabId: tab.id,
+        host: tab.host,
+        title: tab.displayTitle,
+        type: tab.type,
+      ),
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: ShellitColors.obsidianCard.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: ShellitColors.accentBlue, width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.push_pin,
+                  size: 12, color: ShellitColors.accentBlue),
+              const SizedBox(width: 6),
+              Text(
+                tab.displayTitle,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.25, child: tabWidget),
+      child: tabWidget,
     );
   }
 }

@@ -868,12 +868,47 @@ class VaultRepository implements IVaultRepository {
       } catch (_) {}
     }
 
+    final restoreWorkspaceMeta = await getMetadata('setting_restore_workspace');
+    final autoReconnectMeta = await getMetadata('setting_auto_reconnect');
+    final restoreWorkspace = restoreWorkspaceMeta == null
+        ? true
+        : restoreWorkspaceMeta == 'true';
+    final autoReconnect = autoReconnectMeta == 'true';
+
     final settings = record.toEntity(
       decryptedPassphrase: decryptedPassphrase,
       decryptedGeminiApiKey: decryptedGeminiApiKey,
+    ).copyWith(
+      restoreWorkspaceSessions: restoreWorkspace,
+      autoReconnectOnRestore: autoReconnect,
     );
     _cachedSettings = settings;
     return settings;
+  }
+
+  @override
+  Future<String?> getMetadata(String key) async {
+    final record = await (_db.select(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals(key)))
+        .getSingleOrNull();
+    return record?.metaValue;
+  }
+
+  @override
+  Future<void> setMetadata(String key, String value) async {
+    await _db.into(_db.vaultMetadataTable).insertOnConflictUpdate(
+          VaultMetadataTableCompanion(
+            metaKey: Value(key),
+            metaValue: Value(value),
+          ),
+        );
+  }
+
+  @override
+  Future<void> deleteMetadata(String key) async {
+    await (_db.delete(_db.vaultMetadataTable)
+          ..where((t) => t.metaKey.equals(key)))
+        .go();
   }
 
   @override
@@ -940,6 +975,10 @@ class VaultRepository implements IVaultRepository {
               isAiSnippetEnabled: Value(settings.isAiSnippetEnabled),
             ),
           );
+      await setMetadata('setting_restore_workspace',
+          settings.restoreWorkspaceSessions.toString());
+      await setMetadata(
+          'setting_auto_reconnect', settings.autoReconnectOnRestore.toString());
       _cachedSettings = settings;
       await _resetIdleTimer();
       return const Result.success(null);

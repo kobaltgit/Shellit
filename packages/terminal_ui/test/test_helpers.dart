@@ -161,6 +161,21 @@ class FakeVaultRepository implements IVaultRepository {
   Future<VaultSettingsEntity> getSettings() async =>
       const VaultSettingsEntity();
 
+  final Map<String, String> _metadata = {};
+
+  @override
+  Future<String?> getMetadata(String key) async => _metadata[key];
+
+  @override
+  Future<void> setMetadata(String key, String value) async {
+    _metadata[key] = value;
+  }
+
+  @override
+  Future<void> deleteMetadata(String key) async {
+    _metadata.remove(key);
+  }
+
   @override
   Future<Result<void, VaultFailure>> updateSettings(
           VaultSettingsEntity settings) async =>

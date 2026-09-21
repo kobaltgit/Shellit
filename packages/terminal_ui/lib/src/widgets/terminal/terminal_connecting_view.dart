@@ -12,6 +12,7 @@ class TerminalConnectingView extends StatelessWidget {
   final String statusMessage;
   final String? errorMessage;
   final bool isConnecting;
+  final bool isDisconnected;
   final VoidCallback? onCancel;
   final VoidCallback? onRetry;
   final VoidCallback? onClose;
@@ -23,6 +24,7 @@ class TerminalConnectingView extends StatelessWidget {
     this.statusMessage = 'Establishing SSH connection...',
     this.errorMessage,
     this.isConnecting = true,
+    this.isDisconnected = false,
     this.onCancel,
     this.onRetry,
     this.onClose,
@@ -67,7 +69,7 @@ class TerminalConnectingView extends StatelessWidget {
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
-              if (isConnecting && errorMessage == null)
+              if (isConnecting && errorMessage == null && !isDisconnected)
                 BoxShadow(
                   color: ShellitColors.accentCyan.withValues(alpha: 0.05),
                   blurRadius: 30,
@@ -82,7 +84,7 @@ class TerminalConnectingView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Thin progress bar at top of card while connecting
-                if (isConnecting && errorMessage == null)
+                if (isConnecting && errorMessage == null && !isDisconnected)
                   const LinearProgressIndicator(
                     minHeight: 3,
                     backgroundColor: ShellitColors.obsidianBackground,
@@ -198,9 +200,11 @@ class TerminalConnectingView extends StatelessWidget {
                       const Divider(color: ShellitColors.border, height: 1),
                       const SizedBox(height: 24),
 
-                      // Content: Either Connecting Spinner or Error
+                      // Content: Disconnected Standby / Connecting Spinner / Error
                       if (errorMessage != null)
                         _buildErrorContent(context)
+                      else if (isDisconnected || (!isConnecting && errorMessage == null))
+                        _buildDisconnectedContent(context)
                       else
                         _buildConnectingContent(context),
                     ],
@@ -211,6 +215,124 @@ class TerminalConnectingView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDisconnectedContent(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Standby Power Icon
+        Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: ShellitColors.obsidianBackground,
+            border: Border.all(
+              color: ShellitColors.border.withValues(alpha: 0.8),
+              width: 1.2,
+            ),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.power_settings_new_rounded,
+              size: 28,
+              color: ShellitColors.textMuted,
+            ),
+          ),
+        ),
+        const SizedBox(height: 18),
+
+        Text(
+          statusMessage.isNotEmpty
+              ? statusMessage
+              : context.tr(
+                  'connecting.session_restored',
+                  defaultText: 'Session Restored (Disconnected)',
+                ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: ShellitColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          context.tr(
+            'connecting.session_restored_subtitle',
+            defaultText:
+                'Previous session tab was restored in standby mode.',
+          ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: ShellitColors.textSecondary,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Action Buttons: [ ⏻ Connect ] & [ Close Tab ]
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(
+                Icons.power_settings_new_rounded,
+                size: 16,
+              ),
+              label: Text(
+                context.tr(
+                  'connecting.connect_btn',
+                  defaultText: 'Connect',
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: ShellitColors.accentCyan,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            if (onClose != null) ...[
+              const SizedBox(width: 12),
+              OutlinedButton.icon(
+                onPressed: onClose,
+                icon: const Icon(Icons.close_rounded, size: 15),
+                label: Text(
+                  context.tr(
+                    'connecting.btn_close_tab',
+                    defaultText: 'Close Tab',
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: ShellitColors.textSecondary,
+                  side: const BorderSide(color: ShellitColors.border),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  textStyle: const TextStyle(fontSize: 13),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 

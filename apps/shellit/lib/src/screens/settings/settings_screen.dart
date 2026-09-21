@@ -11,6 +11,7 @@ import '../../localization/template_exporter.dart';
 import 'about_settings_card.dart';
 import 'ai_settings_card.dart';
 import 'sync_settings_card.dart';
+import 'workspace_settings_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -256,6 +257,19 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+
+          if (showDesktopExtensions) ...[
+            // Section: Workspace & Sessions
+            _buildSectionHeader(
+              context.tr(
+                'settings.workspace.title',
+                defaultText: 'Workspace & Sessions',
+              ),
+            ),
+            const SizedBox(height: 8),
+            const WorkspaceSettingsCard(),
+            const SizedBox(height: 24),
+          ],
 
           // Section 2: Terminal Appearance
           _buildSectionHeader(

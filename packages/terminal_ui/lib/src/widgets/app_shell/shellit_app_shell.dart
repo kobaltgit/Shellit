@@ -20,7 +20,9 @@ import '../terminal/terminal_screen.dart';
 import '../dialogs/unlock_vault_dialog.dart';
 import '../mobile/mobile_app_shell.dart';
 import 'navigation_sidebar.dart';
+import 'plugin_activity_rail.dart';
 import 'top_bar_tabs.dart';
+import 'window_header_bar.dart';
 
 class ShellitAppShell extends ConsumerStatefulWidget {
   final Future<ITerminalSession> Function(
@@ -41,6 +43,13 @@ class ShellitAppShell extends ConsumerStatefulWidget {
   final Widget Function(BuildContext context)? pluginSidebarBuilder;
   final Widget? topBarTrailing;
   final bool? forceMobile;
+  final VoidCallback? onWindowMinimize;
+  final VoidCallback? onWindowMaximize;
+  final VoidCallback? onWindowClose;
+  final bool isWindowMaximized;
+  final Widget Function(BuildContext context, Widget child)? dragAreaBuilder;
+  final List<PluginActivityRailItem>? pluginRailItems;
+  final VoidCallback? onOpenPluginsManager;
 
   const ShellitAppShell({
     super.key,
@@ -54,6 +63,13 @@ class ShellitAppShell extends ConsumerStatefulWidget {
     this.pluginSidebarBuilder,
     this.topBarTrailing,
     this.forceMobile,
+    this.onWindowMinimize,
+    this.onWindowMaximize,
+    this.onWindowClose,
+    this.isWindowMaximized = false,
+    this.dragAreaBuilder,
+    this.pluginRailItems,
+    this.onOpenPluginsManager,
   });
 
   @override
@@ -128,9 +144,35 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   }
 
   final Set<String> _cancelledTabIds = <String>{};
+  final Set<String> _inFlightTabIds = <String>{};
+
+  void _checkAutoConnectingTabs() {
+    final state = ref.read(sessionManagerProvider);
+    for (final tab in state.tabs) {
+      if (tab.isConnecting &&
+          tab.terminalSession == null &&
+          tab.sftpSession == null &&
+          tab.connectionError == null &&
+          tab.host != null &&
+          !_inFlightTabIds.contains(tab.id) &&
+          !_cancelledTabIds.contains(tab.id)) {
+        _inFlightTabIds.add(tab.id);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            if (tab.type == TabType.terminal) {
+              _connectTerminalWithStatus(tab.id, tab.host!);
+            } else if (tab.type == TabType.sftp) {
+              _connectSftpWithStatus(tab.id, tab.host!);
+            }
+          }
+        });
+      }
+    }
+  }
 
   void _handleCancelConnection(String tabId) {
     _cancelledTabIds.add(tabId);
+    _inFlightTabIds.remove(tabId);
     ref.read(sessionManagerProvider.notifier).closeTab(tabId);
   }
 
@@ -160,6 +202,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
 
   Future<void> _connectTerminalWithStatus(String tabId, HostEntity host) async {
     _cancelledTabIds.remove(tabId);
+    _inFlightTabIds.add(tabId);
     if (widget.onConnectTerminal != null) {
       try {
         final session = await widget.onConnectTerminal!(
@@ -195,7 +238,11 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
               tabId: tabId,
               errorMessage: err.toString().replaceAll('Exception: ', ''),
             );
+      } finally {
+        _inFlightTabIds.remove(tabId);
       }
+    } else {
+      _inFlightTabIds.remove(tabId);
     }
   }
 
@@ -238,6 +285,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
 
   Future<void> _connectSftpWithStatus(String tabId, HostEntity host) async {
     _cancelledTabIds.remove(tabId);
+    _inFlightTabIds.add(tabId);
     if (widget.onConnectSftp != null) {
       try {
         final session = await widget.onConnectSftp!(
@@ -273,7 +321,11 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
               tabId: tabId,
               errorMessage: err.toString().replaceAll('Exception: ', ''),
             );
+      } finally {
+        _inFlightTabIds.remove(tabId);
       }
+    } else {
+      _inFlightTabIds.remove(tabId);
     }
   }
 
@@ -356,6 +408,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
 
   @override
   Widget build(BuildContext context) {
+    _checkAutoConnectingTabs();
     final sessionState = ref.watch(sessionManagerProvider);
     final activeTab = sessionState.activeTab;
 
@@ -387,80 +440,112 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
           onKeyEvent: _handleGlobalKeys,
           child: Scaffold(
             backgroundColor: ShellitColors.obsidianBackground,
-            body: Row(
+            body: Column(
               children: [
-                // Left Navigation Sidebar
-                NavigationSidebar(
-                  currentSection: _currentSection,
-                  isCollapsed: effectiveSidebarCollapsed,
-                  onSectionSelected: (section) {
-                    setState(() {
-                      _currentSection = section;
-                    });
-                    ref.read(sessionManagerProvider.notifier).showCatalog();
-                  },
-                  onToggleCollapse: isSmallScreen
-                      ? null
-                      : () {
-                          setState(() {
-                            _isSidebarCollapsed = !_isSidebarCollapsed;
-                          });
-                        },
+                // 1. Full-Width Title Bar (across the entire window)
+                WindowHeaderBar(
+                  onQuickConnect: _handleQuickConnect,
+                  onOmniBarOpen: _openOmniBar,
+                  trailing: widget.topBarTrailing,
+                  onWindowMinimize: widget.onWindowMinimize,
+                  onWindowMaximize: widget.onWindowMaximize,
+                  onWindowClose: widget.onWindowClose,
+                  isWindowMaximized: widget.isWindowMaximized,
+                  dragAreaBuilder: widget.dragAreaBuilder,
                 ),
 
-                // Main Content Workspace
+                // 2. Main Content (Left Sidebar + Center Workspace with Tabs + Right Plugin Rail)
                 Expanded(
-                  child: Column(
+                  child: Row(
                     children: [
-                      // Top Bar & Tabs
-                      TopBarTabs(
-                        onQuickConnect: _handleQuickConnect,
-                        onOmniBarOpen: _openOmniBar,
-                        trailing: widget.topBarTrailing,
-                        onDuplicateTab: (tab) async {
-                          if (tab.host != null) {
-                            await _handleConnectHost(tab.host!);
-                          }
+                      // Left Navigation Sidebar (unchanged!)
+                      NavigationSidebar(
+                        currentSection: _currentSection,
+                        isCollapsed: effectiveSidebarCollapsed,
+                        onSectionSelected: (section) {
+                          setState(() {
+                            _currentSection = section;
+                          });
+                          ref.read(sessionManagerProvider.notifier).showCatalog();
                         },
-                        onOpenSftp: (host) async {
-                          await _handleOpenSftp(host);
-                        },
-                        onReconnectTab: (tab) async {
-                          if (tab.host != null) {
-                            ref
-                                .read(sessionManagerProvider.notifier)
-                                .closeTab(tab.id);
-                            await _handleConnectHost(tab.host!);
-                          }
-                        },
+                        onToggleCollapse: isSmallScreen
+                            ? null
+                            : () {
+                                setState(() {
+                                  _isSidebarCollapsed = !_isSidebarCollapsed;
+                                });
+                              },
                       ),
 
-                      // Workspace Body (Preserved across tabs & catalog)
+                      // Main Content Workspace
                       Expanded(
-                        child: _buildWorkspaceStack(sessionState),
+                        child: Column(
+                          children: [
+                            // Dedicated Tab Bar (clean, tabs only!)
+                            TopBarTabs(
+                              onDuplicateTab: (tab) async {
+                                if (tab.host != null) {
+                                  await _handleConnectHost(tab.host!);
+                                }
+                              },
+                              onOpenSftp: (host) async {
+                                await _handleOpenSftp(host);
+                              },
+                              onReconnectTab: (tab) async {
+                                if (tab.host != null) {
+                                  ref
+                                      .read(sessionManagerProvider.notifier)
+                                      .closeTab(tab.id);
+                                  await _handleConnectHost(tab.host!);
+                                }
+                              },
+                            ),
+
+                            // Workspace Body (Preserved across tabs & catalog)
+                            Expanded(
+                              child: _buildWorkspaceStack(sessionState),
+                            ),
+
+                            // Mobile Accessory Bar on touch devices or small screens
+                            if ((defaultTargetPlatform == TargetPlatform.android ||
+                                    defaultTargetPlatform == TargetPlatform.iOS ||
+                                    isSmallScreen) &&
+                                activeTab != null &&
+                                activeTab.type != TabType.sftp)
+                              MobileAccessoryBar(
+                                onKeyPress: (key) {
+                                  if (activeTab.terminalSession != null) {
+                                    activeTab.terminalSession!.inputStream
+                                        .add(Uint8List.fromList(key.codeUnits));
+                                  }
+                                },
+                              ),
+                          ],
+                        ),
                       ),
 
-                      // Mobile Accessory Bar on touch devices or small screens
-                      if ((defaultTargetPlatform == TargetPlatform.android ||
-                              defaultTargetPlatform == TargetPlatform.iOS ||
-                              isSmallScreen) &&
-                          activeTab != null &&
-                          activeTab.type != TabType.sftp)
-                        MobileAccessoryBar(
-                          onKeyPress: (key) {
-                            if (activeTab.terminalSession != null) {
-                              activeTab.terminalSession!.inputStream
-                                  .add(Uint8List.fromList(key.codeUnits));
-                            }
-                          },
+                      // Right-docked Desktop Plugin Sidebar (visible when open)
+                      if (widget.pluginSidebarBuilder != null)
+                        widget.pluginSidebarBuilder!(context),
+
+                      // Right Plugin Activity Rail (40 px)
+                      if (widget.pluginRailItems != null &&
+                          widget.pluginRailItems!.isNotEmpty)
+                        PluginActivityRail(
+                          items: widget.pluginRailItems!,
+                          onOpenPluginsManager: widget.onOpenPluginsManager ??
+                              () {
+                                setState(() {
+                                  _currentSection = SidebarSection.plugins;
+                                });
+                                ref
+                                    .read(sessionManagerProvider.notifier)
+                                    .showCatalog();
+                              },
                         ),
                     ],
                   ),
                 ),
-
-                // Right-docked Desktop Plugin Sidebar (visible only when inside an active session tab)
-                if (widget.pluginSidebarBuilder != null && activeTab != null)
-                  widget.pluginSidebarBuilder!(context),
               ],
             ),
           ),
@@ -510,10 +595,16 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
       case TabType.terminal:
       case TabType.localTerminal:
         if (tab.terminalSession == null) {
+          final isRestored = tab.isDisconnected;
           return TerminalConnectingView(
             key: ValueKey('conn-init-${tab.id}'),
             host: tab.host,
-            statusMessage: 'Initializing terminal...',
+            statusMessage: isRestored
+                ? 'Session restored (Disconnected)'
+                : 'Initializing terminal...',
+            isConnecting: tab.isConnecting,
+            isDisconnected: isRestored,
+            onRetry: isRestored ? () => _handleRetryConnection(tab) : null,
             onCancel: () => _handleCancelConnection(tab.id),
             onClose: () =>
                 ref.read(sessionManagerProvider.notifier).closeTab(tab.id),
@@ -583,10 +674,16 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
         );
       case TabType.sftp:
         if (tab.sftpSession == null) {
+          final isRestored = tab.isDisconnected;
           return TerminalConnectingView(
             key: ValueKey('conn-init-sftp-${tab.id}'),
             host: tab.host,
-            statusMessage: 'Initializing SFTP...',
+            statusMessage: isRestored
+                ? 'SFTP restored (Disconnected)'
+                : 'Initializing SFTP...',
+            isConnecting: tab.isConnecting,
+            isDisconnected: isRestored,
+            onRetry: isRestored ? () => _handleRetryConnection(tab) : null,
             onCancel: () => _handleCancelConnection(tab.id),
             onClose: () =>
                 ref.read(sessionManagerProvider.notifier).closeTab(tab.id),

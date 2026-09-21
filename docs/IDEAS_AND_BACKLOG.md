@@ -22,7 +22,6 @@
 | **IDEA-020** | **Startup Snippet on Connect**         | Terminal    | Автовыполнение выбранного сниппета (`cd /var/www && tmux a`) сразу после успешного SSH-хэндшейка.                                                | **S**  | `ACCEPTED` |
 | **IDEA-019** | **Desktop Portable Mode**              | Core        | Запуск с флешки/папки: при наличии `./data` хранит базу SQLCipher и конфиги строго рядом с `.exe` без следов в `%APPDATA%`.                      | **S**  | `ACCEPTED` |
 | **IDEA-017** | **Clickable Links & File Matchers**    | Terminal    | Кликабельные URL и пути файлов (`/var/log/...`, `/etc/...`) прямо в выводе терминала с быстрым переходом в SFTP-редактор.                        | **M**  | `ACCEPTED` |
-| **IDEA-024** | **Modern Workspace & Custom Titlebar** | UX & Layout | Бесшовный заголовок окна, правый рейл плагинов (40px), квадратные вкладки 📌 и сохранение сессий между перезапусками.                            | **L**  | `ACCEPTED` |
 
 ---
 
@@ -57,20 +56,21 @@
 
 ## 2. Реализовано (Архив внедренных фич)
 
-| ID           | Название                                      | Категория | Где внедрено                                                                                                                                         |
-| :----------- | :-------------------------------------------- | :-------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **IDEA-001** | Broadcast Input (Широковещательный ввод)      | Terminal  | Фаза 3: матрицы 2x2 / H / V с синхронным вводом                                                                                                      |
-| **IDEA-002** | Live Latency Indicator & Host Health Check    | Terminal  | Фаза 2: цветные пинги `<50ms` / `<200ms` / offline                                                                                                   |
-| **IDEA-003** | Environment Badges (`PROD` / `DEV` / `STAGE`) | Terminal  | Фаза 2: цветные рамки и PROD Guard перехватчик                                                                                                       |
-| **IDEA-004** | Omni-Bar Fuzzy Search (`Ctrl+K` / `Cmd+K`)    | UX        | Фазы 2 и 12.2: быстрый поиск хостов, сниппетов и действий                                                                                            |
-| **IDEA-009** | Docker Monitor Plugin                         | Plugins   | Фаза 7: эталонный плагин управления контейнерами                                                                                                     |
-| **IDEA-010** | AI Snippet Assistant (Google Gemini API)      | AI        | Фаза 11: чат генерации, JSON-схемы, PROD Guard                                                                                                       |
-| **IDEA-012** | Drag & Drop вкладок в сплиты                  | UX        | Версия 1.0: свободное распределение слотов матрицы                                                                                                   |
-| **IDEA-013** | Контекстное меню табов и дропдаун `[⌄ N]`     | UX        | Версия 1.0: цветные теги, пакетное закрытие, поиск                                                                                                   |
-| **IDEA-014** | `~/.ssh` Discovery & Importer                 | Security  | Фаза 6: автопоиск локальных ключей и импорт в Keychain                                                                                               |
-| **IDEA-015** | Генератор SSH-ключей и `ssh-copy-id`          | Security  | Фаза 6: Ed25519 генератор и 1-Click деплой на сервер                                                                                                 |
-| **IDEA-016** | Плагин MCP Server для внешних ИИ              | AI & Core | Фаза 12: `com.shellit.mcp-server` (Cursor, Claude, Antigravity)                                                                                      |
-| **IDEA-027** | **Native Dual-Pane SFTP Pro Suite**           | SFTP      | Фаза 5 & 12.3: Хлебные крошки, мультивыбор (Shift/Ctrl/Ctrl+A), рекурсивный трансфер папок, разрешение конфликтов, встроенный редактор, Drag & Drop |
+| ID           | Название                                      | Категория   | Где внедрено                                                                                                                                         |
+| :----------- | :-------------------------------------------- | :---------- | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **IDEA-001** | Broadcast Input (Широковещательный ввод)      | Terminal    | Фаза 3: матрицы 2x2 / H / V с синхронным вводом                                                                                                      |
+| **IDEA-002** | Live Latency Indicator & Host Health Check    | Terminal    | Фаза 2: цветные пинги `<50ms` / `<200ms` / offline                                                                                                   |
+| **IDEA-003** | Environment Badges (`PROD` / `DEV` / `STAGE`) | Terminal    | Фаза 2: цветные рамки и PROD Guard перехватчик                                                                                                       |
+| **IDEA-004** | Omni-Bar Fuzzy Search (`Ctrl+K` / `Cmd+K`)    | UX          | Фазы 2 и 12.2: быстрый поиск хостов, сниппетов и действий                                                                                            |
+| **IDEA-009** | Docker Monitor Plugin                         | Plugins     | Фаза 7: эталонный плагин управления контейнерами                                                                                                     |
+| **IDEA-010** | AI Snippet Assistant (Google Gemini API)      | AI          | Фаза 11: чат генерации, JSON-схемы, PROD Guard                                                                                                       |
+| **IDEA-012** | Drag & Drop вкладок в сплиты                  | UX          | Версия 1.0: свободное распределение слотов матрицы                                                                                                   |
+| **IDEA-013** | Контекстное меню табов и дропдаун `[⌄ N]`     | UX          | Версия 1.0: цветные теги, пакетное закрытие, поиск                                                                                                   |
+| **IDEA-014** | `~/.ssh` Discovery & Importer                 | Security    | Фаза 6: автопоиск локальных ключей и импорт в Keychain                                                                                               |
+| **IDEA-015** | Генератор SSH-ключей и `ssh-copy-id`          | Security    | Фаза 6: Ed25519 генератор и 1-Click деплой на сервер                                                                                                 |
+| **IDEA-016** | Плагин MCP Server для внешних ИИ              | AI & Core   | Фаза 12: `com.shellit.mcp-server` (Cursor, Claude, Antigravity)                                                                                      |
+| **IDEA-024** | **Modern Workspace & Custom Titlebar**        | UX & Layout | Фаза 16: Бесшовный заголовок окна, правый рейл плагинов (40px), квадратные вкладки 📌 и сохранение сессий между перезапусками                         |
+| **IDEA-027** | **Native Dual-Pane SFTP Pro Suite**           | SFTP        | Фаза 5 & 12.3: Хлебные крошки, мультивыбор (Shift/Ctrl/Ctrl+A), рекурсивный трансфер папок, разрешение конфликтов, встроенный редактор, Drag & Drop |
 
 ---
 
