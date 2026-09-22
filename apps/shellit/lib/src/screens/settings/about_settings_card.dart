@@ -14,7 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutSettingsCard extends ConsumerStatefulWidget {
   const AboutSettingsCard({super.key});
 
-  static const String defaultAppVersion = '0.8.2';
+  static const String defaultAppVersion = '0.8.3';
   static String appVersion = defaultAppVersion;
   static const String appReleaseChannel = 'α';
   static const String githubRepoUrl = 'https://github.com/kobaltgit/Shellit';

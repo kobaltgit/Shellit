@@ -17,6 +17,7 @@ dependencies:
   flutter_svg: ^2.0.17
   meta: ^1.11.0
   flutter_pty2: ^1.0.2
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

@@ -478,6 +478,8 @@
 - [x] Релиз v0.8.0: успешное прохождение всех тестов монорепозитория, чистый `flutter analyze` и запуск мультиплатформенной сборки в GitHub Actions.
 - [x] Релиз v0.8.1 (Hotfix): обновление плагиновых бандлов (`mcp_server.shellit`, `russian_lang_pack.shellit`, `docker_monitor.shellit`), патч `McpServerService`; 48/48 тестов, 0 ошибок анализатора.
 - [x] Релиз v0.8.2: Modern Workspace & Custom Titlebar (IDEA-024, Фаза 16) + Native Dual-Pane SFTP Pro Suite (IDEA-027); 50/50 тестов, 0 ошибок анализатора.
+- [x] Релиз v0.8.3: Multiline Paste Defense (IDEA-018) + Clickable Links & File Matchers (IDEA-017) + Terminal Padding (Фаза 17); 51/51 тестов, 0 ошибок анализатора.
+
 
 
 ---
@@ -512,4 +514,34 @@
   - [x] Полная интернационализация (i18n): добавление ключей `settings.workspace.*` и `connecting.*` в `default_strings.dart` и `ru.json`.
   - [x] Полный прогон тестов приложения `apps/shellit` (50/50 успешно).
   - [x] 0 ошибок и предупреждений во `flutter analyze` по всему монорепозиторию (307/307 тестов).
+
+---
+
+## Фаза 17: Терминальный щит и навигация: Multiline Paste Defense (IDEA-018), Clickable Links (IDEA-017) и эстетические поля терминала
+- [x] Доменное ядро и персистентность (`packages/core_foundation`, `packages/storage_vault`):
+  - [x] Расширение `VaultSettingsEntity` полями `multilinePasteDefense` (по умолчанию `true`) и `enableClickableLinks` (по умолчанию `true`).
+  - [x] Сохранение и загрузка настроек в `VaultRepository` (`setting_multiline_paste_defense`, `setting_clickable_links`).
+  - [x] Обновление тестов сущностей и хранилища (23/23 тестов `core_foundation`, 37/37 тестов `storage_vault`).
+- [x] Защита многострочной вставки — Multiline Paste Defense (IDEA-018, `packages/terminal_ui`):
+  - [x] Разработка диалога `MultilinePasteDialog`: стиль Obsidian Dark, колонка номеров строк (gutter), счетчик строк, переключатель очистки концевого перевода строки (`Strip trailing newline`).
+  - [x] Интеграция `DangerousCommandChecker`: обнаружение деструктивных команд (`rm -rf`, `dd`, `mkfs` и др.) с предупреждением.
+  - [x] Интеграция `PROD GUARD`: предупреждение при вставке на продакшн-серверы и чекбокс подтверждения при наличии деструктивных команд.
+  - [x] Перехват буфера обмена в `TerminalScreen._pasteFromClipboard()` при наличии символов перевода строк `\n` или `\r`.
+  - [x] Комплект тестов `multiline_paste_defense_test.dart` и обновление `terminal_screen_test.dart`.
+- [x] Кликабельные ссылки и файловые матчеры — Clickable Links & File Matchers (IDEA-017, `packages/terminal_ui`):
+  - [x] Модуль `TerminalLinkDetector`: распознавание URL (`http://`, `https://`), Unix-путей (`/...`, `~/...`, `./...`, `../...`) и Windows-путей (`[A-Z]:\...`), поддержка указателей строк и колонок (`:line:col`), склейка перенесенных строк из буфера xterm (`Terminal.buffer`).
+  - [x] Быстрый переход по ссылке: `Ctrl+Click` / `Cmd+Click` (и одиночный тап на мобильных устройствах) через `url_launcher`.
+  - [x] Расширение контекстного меню терминала `TerminalContextMenu`: контекстные пункты в шапке меню («Открыть ссылку / путь», «Копировать ссылку / путь») при клике ПКМ по обнаруженной ссылке.
+  - [x] Комплект тестов `terminal_link_detector_test.dart` и `terminal_context_menu_test.dart`.
+- [x] Эстетические отступы окна терминала (Terminal Padding):
+  - [x] Добавлены внутренние поля `EdgeInsets.fromLTRB(10, 8, 10, 8)` вокруг холста `TerminalView` по всем сторонам окна для устранения прилипания текста к границам.
+- [x] Настройки приложения и интернационализация (i18n, `apps/shellit`):
+  - [x] Карточка настроек `TerminalSettingsCard` в `SettingsScreen` с тумблерами управления защитой многострочной вставки и кликабельными ссылками.
+  - [x] Нулевой хардкод UI-строк: регистрация всех ключей `settings.terminal.*`, `multiline_paste.*`, `terminal_context.*` в `default_strings.dart` (en).
+  - [x] Полный перевод на русский язык в `ru.json` языкового пакета.
+  - [x] Виджет-тесты `terminal_settings_card_test.dart`.
+- [x] Тестирование и верификация:
+  - [x] 100% прохождение тестов по всем пакетам монорепозитория (110/110 `terminal_ui`, 51/51 `apps/shellit`, 37/37 `storage_vault`, 23/23 `core_foundation`).
+  - [x] 0 ошибок и 0 предупреждений во `flutter analyze`.
+
 

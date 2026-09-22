@@ -1196,3 +1196,53 @@ We refactored `TerminalConnectingView` and the workspace restoration lifecycle:
 5. All 307 tests across the monorepo passed (100% green).
 6. Rebuilt the Windows debug executable (`apps/shellit/build/windows/x64/runner/Debug/shellit.exe`).
 
+---
+
+## Entry 40. Terminal Guard & Smart Navigation: Multiline Paste Defense (IDEA-018), Clickable Links & File Matchers (IDEA-017), and Aesthetic Window Padding
+
+*Timestamp: September 22, 2026, 04:35 (~35 minutes)*
+
+### 1. The Context: Russian Roulette Paste and Friction in Log Navigation
+
+Anyone who has administered production servers knows the sinking feeling: you copy a multi-line snippet from a troubleshooting guide or documentation, accidentally hit `Ctrl+V` inside an open terminal... and the console starts executing commands one by one before you even have a chance to inspect them. If the snippet contains a trailing newline or a destructive command like `rm -rf /`, it can trigger an instant outage on production.
+
+The second friction point was log and output navigation. When a remote service logs an error referencing `/var/log/nginx/error.log:42:15` or outputs a download URL `https://domain.com/patch.tar.gz`, manually selecting the text with a cursor, copying, and switching to a browser or editor breaks the flow of work. Modern terminals allow developers to `Ctrl+Click` URLs directly and jump straight to files.
+
+Finally, there was a visual ergonomics detail: the terminal text rendered flush against the container boundaries without any margin, creating a visually cramped appearance.
+
+We tackled all three challenges systematically: implementing Multiline Paste Defense (**IDEA-018**), Clickable Links & File Matchers (**IDEA-017**), and comfortable terminal margins.
+
+### 2. Architecture & Implementation
+
+#### Multiline Paste Defense (`MultilinePasteDialog`)
+We intercepted clipboard pastes in `TerminalScreen._pasteFromClipboard()`: whenever the clipboard payload contains newline characters (`\n` or `\r`), raw execution is blocked and an Obsidian Dark modal appears:
+1. **Line Preview & Line Count:** Displays total lines with a dedicated line numbers gutter, allowing users to scroll and review the complete command block before running it.
+2. **Trailing Newline Stripping:** Enabled by default (`Strip trailing newline`), stripping any final `\n` so the last command sits harmlessly in the shell input buffer for manual inspection.
+3. **Dangerous Command Detection & PROD GUARD:** Validates commands against `DangerousCommandChecker`. If destructive patterns are detected (`rm -rf`, `dd`, `mkfs`, etc.), an alert banner is shown. On `PROD` servers, the paste action is disabled until the operator checks an explicit confirmation box.
+
+#### Clickable Links & File Matchers (`TerminalLinkDetector`)
+We engineered a regex tokenizer and link matcher:
+1. **Target Detection:** Recognizes HTTP/HTTPS URLs, Unix absolute and relative paths (`/...`, `~/...`, `./...`, `../...`), Windows drive paths (`C:\...`), and handles line/column specifiers (`:line:col`).
+2. **Wrapped Line Reconstruction:** Reconstructs wrapped lines across terminal cell boundaries by checking `Terminal.buffer` wrapped line flags.
+3. **Direct Navigation (`Ctrl+Click` / `Cmd+Click`):** Clicking a detected link with a keyboard modifier (or single tap on mobile) launches the URL or opens the target via `url_launcher`. During investigation, we uncovered a silent defect in `xterm-4.0.0` where the internal `TerminalGestureDetector` never invoked `widget.onTapUp`. We rerouted click handling through an ancestor `Listener.onPointerUp` with drag distance filtering (`distance < 6px`), completely safeguarding text selection while ensuring 100% reliable `Ctrl+Click` activation. Clicking without Ctrl displays a helpful reminder hint.
+4. **Interactive Cursor & Floating Link Badge:** Hovering over any recognized URL or file path dynamically changes the mouse cursor to `SystemMouseCursors.click` (pointing hand 👆) and renders an Obsidian Dark floating pill badge (`[ 🔗 Ctrl+Click: ... ]`), making link affordance immediately obvious.
+5. **Context Menu Actions:** Right-clicking on an identified link dynamically injects "Open Link / File" and "Copy Link / Path" actions at the top of `TerminalContextMenu`.
+
+#### Aesthetic Window Padding
+Applied `EdgeInsets.fromLTRB(10, 8, 10, 8)` around `TerminalView`. The terminal output now breathes comfortably with balanced margins on all sides.
+
+#### Settings & Internationalization (i18n)
+Added `TerminalSettingsCard` to the Settings screen with independent toggles for multiline defense and clickable links. All UI labels, tooltips, dialogs, and warnings are registered in `default_strings.dart` and translated into Russian in `ru.json` with zero hardcoded strings.
+
+### 3. Verification & Results
+
+1. Promoted `IDEA-018` and `IDEA-017` to `IMPLEMENTED` in `docs/IDEAS_AND_BACKLOG.md`.
+2. Documented Phase 17 in `docs/CHECKLIST.md`.
+3. Created `MultilinePasteDialog`, `TerminalLinkDetector`, and `TerminalSettingsCard`.
+4. Enhanced `TerminalScreen`, `TerminalContextMenu`, and added dynamic cursor/hover badge.
+5. Added comprehensive test suites: `multiline_paste_defense_test.dart`, `terminal_link_detector_test.dart`, `terminal_settings_card_test.dart`, and an interactive link hover/click test.
+6. Monorepo tests passed with 100% success (111 in `terminal_ui`, 51 in `apps/shellit`, 37 in `storage_vault`, 23 in `core_foundation`).
+7. Static analysis `flutter analyze` completed with 0 warnings and 0 errors.
+8. Hot Reload applied successfully to the running application instance via DTD.
+
+

@@ -95,5 +95,18 @@ void main() {
       expect(manifest.toJson()['locale'], equals('ru_RU'));
       expect(manifest.toJson()['target'], equals('localization'));
     });
+
+    test('VaultSettingsEntity terminal settings default and copyWith', () {
+      const settings = VaultSettingsEntity();
+      expect(settings.multilinePasteDefense, isTrue);
+      expect(settings.enableClickableLinks, isTrue);
+
+      final updated = settings.copyWith(
+        multilinePasteDefense: false,
+        enableClickableLinks: false,
+      );
+      expect(updated.multilinePasteDefense, isFalse);
+      expect(updated.enableClickableLinks, isFalse);
+    });
   });
 }

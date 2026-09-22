@@ -73,6 +73,12 @@ const Map<String, String> defaultEnglishStrings = {
   'settings.terminal.current_scheme': 'Current scheme: {scheme}',
   'settings.terminal.font_size_label': 'Font Size',
   'settings.terminal.font_family_label': 'Font Family',
+  'settings.terminal.multiline_paste_title': 'Multiline Paste Defense',
+  'settings.terminal.multiline_paste_subtitle':
+      'Intercept multiline paste with preview dialog to prevent accidental script execution',
+  'settings.terminal.clickable_links_title': 'Clickable Links & File Paths',
+  'settings.terminal.clickable_links_subtitle':
+      'Open URLs in browser and file paths in SFTP editor via Ctrl+Click / Cmd+Click and context menu',
 
   // Backup & Storage
   'settings.backup_storage_title': 'Backup & Storage',
@@ -506,6 +512,22 @@ const Map<String, String> defaultEnglishStrings = {
   'terminal.sftp_tooltip': 'Open SFTP for this host',
   'terminal.rec_start_tooltip': 'Start Session Recording',
   'terminal.rec_stop_tooltip': 'Session Recording Active (Click to Stop)',
+  'terminal.multiline_paste_title': 'Multiline Paste Warning',
+  'terminal.multiline_paste_lines_badge': '{count} lines',
+  'terminal.multiline_paste_prod_banner':
+      'Pasting multiple commands to a PRODUCTION server will execute intermediate commands immediately.',
+  'terminal.multiline_paste_preview_label': 'Content preview:',
+  'terminal.multiline_paste_strip_newline':
+      'Strip trailing newline (avoids auto-executing the last line)',
+  'terminal.multiline_paste_confirm_prod':
+      'I understand the risks and confirm execution on PRODUCTION',
+  'terminal.multiline_paste_submit_btn': 'Paste {count} lines',
+  'terminal.context_menu_open_url': 'Open URL: {url}',
+  'terminal.context_menu_open_file': 'Open File: {path}',
+  'terminal.context_menu_copy_url': 'Copy Link Address',
+  'terminal.context_menu_copy_path': 'Copy File Path',
+  'terminal.link_copied_toast': 'Link copied to clipboard',
+  'terminal.path_copied_toast': 'File path copied to clipboard',
 
   // Prod Guard & Connecting View
   'prod_guard.dialog_title': 'PROD GUARD: Destructive Command',

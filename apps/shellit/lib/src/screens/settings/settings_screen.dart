@@ -11,6 +11,7 @@ import '../../localization/template_exporter.dart';
 import 'about_settings_card.dart';
 import 'ai_settings_card.dart';
 import 'sync_settings_card.dart';
+import 'terminal_settings_card.dart';
 import 'workspace_settings_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -370,6 +371,8 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+          const TerminalSettingsCard(),
           const SizedBox(height: 24),
 
           // Section 3: Backup & Export

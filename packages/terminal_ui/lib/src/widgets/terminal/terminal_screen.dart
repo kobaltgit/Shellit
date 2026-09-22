@@ -5,14 +5,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:xterm/xterm.dart';
+// ignore: implementation_imports
+import 'package:xterm/src/ui/render.dart';
 import 'package:flutter/gestures.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/shellit_theme.dart';
+import 'multiline_paste_dialog.dart';
 import 'prod_confirmation_dialog.dart';
 import 'prod_guard_border.dart';
 import 'terminal_context_menu.dart';
+import 'terminal_link_detector.dart';
 import 'terminal_session_registry.dart';
 import 'terminal_shortcuts_dialog.dart';
 
@@ -23,6 +28,10 @@ class TerminalScreen extends ConsumerStatefulWidget {
   final bool autoFocus;
   final VoidCallback? onOpenSftp;
   final VoidCallback? onToggleRecording;
+  final void Function(String filePath)? onOpenFile;
+  final void Function(String url)? onOpenUrl;
+  final bool enableMultilineDefense;
+  final bool enableClickableLinks;
 
   const TerminalScreen({
     super.key,
@@ -32,6 +41,10 @@ class TerminalScreen extends ConsumerStatefulWidget {
     this.autoFocus = true,
     this.onOpenSftp,
     this.onToggleRecording,
+    this.onOpenFile,
+    this.onOpenUrl,
+    this.enableMultilineDefense = true,
+    this.enableClickableLinks = true,
   });
 
   @override
@@ -52,14 +65,25 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   Timer? _recordTimer;
   int _recordDurationSeconds = 0;
 
+  late final ScrollController _scrollController;
+  final GlobalKey<TerminalViewState> _terminalViewKey =
+      GlobalKey<TerminalViewState>();
+  TerminalLinkMatch? _hoveredLink;
+  Offset? _hoveredPosition;
+  bool _isCtrlPressed = false;
+  Offset? _pointerDownPosition;
+  bool _isPointerDownWithCtrl = false;
+
   @override
   void initState() {
     super.initState();
     final entry = TerminalSessionRegistry.instance.getOrCreate(widget.session);
     _terminal = entry.terminal;
     _controller = entry.controller;
+    _scrollController = ScrollController();
     _focusNode = FocusNode();
     _focusNode.addListener(_handleFocusChange);
+    HardwareKeyboard.instance.addHandler(_handleHardwareKey);
 
     if (widget.session.recorder?.isRecording == true) {
       _syncRecordTimer();
@@ -123,11 +147,13 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   @override
   void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _recordTimer?.cancel();
     _recordTimer = null;
     _stopCursorBlink();
     _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -217,12 +243,244 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     }
   }
 
+  Future<void> _copyToClipboard(String text, String feedbackMessage) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_outline,
+                  size: 14, color: ShellitColors.statusGreen),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  feedbackMessage,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: ShellitColors.obsidianCard,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 1500),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: ShellitColors.border),
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _pasteFromClipboard() async {
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
-    if (text != null && text.isNotEmpty) {
-      _terminal.paste(text);
-      _controller.clearSelection();
+    if (text == null || text.isEmpty) return;
+
+    final isMultilined = text.contains('\n') || text.contains('\r');
+    final lines = text.split(RegExp(r'\r\n|\r|\n'));
+
+    if (widget.enableMultilineDefense &&
+        (isMultilined && (lines.length > 1 || text.endsWith('\n') || text.endsWith('\r')))) {
+      final confirmedText = await MultilinePasteDialog.show(
+        context: context,
+        text: text,
+        host: widget.host,
+        isProduction: widget.host?.isProduction ?? false,
+      );
+      if (confirmedText != null && confirmedText.isNotEmpty) {
+        _terminal.paste(confirmedText);
+        _controller.clearSelection();
+      }
+      return;
+    }
+
+    _terminal.paste(text);
+    _controller.clearSelection();
+  }
+
+  Future<void> _handleLinkAction(TerminalLinkMatch match) async {
+    if (match.isUrl) {
+      if (widget.onOpenUrl != null) {
+        widget.onOpenUrl!(match.text);
+        return;
+      }
+      try {
+        final uri = Uri.parse(match.text);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          await _copyToClipboard(
+            match.text,
+            context.tr('terminal.link_copied_toast',
+                defaultText: 'Link copied to clipboard'),
+          );
+        }
+      } catch (_) {
+        await _copyToClipboard(
+          match.text,
+          context.tr('terminal.link_copied_toast',
+              defaultText: 'Link copied to clipboard'),
+        );
+      }
+    } else if (match.isFilePath) {
+      if (widget.onOpenFile != null) {
+        widget.onOpenFile!(match.text);
+        return;
+      }
+      if (widget.onOpenSftp != null) {
+        widget.onOpenSftp!();
+        return;
+      }
+      await _copyToClipboard(
+        match.text,
+        context.tr('terminal.path_copied_toast',
+            defaultText: 'File path copied to clipboard'),
+      );
+    }
+  }
+
+  bool _handleHardwareKey(KeyEvent event) {
+    final isCtrl = HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed;
+    if (isCtrl != _isCtrlPressed && mounted) {
+      setState(() {
+        _isCtrlPressed = isCtrl;
+      });
+    }
+    return false;
+  }
+
+  CellOffset? _getCellOffset(Offset globalPosition) {
+    final state = _terminalViewKey.currentState;
+    if (state != null) {
+      try {
+        final RenderTerminal renderTerminal = state.renderTerminal;
+        if (renderTerminal.hasSize) {
+          final localOffset = renderTerminal.globalToLocal(globalPosition);
+          return renderTerminal.getCellOffset(localOffset);
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (event.buttons == kMiddleMouseButton) {
+      _pasteFromClipboard();
+      return;
+    }
+    if (event.buttons == kPrimaryMouseButton) {
+      _pointerDownPosition = event.position;
+      _isPointerDownWithCtrl = HardwareKeyboard.instance.isControlPressed ||
+          HardwareKeyboard.instance.isMetaPressed;
+    }
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    if (!widget.enableClickableLinks) {
+      _pointerDownPosition = null;
+      return;
+    }
+
+    if (_pointerDownPosition != null) {
+      final distance = (event.position - _pointerDownPosition!).distance;
+      _pointerDownPosition = null;
+
+      // Click/Tap tolerance (not a drag selection)
+      if (distance < 6.0) {
+        final isCmdOrCtrl = _isPointerDownWithCtrl ||
+            HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed;
+        final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS;
+
+        final cellOffset = _getCellOffset(event.position);
+        if (cellOffset != null) {
+          final match =
+              TerminalLinkDetector.findMatchAtOffset(_terminal, cellOffset);
+          if (match != null) {
+            if (isCmdOrCtrl || isMobile) {
+              _controller.clearSelection();
+              _handleLinkAction(match);
+            } else {
+              // Clicked without Ctrl: show helpful hint toast
+              final hintKey = defaultTargetPlatform == TargetPlatform.macOS
+                  ? 'Cmd+Click'
+                  : 'Ctrl+Click';
+              _copyToClipboard(
+                match.text,
+                '$hintKey to open: ${match.text}',
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void _handlePointerHover(PointerHoverEvent event) {
+    if (!widget.enableClickableLinks) {
+      if (_hoveredLink != null) {
+        setState(() {
+          _hoveredLink = null;
+          _hoveredPosition = null;
+        });
+      }
+      return;
+    }
+
+    final cellOffset = _getCellOffset(event.position);
+    final match = cellOffset != null
+        ? TerminalLinkDetector.findMatchAtOffset(_terminal, cellOffset)
+        : null;
+
+    final box = context.findRenderObject() as RenderBox?;
+    final stackPos = box != null && box.hasSize
+        ? box.globalToLocal(event.position)
+        : event.localPosition;
+
+    if (_hoveredLink?.text != match?.text ||
+        (_hoveredLink == null && match != null) ||
+        (_hoveredLink != null && match == null)) {
+      setState(() {
+        _hoveredLink = match;
+        _hoveredPosition = stackPos;
+      });
+    } else if (match != null &&
+        _hoveredPosition != null &&
+        (_hoveredPosition! - stackPos).distance > 4.0) {
+      setState(() {
+        _hoveredPosition = stackPos;
+      });
+    }
+  }
+
+  void _handlePointerExit(PointerExitEvent event) {
+    if (_hoveredLink != null || _hoveredPosition != null) {
+      setState(() {
+        _hoveredLink = null;
+        _hoveredPosition = null;
+      });
+    }
+  }
+
+  void _handleTerminalTapUp(TapUpDetails details, CellOffset offset) {
+    if (!widget.enableClickableLinks) return;
+    final isCmdOrCtrl = HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed;
+    final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS;
+
+    if (isCmdOrCtrl || isMobile) {
+      final match = TerminalLinkDetector.findMatchAtOffset(_terminal, offset);
+      if (match != null) {
+        _handleLinkAction(match);
+      }
     }
   }
 
@@ -247,17 +505,42 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     TerminalShortcutsDialog.show(context);
   }
 
-  void _showContextMenu(Offset globalPosition) {
+  void _showContextMenu(Offset globalPosition, [CellOffset? offset]) {
     final selection = _controller.selection;
     String? selectedText;
     if (selection != null) {
       selectedText = _terminal.buffer.getText(selection);
     }
+
+    TerminalLinkMatch? detectedLink;
+    if (widget.enableClickableLinks) {
+      if (offset != null) {
+        detectedLink =
+            TerminalLinkDetector.findMatchAtOffset(_terminal, offset);
+      }
+      if (detectedLink == null && selectedText != null) {
+        detectedLink = TerminalLinkDetector.findMatchInText(selectedText);
+      }
+    }
+
     TerminalContextMenu.show(
       context: context,
       globalPosition: globalPosition,
       hasSelection: selection != null,
       selectedText: selectedText,
+      detectedLink: detectedLink,
+      onOpenLink:
+          detectedLink != null ? () => _handleLinkAction(detectedLink!) : null,
+      onCopyLink: detectedLink != null
+          ? () => _copyToClipboard(
+                detectedLink!.text,
+                detectedLink.isUrl
+                    ? context.tr('terminal.link_copied_toast',
+                        defaultText: 'Link copied to clipboard')
+                    : context.tr('terminal.path_copied_toast',
+                        defaultText: 'File path copied to clipboard'),
+              )
+          : null,
       onCopy: _copySelection,
       onPaste: _pasteFromClipboard,
       onSelectAll: _selectAll,
@@ -295,7 +578,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         (key == LogicalKeyboardKey.equal ||
             key == LogicalKeyboardKey.add ||
             key == LogicalKeyboardKey.numpadAdd)) {
-      if (_fontSize < 28) setState(() => _fontSize += 1);
+      if (_fontSize < 28) {
+        setState(() {
+          _fontSize += 1;
+        });
+      }
       return KeyEventResult.handled;
     }
     // Ctrl + Minus, Ctrl + NumpadSubtract
@@ -303,7 +590,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         !isAlt &&
         (key == LogicalKeyboardKey.minus ||
             key == LogicalKeyboardKey.numpadSubtract)) {
-      if (_fontSize > 8) setState(() => _fontSize -= 1);
+      if (_fontSize > 8) {
+        setState(() {
+          _fontSize -= 1;
+        });
+      }
       return KeyEventResult.handled;
     }
     // Ctrl + 0, Ctrl + Numpad0
@@ -311,7 +602,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         !isAlt &&
         (key == LogicalKeyboardKey.digit0 ||
             key == LogicalKeyboardKey.numpad0)) {
-      setState(() => _fontSize = 13.0);
+      setState(() {
+        _fontSize = 13.0;
+      });
       return KeyEventResult.handled;
     }
 
@@ -488,50 +781,120 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             Container(
               color: terminalTheme.background,
               padding: EdgeInsets.only(top: isProd ? 24 : 0),
-              child: Listener(
-                onPointerDown: (event) {
-                  if (event.buttons == kMiddleMouseButton) {
-                    _pasteFromClipboard();
-                  }
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Proactively sync terminal size whenever Flutter layout changes
-                    // This ensures the terminal expands when the window grows,
-                    // not just when it shrinks.
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted &&
-                          _terminal.viewWidth > 0 &&
-                          _terminal.viewHeight > 0) {
-                        widget.session.resize(
-                          TerminalDimensions(
-                            cols: _terminal.viewWidth,
-                            rows: _terminal.viewHeight,
-                          ),
-                        );
-                      }
-                    });
-                    return TerminalView(
-                      _terminal,
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      autofocus: widget.autoFocus,
-                      hardwareKeyboardOnly: isDesktop,
-                      onKeyEvent: _handleTerminalKeyEvent,
-                      onSecondaryTapUp: (details, offset) {
-                        _showContextMenu(details.globalPosition);
-                      },
-                      theme: terminalTheme,
-                      textStyle: TerminalStyle(
-                        fontSize: _fontSize,
-                        fontFamily: 'JetBrains Mono',
-                      ),
-                      backgroundOpacity: 1.0,
-                    );
-                  },
+              child: MouseRegion(
+                cursor: _hoveredLink != null
+                    ? SystemMouseCursors.click
+                    : MouseCursor.defer,
+                onExit: _handlePointerExit,
+                child: Listener(
+                  onPointerDown: _handlePointerDown,
+                  onPointerUp: _handlePointerUp,
+                  onPointerHover: _handlePointerHover,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Proactively sync terminal size whenever Flutter layout changes
+                      // This ensures the terminal expands when the window grows,
+                      // not just when it shrinks.
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted &&
+                            _terminal.viewWidth > 0 &&
+                            _terminal.viewHeight > 0) {
+                          widget.session.resize(
+                            TerminalDimensions(
+                              cols: _terminal.viewWidth,
+                              rows: _terminal.viewHeight,
+                            ),
+                          );
+                        }
+                      });
+                      return TerminalView(
+                        _terminal,
+                        key: _terminalViewKey,
+                        controller: _controller,
+                        scrollController: _scrollController,
+                        focusNode: _focusNode,
+                        autofocus: widget.autoFocus,
+                        hardwareKeyboardOnly: isDesktop,
+                        padding: const EdgeInsets.all(12),
+                        onKeyEvent: _handleTerminalKeyEvent,
+                        mouseCursor: _hoveredLink != null
+                            ? SystemMouseCursors.click
+                            : SystemMouseCursors.text,
+                        onTapUp: (details, offset) {
+                          _handleTerminalTapUp(details, offset);
+                        },
+                        onSecondaryTapUp: (details, offset) {
+                          _showContextMenu(details.globalPosition, offset);
+                        },
+                        theme: terminalTheme,
+                        textStyle: TerminalStyle(
+                          fontSize: _fontSize,
+                          fontFamily: 'JetBrains Mono',
+                        ),
+                        backgroundOpacity: 1.0,
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
+
+            if (_hoveredLink != null && _hoveredPosition != null) ...[
+              Positioned(
+                left: (_hoveredPosition!.dx + 12).clamp(
+                  8.0,
+                  (MediaQuery.of(context).size.width - 340)
+                      .clamp(8.0, double.infinity),
+                ),
+                top: (_hoveredPosition!.dy - 34).clamp(8.0, double.infinity),
+                child: IgnorePointer(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: ShellitColors.obsidianCard,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: ShellitColors.accentCyan.withValues(alpha: 0.7),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _hoveredLink!.isUrl
+                              ? Icons.link_rounded
+                              : Icons.insert_drive_file_outlined,
+                          size: 13,
+                          color: ShellitColors.accentCyan,
+                        ),
+                        const SizedBox(width: 6),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 280),
+                          child: Text(
+                            '${defaultTargetPlatform == TargetPlatform.macOS ? "Cmd" : "Ctrl"}+Click: ${_hoveredLink!.text}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontFamily: 'JetBrains Mono',
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
 
             // Floating font zoom buttons on hover/top-right
             Positioned(
@@ -675,7 +1038,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     ],
                     InkWell(
                       onTap: () {
-                        if (_fontSize > 8) setState(() => _fontSize -= 1);
+                        if (_fontSize > 8) {
+                          setState(() {
+                            _fontSize -= 1;
+                          });
+                        }
                       },
                       child: const Padding(
                         padding: EdgeInsets.all(4),
@@ -690,7 +1057,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     ),
                     InkWell(
                       onTap: () {
-                        if (_fontSize < 28) setState(() => _fontSize += 1);
+                        if (_fontSize < 28) {
+                          setState(() {
+                            _fontSize += 1;
+                          });
+                        }
                       },
                       child: const Padding(
                         padding: EdgeInsets.all(4),

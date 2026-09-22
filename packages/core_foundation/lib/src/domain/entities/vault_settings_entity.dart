@@ -30,6 +30,10 @@ class VaultSettingsEntity {
   final bool restoreWorkspaceSessions;
   final bool autoReconnectOnRestore;
 
+  // Terminal defense and link features
+  final bool multilinePasteDefense;
+  final bool enableClickableLinks;
+
   const VaultSettingsEntity({
     this.idleLockTimeoutMinutes = 15,
     this.isBiometricsEnabled = false,
@@ -51,6 +55,8 @@ class VaultSettingsEntity {
     this.isAiSnippetEnabled = false,
     this.restoreWorkspaceSessions = true,
     this.autoReconnectOnRestore = false,
+    this.multilinePasteDefense = true,
+    this.enableClickableLinks = true,
   });
 
   VaultSettingsEntity copyWith({
@@ -74,6 +80,8 @@ class VaultSettingsEntity {
     bool? isAiSnippetEnabled,
     bool? restoreWorkspaceSessions,
     bool? autoReconnectOnRestore,
+    bool? multilinePasteDefense,
+    bool? enableClickableLinks,
   }) {
     return VaultSettingsEntity(
       idleLockTimeoutMinutes:
@@ -101,6 +109,10 @@ class VaultSettingsEntity {
           restoreWorkspaceSessions ?? this.restoreWorkspaceSessions,
       autoReconnectOnRestore:
           autoReconnectOnRestore ?? this.autoReconnectOnRestore,
+      multilinePasteDefense:
+          multilinePasteDefense ?? this.multilinePasteDefense,
+      enableClickableLinks:
+          enableClickableLinks ?? this.enableClickableLinks,
     );
   }
 
@@ -124,10 +136,12 @@ class VaultSettingsEntity {
           geminiModelId == other.geminiModelId &&
           isAiSnippetEnabled == other.isAiSnippetEnabled &&
           restoreWorkspaceSessions == other.restoreWorkspaceSessions &&
-          autoReconnectOnRestore == other.autoReconnectOnRestore;
+          autoReconnectOnRestore == other.autoReconnectOnRestore &&
+          multilinePasteDefense == other.multilinePasteDefense &&
+          enableClickableLinks == other.enableClickableLinks;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
         idleLockTimeoutMinutes,
         isBiometricsEnabled,
         isPinEnabled,
@@ -144,5 +158,7 @@ class VaultSettingsEntity {
         isAiSnippetEnabled,
         restoreWorkspaceSessions,
         autoReconnectOnRestore,
-      );
+        multilinePasteDefense,
+        enableClickableLinks,
+      ]);
 }

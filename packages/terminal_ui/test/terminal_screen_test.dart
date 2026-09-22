@@ -19,6 +19,7 @@ void main() {
     String? mockClipboardText;
 
     setUp(() {
+      TerminalSessionRegistry.instance.clear();
       session = FakeTerminalSession(id: 'sess-1', hostId: 'host-1');
       mockClipboardText = null;
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -39,6 +40,7 @@ void main() {
     });
 
     tearDown(() async {
+      TerminalSessionRegistry.instance.clear();
       await session.terminate();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
@@ -378,9 +380,9 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('Ctrl+Shift+V pastes clipboard text into session',
+    testWidgets('Ctrl+Shift+V pastes single-line clipboard text directly into session',
         (tester) async {
-      await Clipboard.setData(const ClipboardData(text: 'pasted_cmd\n'));
+      await Clipboard.setData(const ClipboardData(text: 'pasted_cmd'));
 
       await tester.pumpWidget(
         ProviderScope(
@@ -413,6 +415,52 @@ void main() {
       final combinedInput =
           session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
       expect(combinedInput, contains('pasted_cmd'));
+    });
+
+    testWidgets(
+        'Ctrl+Shift+V with multiline text opens MultilinePasteDialog and pastes upon confirmation',
+        (tester) async {
+      await Clipboard.setData(
+          const ClipboardData(text: 'line1\nline2\n'));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyV);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyV);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pumpAndSettle();
+
+      // MultilinePasteDialog is shown!
+      expect(find.byType(MultilinePasteDialog), findsOneWidget);
+
+      // Confirm paste
+      await tester.tap(find.text('Paste 3 lines'));
+      await tester.pumpAndSettle();
+
+      final combinedInput =
+          session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
+      expect(combinedInput, contains('line1'));
+      expect(combinedInput, contains('line2'));
     });
 
     testWidgets('Ctrl + = and Ctrl + - hotkeys zoom font size', (tester) async {
@@ -523,6 +571,65 @@ void main() {
       // Dismiss menu
       await tester.tapAt(const Offset(10, 10));
       await tester.pump(const Duration(milliseconds: 250));
+    });
+
+    testWidgets(
+        'Hovering over a link shows click cursor and tooltip badge, Ctrl+Click opens URL',
+        (tester) async {
+      String? openedUrl;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  enableClickableLinks: true,
+                  onOpenUrl: (url) => openedUrl = url,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Emit URL into terminal output stream
+      session.emitOutput(
+          Uint8List.fromList(utf8.encode('Check https://shellit.dev/download\r\n')));
+      await tester.pumpAndSettle();
+
+      // Move mouse pointer over the URL (row 0, col ~10)
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: Offset.zero);
+      await gesture.moveTo(const Offset(100, 16));
+      await tester.pump();
+
+      // Tooltip should be visible with URL text
+      expect(find.textContaining('https://shellit.dev/download'), findsOneWidget);
+
+      // Verify TerminalView has SystemMouseCursors.click
+      final terminalView =
+          tester.widget<TerminalView>(find.byType(TerminalView));
+      expect(terminalView.mouseCursor, SystemMouseCursors.click);
+
+      // Send Ctrl key down and click
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      await gesture.down(const Offset(100, 16));
+      await gesture.up();
+      await tester.pump();
+
+      expect(openedUrl, 'https://shellit.dev/download');
+
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await gesture.removePointer();
+      await tester.pump(const Duration(milliseconds: 350));
     });
   });
 }

@@ -37,6 +37,8 @@ export 'src/widgets/terminal/terminal_screen.dart';
 export 'src/widgets/terminal/terminal_connecting_view.dart';
 export 'src/widgets/terminal/terminal_context_menu.dart';
 export 'src/widgets/terminal/terminal_shortcuts_dialog.dart';
+export 'src/widgets/terminal/terminal_link_detector.dart';
+export 'src/widgets/terminal/multiline_paste_dialog.dart';
 export 'src/widgets/terminal/prod_guard_border.dart';
 export 'src/widgets/terminal/prod_confirmation_dialog.dart';
 export 'src/widgets/terminal/local_terminal_button.dart';

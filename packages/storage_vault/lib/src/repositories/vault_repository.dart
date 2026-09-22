@@ -870,10 +870,17 @@ class VaultRepository implements IVaultRepository {
 
     final restoreWorkspaceMeta = await getMetadata('setting_restore_workspace');
     final autoReconnectMeta = await getMetadata('setting_auto_reconnect');
+    final multilinePasteMeta =
+        await getMetadata('setting_multiline_paste_defense');
+    final clickableLinksMeta = await getMetadata('setting_clickable_links');
     final restoreWorkspace = restoreWorkspaceMeta == null
         ? true
         : restoreWorkspaceMeta == 'true';
     final autoReconnect = autoReconnectMeta == 'true';
+    final multilinePaste =
+        multilinePasteMeta == null ? true : multilinePasteMeta == 'true';
+    final clickableLinks =
+        clickableLinksMeta == null ? true : clickableLinksMeta == 'true';
 
     final settings = record.toEntity(
       decryptedPassphrase: decryptedPassphrase,
@@ -881,6 +888,8 @@ class VaultRepository implements IVaultRepository {
     ).copyWith(
       restoreWorkspaceSessions: restoreWorkspace,
       autoReconnectOnRestore: autoReconnect,
+      multilinePasteDefense: multilinePaste,
+      enableClickableLinks: clickableLinks,
     );
     _cachedSettings = settings;
     return settings;
@@ -979,6 +988,10 @@ class VaultRepository implements IVaultRepository {
           settings.restoreWorkspaceSessions.toString());
       await setMetadata(
           'setting_auto_reconnect', settings.autoReconnectOnRestore.toString());
+      await setMetadata('setting_multiline_paste_defense',
+          settings.multilinePasteDefense.toString());
+      await setMetadata('setting_clickable_links',
+          settings.enableClickableLinks.toString());
       _cachedSettings = settings;
       await _resetIdleTimer();
       return const Result.success(null);
