@@ -135,7 +135,8 @@ class TransferQueueBar extends StatelessWidget {
                       color: item.status == TransferStatus.failed
                           ? ShellitColors.statusRed
                           : (item.status == TransferStatus.cancelled
-                              ? ShellitColors.statusYellow.withValues(alpha: 0.5)
+                              ? ShellitColors.statusYellow
+                                  .withValues(alpha: 0.5)
                               : ShellitColors.border),
                     ),
                   ),

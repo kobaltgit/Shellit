@@ -768,6 +768,42 @@ const Map<String, String> defaultEnglishStrings = {
   'settings.about.changelog_subtitle': 'View release highlights and changes',
   'settings.about.changelog_dialog_title': "What's New in Shellit",
   'settings.about.view_all_releases_btn': 'All Releases on GitHub',
+  'settings.about.send_feedback_btn': 'Send Feedback / Bug Report',
+  'settings.about.rate_limit_error':
+      'GitHub API rate limit exceeded. Please check releases manually on GitHub.',
+  'settings.about.no_releases_found':
+      'No remote releases found. You are running the latest preview build.',
+  'settings.about.network_error':
+      'Network connection failed. Could not check for updates.',
   'settings.about.error_checking_updates':
       'Could not check for updates. Check your internet connection.',
+
+  // Feedback & Bug Reporter Dialog (IDEA-028)
+  'feedback.dialog_title': 'Send Feedback or Bug Report',
+  'feedback.dialog_subtitle':
+      'Help us make Shellit better. We read every submission.',
+  'feedback.category_label': 'Category',
+  'feedback.category_bug': '🐛 Bug Report',
+  'feedback.category_feature': '💡 Feature',
+  'feedback.category_general': '💬 Feedback',
+  'feedback.subject_label': 'Subject',
+  'feedback.subject_placeholder': 'Brief summary of the issue or idea...',
+  'feedback.subject_required': 'Please enter a subject',
+  'feedback.message_label': 'Details',
+  'feedback.message_placeholder':
+      'Describe what happened or what you would like to see...',
+  'feedback.message_required': 'Please provide details',
+  'feedback.email_label': 'Your Email (Optional)',
+  'feedback.email_placeholder': 'you@domain.com (for follow-up)',
+  'feedback.email_invalid': 'Please enter a valid email address',
+  'feedback.send_btn': 'Send Report',
+  'feedback.sending_btn': 'Sending...',
+  'feedback.cancel_btn': 'Cancel',
+  'feedback.close_btn': 'Close',
+  'feedback.success_title': 'Report Received!',
+  'feedback.success_desc':
+      'Thank you! Your feedback has been submitted to the engineering dashboard.',
+  'feedback.error_banner':
+      'Failed to send report. Please check your internet connection and try again.',
+  'feedback.retry_btn': 'Retry',
 };

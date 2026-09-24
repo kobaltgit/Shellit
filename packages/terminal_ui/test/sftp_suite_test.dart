@@ -267,7 +267,8 @@ void main() {
       expect(cancelAllCalled, isTrue);
     });
 
-    testWidgets('Emits onCancelTransfer callback when closing individual transfer',
+    testWidgets(
+        'Emits onCancelTransfer callback when closing individual transfer',
         (tester) async {
       String? cancelledId;
 

@@ -380,7 +380,8 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
     });
 
-    testWidgets('Ctrl+Shift+V pastes single-line clipboard text directly into session',
+    testWidgets(
+        'Ctrl+Shift+V pastes single-line clipboard text directly into session',
         (tester) async {
       await Clipboard.setData(const ClipboardData(text: 'pasted_cmd'));
 
@@ -420,8 +421,7 @@ void main() {
     testWidgets(
         'Ctrl+Shift+V with multiline text opens MultilinePasteDialog and pastes upon confirmation',
         (tester) async {
-      await Clipboard.setData(
-          const ClipboardData(text: 'line1\nline2\n'));
+      await Clipboard.setData(const ClipboardData(text: 'line1\nline2\n'));
 
       await tester.pumpWidget(
         ProviderScope(
@@ -599,8 +599,8 @@ void main() {
       await tester.pump();
 
       // Emit URL into terminal output stream
-      session.emitOutput(
-          Uint8List.fromList(utf8.encode('Check https://shellit.dev/download\r\n')));
+      session.emitOutput(Uint8List.fromList(
+          utf8.encode('Check https://shellit.dev/download\r\n')));
       await tester.pumpAndSettle();
 
       // Move mouse pointer over the URL (row 0, col ~10)
@@ -610,7 +610,8 @@ void main() {
       await tester.pump();
 
       // Tooltip should be visible with URL text
-      expect(find.textContaining('https://shellit.dev/download'), findsOneWidget);
+      expect(
+          find.textContaining('https://shellit.dev/download'), findsOneWidget);
 
       // Verify TerminalView has SystemMouseCursors.click
       final terminalView =

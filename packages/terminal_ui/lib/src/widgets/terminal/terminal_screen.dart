@@ -32,6 +32,7 @@ class TerminalScreen extends ConsumerStatefulWidget {
   final void Function(String url)? onOpenUrl;
   final bool enableMultilineDefense;
   final bool enableClickableLinks;
+  final bool? isReadOnly;
 
   const TerminalScreen({
     super.key,
@@ -45,6 +46,7 @@ class TerminalScreen extends ConsumerStatefulWidget {
     this.onOpenUrl,
     this.enableMultilineDefense = true,
     this.enableClickableLinks = true,
+    this.isReadOnly,
   });
 
   @override
@@ -199,7 +201,56 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     }
   }
 
+  bool get _isReadOnly =>
+      widget.isReadOnly ?? (widget.host?.isReadOnly ?? false);
+
+  DateTime? _lastReadOnlyWarningAt;
+  void _showReadOnlyWarning() {
+    final now = DateTime.now();
+    if (_lastReadOnlyWarningAt != null &&
+        now.difference(_lastReadOnlyWarningAt!) <
+            const Duration(milliseconds: 1500)) {
+      return;
+    }
+    _lastReadOnlyWarningAt = now;
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 14, color: Color(0xFFFBBF24)),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                context.tr(
+                  'terminal.read_only_active_snack',
+                  defaultText:
+                      'Terminal is in Read-Only mode. Input is blocked.',
+                ),
+                style: const TextStyle(fontSize: 12, color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: ShellitColors.obsidianCard,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(milliseconds: 1500),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Color(0xFFF59E0B)),
+        ),
+      ),
+    );
+  }
+
   void _sendToSession(String data) {
+    if (_isReadOnly) {
+      _showReadOnlyWarning();
+      return;
+    }
     _resetCursorBlink();
     widget.session.inputStream.add(Uint8List.fromList(utf8.encode(data)));
     widget.onBroadcastOutput?.call(data);
@@ -277,6 +328,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   Future<void> _pasteFromClipboard() async {
+    if (_isReadOnly) {
+      _showReadOnlyWarning();
+      return;
+    }
     final data = await Clipboard.getData(Clipboard.kTextPlain);
     final text = data?.text;
     if (text == null || text.isEmpty) return;
@@ -285,7 +340,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final lines = text.split(RegExp(r'\r\n|\r|\n'));
 
     if (widget.enableMultilineDefense &&
-        (isMultilined && (lines.length > 1 || text.endsWith('\n') || text.endsWith('\r')))) {
+        (isMultilined &&
+            (lines.length > 1 || text.endsWith('\n') || text.endsWith('\r')))) {
       final confirmedText = await MultilinePasteDialog.show(
         context: context,
         text: text,
@@ -693,6 +749,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // Direct emission of printable characters (Latin, Cyrillic, symbols, space)
     if (event.character != null && event.character!.isNotEmpty) {
+      if (_isReadOnly) {
+        _showReadOnlyWarning();
+        return KeyEventResult.handled;
+      }
       _terminal.textInput(event.character!);
       return KeyEventResult.handled;
     }
@@ -701,6 +761,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   Future<void> _handleTerminalOutput(String data) async {
+    if (_isReadOnly) {
+      _showReadOnlyWarning();
+      return;
+    }
     if (_isAwaitingConfirmation) return;
 
     final isProd = widget.host?.isProduction ?? false;
@@ -909,6 +973,53 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (_isReadOnly) ...[
+                      Semantics(
+                        label: '[🔒 Read-Only]',
+                        child: Tooltip(
+                          message: context.tr(
+                            'terminal.read_only_tooltip',
+                            defaultText:
+                                'Read-Only Mode: Keystrokes and modifications are disabled',
+                          ),
+                          child: Container(
+                            key: const Key('terminal_read_only_badge'),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFD97706)
+                                  .withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: const Color(0xFFF59E0B)
+                                    .withValues(alpha: 0.6),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('🔒',
+                                    style: TextStyle(fontSize: 10)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  context.tr('terminal.read_only_badge',
+                                      defaultText: 'Read-Only'),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFFBBF24),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Container(width: 1, height: 12, color: Colors.white24),
+                      const SizedBox(width: 4),
+                    ],
                     Tooltip(
                       message: context.tr('terminal.shortcuts_tooltip',
                           defaultText: 'Keyboard Shortcuts (F1)'),

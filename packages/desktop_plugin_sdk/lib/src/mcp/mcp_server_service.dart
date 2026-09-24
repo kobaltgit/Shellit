@@ -64,7 +64,8 @@ class McpServerService {
           tag: 'McpServer');
 
       _httpServer!.listen(_handleRequest, onError: (Object err) {
-        AppLogger.e('McpServerService HTTP error', tag: 'McpServer', error: err);
+        AppLogger.e('McpServerService HTTP error',
+            tag: 'McpServer', error: err);
       });
 
       return _port;
@@ -92,7 +93,6 @@ class McpServerService {
     }
   }
 
-
   Future<void> _handleRequest(HttpRequest request) async {
     final response = request.response;
 
@@ -113,8 +113,10 @@ class McpServerService {
     if (request.method == 'GET' && (path == '/sse' || path == '/')) {
       await _handleSseConnection(request);
     } else if (request.method == 'POST' &&
-        (path == '/message' || path == '/rpc' ||
-            path == '/sse' || path == '/')) {
+        (path == '/message' ||
+            path == '/rpc' ||
+            path == '/sse' ||
+            path == '/')) {
       // Also accept POST to /sse and / for Streamable HTTP transport compatibility
       // (used by Antigravity IDE and other clients implementing the newer MCP spec).
       await _handlePostMessage(request);
@@ -158,8 +160,8 @@ class McpServerService {
 
     response.statusCode = HttpStatus.ok;
     response.bufferOutput = false;
-    response.headers.set(
-        HttpHeaders.contentTypeHeader, 'text/event-stream; charset=utf-8');
+    response.headers
+        .set(HttpHeaders.contentTypeHeader, 'text/event-stream; charset=utf-8');
     response.headers.set(HttpHeaders.cacheControlHeader, 'no-cache');
     response.headers.set(HttpHeaders.connectionHeader, 'keep-alive');
 
@@ -168,8 +170,7 @@ class McpServerService {
     // Send initial endpoint event informing client where to send POST messages.
     // Must be an absolute URL — some clients (Antigravity, Cursor, Claude Desktop)
     // cannot reconstruct a full URL from a relative path and drop the sessionId.
-    final endpointData =
-        'http://127.0.0.1:$_port/message?sessionId=$sessionId';
+    final endpointData = 'http://127.0.0.1:$_port/message?sessionId=$sessionId';
     response.write('event: endpoint\ndata: $endpointData\n\n');
     await response.flush();
 
@@ -268,7 +269,8 @@ class McpServerService {
         break;
 
       case 'tools/list':
-        final toolsList = _registeredTools.values.map((t) => t.toJson()).toList();
+        final toolsList =
+            _registeredTools.values.map((t) => t.toJson()).toList();
         rpcResponse = {
           'jsonrpc': '2.0',
           if (id != null) 'id': id,

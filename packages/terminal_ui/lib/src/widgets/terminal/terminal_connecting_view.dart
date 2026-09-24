@@ -203,7 +203,8 @@ class TerminalConnectingView extends StatelessWidget {
                       // Content: Disconnected Standby / Connecting Spinner / Error
                       if (errorMessage != null)
                         _buildErrorContent(context)
-                      else if (isDisconnected || (!isConnecting && errorMessage == null))
+                      else if (isDisconnected ||
+                          (!isConnecting && errorMessage == null))
                         _buildDisconnectedContent(context)
                       else
                         _buildConnectingContent(context),
@@ -262,8 +263,7 @@ class TerminalConnectingView extends StatelessWidget {
         Text(
           context.tr(
             'connecting.session_restored_subtitle',
-            defaultText:
-                'Previous session tab was restored in standby mode.',
+            defaultText: 'Previous session tab was restored in standby mode.',
           ),
           textAlign: TextAlign.center,
           style: const TextStyle(

@@ -153,7 +153,8 @@ class _SftpFileEditorDialogState extends State<SftpFileEditorDialog> {
         }
         final result = await widget.session!.readFile(widget.path);
         if (result.isError) {
-          throw Exception(result.failureOrNull?.message ?? 'Failed to read file');
+          throw Exception(
+              result.failureOrNull?.message ?? 'Failed to read file');
         }
         bytes = result.valueOrNull!;
       } else {
@@ -201,8 +202,8 @@ class _SftpFileEditorDialogState extends State<SftpFileEditorDialog> {
                   foregroundColor: Colors.black,
                 ),
                 onPressed: () => Navigator.of(ctx).pop(true),
-                child: Text(context.tr('sftp.open_anyway',
-                    defaultText: 'Open Anyway')),
+                child: Text(
+                    context.tr('sftp.open_anyway', defaultText: 'Open Anyway')),
               ),
             ],
           ),
@@ -337,7 +338,8 @@ class _SftpFileEditorDialogState extends State<SftpFileEditorDialog> {
         },
         child: Dialog(
           backgroundColor: ShellitColors.obsidianBackground,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: const BorderSide(color: ShellitColors.border),
@@ -418,7 +420,8 @@ class _SftpFileEditorDialogState extends State<SftpFileEditorDialog> {
                     // Reload
                     IconButton(
                       icon: const Icon(Icons.refresh, size: 16),
-                      tooltip: context.tr('common.refresh', defaultText: 'Reload file'),
+                      tooltip: context.tr('common.refresh',
+                          defaultText: 'Reload file'),
                       onPressed: _loadFile,
                       visualDensity: VisualDensity.compact,
                     ),
@@ -487,7 +490,8 @@ class _SftpFileEditorDialogState extends State<SftpFileEditorDialog> {
                               child: Text(
                                 'Error loading file: $_errorMessage',
                                 style: const TextStyle(
-                                    color: ShellitColors.statusRed, fontSize: 13),
+                                    color: ShellitColors.statusRed,
+                                    fontSize: 13),
                               ),
                             ),
                           )

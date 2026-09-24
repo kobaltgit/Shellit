@@ -356,7 +356,8 @@ void main() {
           Uint8List.fromList('server_name test;'.codeUnits);
       final res = await session.readFile('/remote/app.conf');
       expect(res.isSuccess, isTrue);
-      expect(String.fromCharCodes(res.valueOrNull!), equals('server_name test;'));
+      expect(
+          String.fromCharCodes(res.valueOrNull!), equals('server_name test;'));
     });
 
     test('writeFile writes bytes to remote file via open and writeBytes',

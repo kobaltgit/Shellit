@@ -193,9 +193,8 @@ class _SftpTabViewState extends State<SftpTabView> {
       for (final entity in entities) {
         if (_cancelRequested) return;
         if (entity is Directory) {
-          final relPath = entity.path
-              .substring(dir.path.length)
-              .replaceAll(r'\', '/');
+          final relPath =
+              entity.path.substring(dir.path.length).replaceAll(r'\', '/');
           final subRemoteDir = '$remoteBaseDir$relPath';
           await widget.sftpSession.createDirectory(subRemoteDir);
         }
@@ -205,9 +204,8 @@ class _SftpTabViewState extends State<SftpTabView> {
       for (final entity in entities) {
         if (_cancelRequested) return;
         if (entity is File) {
-          final relPath = entity.path
-              .substring(dir.path.length)
-              .replaceAll(r'\', '/');
+          final relPath =
+              entity.path.substring(dir.path.length).replaceAll(r'\', '/');
           final targetRemotePath = '$remoteBaseDir$relPath';
           await _uploadSingleFileWithConflict(
             localFilePath: entity.path,
@@ -381,8 +379,7 @@ class _SftpTabViewState extends State<SftpTabView> {
       final listRes = await widget.sftpSession.listDirectory(remotePath);
       if (listRes.isSuccess) {
         // Recursive folder download
-        final dirName =
-            remotePath.split('/').where((s) => s.isNotEmpty).last;
+        final dirName = remotePath.split('/').where((s) => s.isNotEmpty).last;
         final targetSubLocal = _joinLocal(targetLocalDir, dirName);
         final dir = Directory(targetSubLocal);
         if (!dir.existsSync()) {

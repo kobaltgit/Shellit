@@ -16,7 +16,8 @@ void main() {
       expect(find.byType(GestureDetector), findsNothing);
     });
 
-    testWidgets('renders minimize, maximize, close buttons and triggers callbacks',
+    testWidgets(
+        'renders minimize, maximize, close buttons and triggers callbacks',
         (tester) async {
       bool minimized = false;
       bool maximized = false;

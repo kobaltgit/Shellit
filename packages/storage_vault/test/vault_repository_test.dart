@@ -147,7 +147,8 @@ void main() {
       expect(vaultRepository.isVaultUnlocked, isTrue);
     });
 
-    test('disableMasterPassword removes master password and leaves vault open', () async {
+    test('disableMasterPassword removes master password and leaves vault open',
+        () async {
       await vaultRepository.initializeVault('MasterSecret123');
       expect(await vaultRepository.isVaultInitialized(), isTrue);
       expect(vaultRepository.isVaultUnlocked, isTrue);
@@ -157,7 +158,8 @@ void main() {
         currentPassword: 'WrongPassword',
       );
       expect(wrongRes.isError, isTrue);
-      expect(wrongRes.failureOrNull?.type, equals(VaultFailureType.invalidPassword));
+      expect(wrongRes.failureOrNull?.type,
+          equals(VaultFailureType.invalidPassword));
       expect(await vaultRepository.isVaultInitialized(), isTrue);
 
       // Correct password succeeds
@@ -244,8 +246,8 @@ void main() {
       // Test metadata CRUD
       expect(await vaultRepository.getMetadata('custom_key'), isNull);
       await vaultRepository.setMetadata('custom_key', 'some_value');
-      expect(
-          await vaultRepository.getMetadata('custom_key'), equals('some_value'));
+      expect(await vaultRepository.getMetadata('custom_key'),
+          equals('some_value'));
       await vaultRepository.deleteMetadata('custom_key');
       expect(await vaultRepository.getMetadata('custom_key'), isNull);
 

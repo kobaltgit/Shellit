@@ -316,7 +316,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
 
     final title = isSingle
         ? (isDir
-            ? context.tr('sftp.delete_dir_title', defaultText: 'Delete Directory')
+            ? context.tr('sftp.delete_dir_title',
+                defaultText: 'Delete Directory')
             : context.tr('sftp.delete_file_title', defaultText: 'Delete File'))
         : context.tr('sftp.delete_batch_title',
             defaultText: 'Delete {count} items',
@@ -643,7 +644,9 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
               const Icon(Icons.select_all,
                   size: 16, color: ShellitColors.accentCyan),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.select_all', defaultText: 'Select All (Ctrl+A)'),
+              Text(
+                  context.tr('sftp.select_all',
+                      defaultText: 'Select All (Ctrl+A)'),
                   style: const TextStyle(fontSize: 12)),
             ],
           ),
@@ -726,14 +729,17 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
       return;
     }
 
-    if (event.logicalKey == LogicalKeyboardKey.f2 && _selectedPaths.length == 1) {
+    if (event.logicalKey == LogicalKeyboardKey.f2 &&
+        _selectedPaths.length == 1) {
       final item = selectedItems.first;
       showDialog<String>(
         context: context,
         builder: (_) => SftpRenameDialog(currentName: item.name),
       ).then((newName) {
         if (newName != null && newName.isNotEmpty && newName != item.name) {
-          widget.session.rename(item.path, _join(_currentPath, newName)).then((res) {
+          widget.session
+              .rename(item.path, _join(_currentPath, newName))
+              .then((res) {
             res.when(
               success: (_) => reload(),
               error: (err) => _showError(err.message),
@@ -813,7 +819,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                       size: 15, color: ShellitColors.accentCyan),
                   const SizedBox(width: 6),
                   Text(
-                    context.tr('sftp.remote_title', defaultText: 'Remote Files'),
+                    context.tr('sftp.remote_title',
+                        defaultText: 'Remote Files'),
                     style: const TextStyle(
                         fontSize: 12, fontWeight: FontWeight.bold),
                   ),
@@ -847,7 +854,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                 )
                               : null,
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 4),
                           filled: true,
                           fillColor: ShellitColors.obsidianCard,
                           border: OutlineInputBorder(
@@ -862,7 +870,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                   ),
 
                   IconButton(
-                    icon: const Icon(Icons.create_new_folder_outlined, size: 15),
+                    icon:
+                        const Icon(Icons.create_new_folder_outlined, size: 15),
                     tooltip: context.tr('sftp.new_directory',
                         defaultText: 'New Directory'),
                     onPressed: _createNewDirectory,
@@ -870,13 +879,16 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.note_add_outlined, size: 15),
-                    tooltip: context.tr('sftp.new_file', defaultText: 'New File'),
+                    tooltip:
+                        context.tr('sftp.new_file', defaultText: 'New File'),
                     onPressed: _createNewFile,
                     visualDensity: VisualDensity.compact,
                   ),
                   IconButton(
                     icon: Icon(
-                      _showHiddenFiles ? Icons.visibility : Icons.visibility_off,
+                      _showHiddenFiles
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                       size: 15,
                       color: _showHiddenFiles
                           ? ShellitColors.accentCyan
@@ -1059,7 +1071,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                             borderRadius:
                                                 BorderRadius.circular(6),
                                             border: Border.all(
-                                                color: ShellitColors.accentBlue),
+                                                color:
+                                                    ShellitColors.accentBlue),
                                           ),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
@@ -1089,15 +1102,17 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                       child: GestureDetector(
                                         behavior: HitTestBehavior.opaque,
                                         onSecondaryTapDown: (details) =>
-                                            _showItemContextMenu(
-                                                context, item, details.globalPosition),
+                                            _showItemContextMenu(context, item,
+                                                details.globalPosition),
                                         child: InkWell(
                                           onTap: () {
-                                            final isCtrlOrCmd =
-                                                HardwareKeyboard.instance.isControlPressed ||
-                                                    HardwareKeyboard.instance.isMetaPressed;
-                                            final isShift =
-                                                HardwareKeyboard.instance.isShiftPressed;
+                                            final isCtrlOrCmd = HardwareKeyboard
+                                                    .instance
+                                                    .isControlPressed ||
+                                                HardwareKeyboard
+                                                    .instance.isMetaPressed;
+                                            final isShift = HardwareKeyboard
+                                                .instance.isShiftPressed;
 
                                             if (isShift) {
                                               _selectRangeTo(item);
@@ -1138,10 +1153,11 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                                   height: 22,
                                                   child: Checkbox(
                                                     value: isSelected,
-                                                    activeColor:
-                                                        ShellitColors.accentCyan,
+                                                    activeColor: ShellitColors
+                                                        .accentCyan,
                                                     side: const BorderSide(
-                                                      color: ShellitColors.border,
+                                                      color:
+                                                          ShellitColors.border,
                                                       width: 1,
                                                     ),
                                                     onChanged: (_) =>
@@ -1159,7 +1175,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                                   size: 15,
                                                   color: item.isDirectory
                                                       ? ShellitColors.accentCyan
-                                                      : ShellitColors.textSecondary,
+                                                      : ShellitColors
+                                                          .textSecondary,
                                                 ),
                                                 const SizedBox(width: 6),
 
@@ -1170,15 +1187,18 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: isSelected
-                                                          ? ShellitColors.accentCyan
+                                                          ? ShellitColors
+                                                              .accentCyan
                                                           : ShellitColors
                                                               .textPrimary,
-                                                      fontWeight: item.isDirectory
+                                                      fontWeight: item
+                                                              .isDirectory
                                                           ? FontWeight.w500
                                                           : FontWeight.normal,
                                                     ),
                                                     maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
 
@@ -1187,8 +1207,10 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                                                   SizedBox(
                                                     width: 70,
                                                     child: Text(
-                                                      _formatSize(item.sizeBytes),
-                                                      textAlign: TextAlign.right,
+                                                      _formatSize(
+                                                          item.sizeBytes),
+                                                      textAlign:
+                                                          TextAlign.right,
                                                       style: const TextStyle(
                                                         fontSize: 11,
                                                         color: ShellitColors
@@ -1283,7 +1305,8 @@ class RemoteFilePaneState extends State<RemoteFilePane> {
                     IconButton(
                       icon: const Icon(Icons.delete_outline,
                           size: 16, color: ShellitColors.statusRed),
-                      tooltip: context.tr('common.delete', defaultText: 'Delete'),
+                      tooltip:
+                          context.tr('common.delete', defaultText: 'Delete'),
                       onPressed: _deleteSelected,
                       visualDensity: VisualDensity.compact,
                     ),

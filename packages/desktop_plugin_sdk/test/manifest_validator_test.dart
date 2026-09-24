@@ -144,7 +144,8 @@ void main() {
       expect(manifest.locale, 'ru_RU');
     });
 
-    test('rejects localization manifest without locale or non-json entryPoint', () {
+    test('rejects localization manifest without locale or non-json entryPoint',
+        () {
       final noLocale = {
         'id': 'com.community.lang.ru',
         'name': 'Russian Language Pack',

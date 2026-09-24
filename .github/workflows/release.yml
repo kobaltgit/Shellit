@@ -160,14 +160,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate Release Notes from Git Commits
+      - name: Generate Release Notes
         run: |
           PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${{ github.ref_name }}$" | head -n 1 || true)
           echo "Current tag: ${{ github.ref_name }}"
           echo "Previous tag: $PREV_TAG"
 
-          echo "## What's Changed in ${{ github.ref_name }}" > RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
+          RELEASE_DOC="docs/releases/${{ github.ref_name }}.md"
+          if [ -f "$RELEASE_DOC" ]; then
+            echo "Found curated release description at $RELEASE_DOC"
+            cat "$RELEASE_DOC" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "---" >> RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+            echo "### 📦 Git Commits & Changes" >> RELEASE_NOTES.md
+          else
+            echo "## What's Changed in ${{ github.ref_name }}" > RELEASE_NOTES.md
+            echo "" >> RELEASE_NOTES.md
+          fi
 
           if [ -n "$PREV_TAG" ]; then
             RANGE="${PREV_TAG}..HEAD"

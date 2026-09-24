@@ -157,7 +157,8 @@ void main() {
     });
 
     test('installs and loads localization language pack dictionary', () async {
-      final pluginDir = Directory(p.join(tempWorkDir.path, 'lang_pack'))..createSync();
+      final pluginDir = Directory(p.join(tempWorkDir.path, 'lang_pack'))
+        ..createSync();
       File(p.join(pluginDir.path, 'manifest.json')).writeAsStringSync('''
       {
         "id": "com.community.lang.ru",

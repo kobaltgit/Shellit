@@ -71,3 +71,10 @@ enum ShellType {
   zsh,
   custom,
 }
+
+/// Status of SSH host key verification (TOFU model).
+enum HostKeyVerificationStatus {
+  trusted,
+  unknown,
+  mismatched,
+}

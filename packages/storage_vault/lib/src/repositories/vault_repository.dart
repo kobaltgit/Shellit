@@ -274,8 +274,8 @@ class VaultRepository implements IVaultRepository {
       VaultCryptoService.zeroize(secret);
 
       if (!isValid) {
-        return Result.error(VaultFailure.biometricFailed(
-            'Invalid biometric key'));
+        return Result.error(
+            VaultFailure.biometricFailed('Invalid biometric key'));
       }
 
       _securityContext.unlock(masterKey);
@@ -313,8 +313,7 @@ class VaultRepository implements IVaultRepository {
       if (pinSaltRecord == null ||
           pinVerificationRecord == null ||
           encryptedMasterKeyRecord == null) {
-        return Result.error(
-            VaultFailure.corrupted('Missing PIN metadata.'));
+        return Result.error(VaultFailure.corrupted('Missing PIN metadata.'));
       }
 
       final pinSalt = CryptoUtils.hexToBytes(pinSaltRecord.metaValue);
@@ -771,7 +770,8 @@ class VaultRepository implements IVaultRepository {
   }
 
   Future<SecretKey?> _getActiveOrOpenKey() async {
-    if (_securityContext.isUnlocked && _securityContext.activeMasterKey != null) {
+    if (_securityContext.isUnlocked &&
+        _securityContext.activeMasterKey != null) {
       return _securityContext.activeMasterKey;
     }
     final record = await (_db.select(_db.vaultMetadataTable)
@@ -842,8 +842,7 @@ class VaultRepository implements IVaultRepository {
         decryptedGeminiApiKey = utf8.decode(clearBytes);
         VaultCryptoService.zeroize(clearBytes);
       } catch (_) {}
-    } else if (record.geminiApiKey != null &&
-        record.geminiApiKey!.isNotEmpty) {
+    } else if (record.geminiApiKey != null && record.geminiApiKey!.isNotEmpty) {
       decryptedGeminiApiKey = record.geminiApiKey;
       if (activeKey != null) {
         try {
@@ -873,24 +872,25 @@ class VaultRepository implements IVaultRepository {
     final multilinePasteMeta =
         await getMetadata('setting_multiline_paste_defense');
     final clickableLinksMeta = await getMetadata('setting_clickable_links');
-    final restoreWorkspace = restoreWorkspaceMeta == null
-        ? true
-        : restoreWorkspaceMeta == 'true';
+    final restoreWorkspace =
+        restoreWorkspaceMeta == null ? true : restoreWorkspaceMeta == 'true';
     final autoReconnect = autoReconnectMeta == 'true';
     final multilinePaste =
         multilinePasteMeta == null ? true : multilinePasteMeta == 'true';
     final clickableLinks =
         clickableLinksMeta == null ? true : clickableLinksMeta == 'true';
 
-    final settings = record.toEntity(
-      decryptedPassphrase: decryptedPassphrase,
-      decryptedGeminiApiKey: decryptedGeminiApiKey,
-    ).copyWith(
-      restoreWorkspaceSessions: restoreWorkspace,
-      autoReconnectOnRestore: autoReconnect,
-      multilinePasteDefense: multilinePaste,
-      enableClickableLinks: clickableLinks,
-    );
+    final settings = record
+        .toEntity(
+          decryptedPassphrase: decryptedPassphrase,
+          decryptedGeminiApiKey: decryptedGeminiApiKey,
+        )
+        .copyWith(
+          restoreWorkspaceSessions: restoreWorkspace,
+          autoReconnectOnRestore: autoReconnect,
+          multilinePasteDefense: multilinePaste,
+          enableClickableLinks: clickableLinks,
+        );
     _cachedSettings = settings;
     return settings;
   }
@@ -990,8 +990,8 @@ class VaultRepository implements IVaultRepository {
           'setting_auto_reconnect', settings.autoReconnectOnRestore.toString());
       await setMetadata('setting_multiline_paste_defense',
           settings.multilinePasteDefense.toString());
-      await setMetadata('setting_clickable_links',
-          settings.enableClickableLinks.toString());
+      await setMetadata(
+          'setting_clickable_links', settings.enableClickableLinks.toString());
       _cachedSettings = settings;
       await _resetIdleTimer();
       return const Result.success(null);

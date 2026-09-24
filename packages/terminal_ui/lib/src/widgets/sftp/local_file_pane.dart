@@ -177,7 +177,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
 
   void _notifySelectionChanged() {
     final selectedList = selectedEntities;
-    widget.onSelectionChanged?.call(selectedList.isNotEmpty ? selectedList.first : null);
+    widget.onSelectionChanged
+        ?.call(selectedList.isNotEmpty ? selectedList.first : null);
     widget.onMultiSelectionChanged?.call(selectedList);
   }
 
@@ -365,11 +366,13 @@ class LocalFilePaneState extends State<LocalFilePane> {
 
     final isSingle = entities.length == 1;
     final firstName = entities.first.path.split(Platform.pathSeparator).last;
-    final isDir = isSingle && FileSystemEntity.isDirectorySync(entities.first.path);
+    final isDir =
+        isSingle && FileSystemEntity.isDirectorySync(entities.first.path);
 
     final title = isSingle
         ? (isDir
-            ? context.tr('sftp.delete_dir_title', defaultText: 'Delete Directory')
+            ? context.tr('sftp.delete_dir_title',
+                defaultText: 'Delete Directory')
             : context.tr('sftp.delete_file_title', defaultText: 'Delete File'))
         : context.tr('sftp.delete_batch_title',
             defaultText: 'Delete {count} items',
@@ -603,7 +606,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.tr('sftp.copied_path',
-                  defaultText: 'Copied: {path}', namedArgs: {'path': item.path})),
+                  defaultText: 'Copied: {path}',
+                  namedArgs: {'path': item.path})),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -678,7 +682,9 @@ class LocalFilePaneState extends State<LocalFilePane> {
               const Icon(Icons.select_all,
                   size: 16, color: ShellitColors.accentCyan),
               const SizedBox(width: 8),
-              Text(context.tr('sftp.select_all', defaultText: 'Select All (Ctrl+A)'),
+              Text(
+                  context.tr('sftp.select_all',
+                      defaultText: 'Select All (Ctrl+A)'),
                   style: const TextStyle(fontSize: 12)),
             ],
           ),
@@ -761,7 +767,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
       return;
     }
 
-    if (event.logicalKey == LogicalKeyboardKey.f2 && _selectedPaths.length == 1) {
+    if (event.logicalKey == LogicalKeyboardKey.f2 &&
+        _selectedPaths.length == 1) {
       final item = selectedEntities.first;
       _renameSingle(item);
       return;
@@ -870,7 +877,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
                                 )
                               : null,
                           isDense: true,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 4),
                           filled: true,
                           fillColor: ShellitColors.obsidianCard,
                           border: OutlineInputBorder(
@@ -885,7 +893,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
                   ),
 
                   IconButton(
-                    icon: const Icon(Icons.create_new_folder_outlined, size: 15),
+                    icon:
+                        const Icon(Icons.create_new_folder_outlined, size: 15),
                     tooltip: context.tr('sftp.new_directory',
                         defaultText: 'New Directory'),
                     onPressed: _createNewDirectory,
@@ -893,13 +902,16 @@ class LocalFilePaneState extends State<LocalFilePane> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.note_add_outlined, size: 15),
-                    tooltip: context.tr('sftp.new_file', defaultText: 'New File'),
+                    tooltip:
+                        context.tr('sftp.new_file', defaultText: 'New File'),
                     onPressed: _createNewFile,
                     visualDensity: VisualDensity.compact,
                   ),
                   IconButton(
                     icon: Icon(
-                      _showHiddenFiles ? Icons.visibility : Icons.visibility_off,
+                      _showHiddenFiles
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                       size: 15,
                       color: _showHiddenFiles
                           ? ShellitColors.accentBlue
@@ -1042,8 +1054,7 @@ class LocalFilePaneState extends State<LocalFilePane> {
                               FileSystemEntity.isDirectorySync(item.path);
                           final name =
                               item.path.split(Platform.pathSeparator).last;
-                          final isSelected =
-                              _selectedPaths.contains(item.path);
+                          final isSelected = _selectedPaths.contains(item.path);
 
                           int size = 0;
                           DateTime? modified;
@@ -1102,9 +1113,9 @@ class LocalFilePaneState extends State<LocalFilePane> {
                                       context, item, details.globalPosition),
                               child: InkWell(
                                 onTap: () {
-                                  final isCtrlOrCmd =
-                                      HardwareKeyboard.instance.isControlPressed ||
-                                          HardwareKeyboard.instance.isMetaPressed;
+                                  final isCtrlOrCmd = HardwareKeyboard
+                                          .instance.isControlPressed ||
+                                      HardwareKeyboard.instance.isMetaPressed;
                                   final isShift =
                                       HardwareKeyboard.instance.isShiftPressed;
 
@@ -1268,7 +1279,8 @@ class LocalFilePaneState extends State<LocalFilePane> {
                     IconButton(
                       icon: const Icon(Icons.delete_outline,
                           size: 16, color: ShellitColors.statusRed),
-                      tooltip: context.tr('common.delete', defaultText: 'Delete'),
+                      tooltip:
+                          context.tr('common.delete', defaultText: 'Delete'),
                       onPressed: _deleteSelected,
                       visualDensity: VisualDensity.compact,
                     ),

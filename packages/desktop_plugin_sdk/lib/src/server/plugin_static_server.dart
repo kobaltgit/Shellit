@@ -4,6 +4,16 @@ import 'package:path/path.dart' as p;
 /// Lightweight localhost HTTP server to serve plugin static web assets (index.html, JS, CSS)
 /// into a desktop WebView sandbox without CORS or file:// protocol security restrictions.
 class PluginStaticServer {
+  /// Strict CSP header restricting resource loading within plugin sandbox.
+  static const String contentSecurityPolicyHeader =
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none';";
+
+  /// Disables MIME sniffing.
+  static const String xContentTypeOptionsHeader = 'nosniff';
+
+  /// Prevents framing / clickjacking.
+  static const String xFrameOptionsHeader = 'DENY';
+
   HttpServer? _server;
 
   int? get port => _server?.port;
@@ -47,6 +57,18 @@ class PluginStaticServer {
           final mime = _mimeFor(ext);
           request.response.headers.set(HttpHeaders.contentTypeHeader, mime);
           request.response.headers.set('Access-Control-Allow-Origin', '*');
+          request.response.headers.set(
+            'Content-Security-Policy',
+            contentSecurityPolicyHeader,
+          );
+          request.response.headers.set(
+            'X-Content-Type-Options',
+            xContentTypeOptionsHeader,
+          );
+          request.response.headers.set(
+            'X-Frame-Options',
+            xFrameOptionsHeader,
+          );
           await request.response.addStream(file.openRead());
         } else {
           request.response.statusCode = HttpStatus.notFound;

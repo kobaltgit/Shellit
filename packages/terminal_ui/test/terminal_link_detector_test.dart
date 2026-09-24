@@ -14,7 +14,8 @@ void main() {
       expect(matches[0].text, 'http://127.0.0.1:8080/api/v1');
 
       expect(matches[1].type, TerminalLinkType.url);
-      expect(matches[1].text, 'https://github.com/kobaltgit/Shellit?tab=readme');
+      expect(
+          matches[1].text, 'https://github.com/kobaltgit/Shellit?tab=readme');
     });
 
     test('trims trailing punctuation from URLs and paths in logs', () {
@@ -58,7 +59,8 @@ void main() {
     });
 
     test('detects Windows absolute paths', () {
-      const text = r'Project located at D:\Projects\active\Shellit\pubspec.yaml';
+      const text =
+          r'Project located at D:\Projects\active\Shellit\pubspec.yaml';
       final matches = TerminalLinkDetector.detectLinks(text);
 
       expect(matches.length, 1);
@@ -67,7 +69,8 @@ void main() {
     });
 
     test('ignores empty or unrelated text without false positives', () {
-      const text = 'Regular text with simple words, numbers 12345, / alone, or --flags';
+      const text =
+          'Regular text with simple words, numbers 12345, / alone, or --flags';
       final matches = TerminalLinkDetector.detectLinks(text);
 
       expect(matches.isEmpty, isTrue);
@@ -81,7 +84,8 @@ void main() {
 
       // 'https://shellit.dev/download' starts at column 8
       const cellInsideUrl = CellOffset(12, 0);
-      final match = TerminalLinkDetector.findMatchAtOffset(terminal, cellInsideUrl);
+      final match =
+          TerminalLinkDetector.findMatchAtOffset(terminal, cellInsideUrl);
 
       expect(match, isNotNull);
       expect(match!.isUrl, isTrue);
@@ -122,7 +126,8 @@ void main() {
 
       // Col 60 is far past the line content
       const pastBounds = CellOffset(60, 0);
-      final match = TerminalLinkDetector.findMatchAtOffset(terminal, pastBounds);
+      final match =
+          TerminalLinkDetector.findMatchAtOffset(terminal, pastBounds);
       expect(match, isNull);
     });
   });

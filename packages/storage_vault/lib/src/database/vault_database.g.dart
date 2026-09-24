@@ -3610,6 +3610,397 @@ class SyncTombstonesTableCompanion
   }
 }
 
+class $KnownHostsTableTable extends KnownHostsTable
+    with TableInfo<$KnownHostsTableTable, KnownHostRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $KnownHostsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _hostMeta = const VerificationMeta('host');
+  @override
+  late final GeneratedColumn<String> host = GeneratedColumn<String>(
+      'host', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _portMeta = const VerificationMeta('port');
+  @override
+  late final GeneratedColumn<int> port = GeneratedColumn<int>(
+      'port', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(22));
+  static const VerificationMeta _keyTypeMeta =
+      const VerificationMeta('keyType');
+  @override
+  late final GeneratedColumn<String> keyType = GeneratedColumn<String>(
+      'key_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fingerprintSha256Meta =
+      const VerificationMeta('fingerprintSha256');
+  @override
+  late final GeneratedColumn<String> fingerprintSha256 =
+      GeneratedColumn<String>('fingerprint_sha256', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _firstSeenAtMeta =
+      const VerificationMeta('firstSeenAt');
+  @override
+  late final GeneratedColumn<DateTime> firstSeenAt = GeneratedColumn<DateTime>(
+      'first_seen_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastSeenAtMeta =
+      const VerificationMeta('lastSeenAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSeenAt = GeneratedColumn<DateTime>(
+      'last_seen_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, host, port, keyType, fingerprintSha256, firstSeenAt, lastSeenAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'known_hosts';
+  @override
+  VerificationContext validateIntegrity(Insertable<KnownHostRecord> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('host')) {
+      context.handle(
+          _hostMeta, host.isAcceptableOrUnknown(data['host']!, _hostMeta));
+    } else if (isInserting) {
+      context.missing(_hostMeta);
+    }
+    if (data.containsKey('port')) {
+      context.handle(
+          _portMeta, port.isAcceptableOrUnknown(data['port']!, _portMeta));
+    }
+    if (data.containsKey('key_type')) {
+      context.handle(_keyTypeMeta,
+          keyType.isAcceptableOrUnknown(data['key_type']!, _keyTypeMeta));
+    } else if (isInserting) {
+      context.missing(_keyTypeMeta);
+    }
+    if (data.containsKey('fingerprint_sha256')) {
+      context.handle(
+          _fingerprintSha256Meta,
+          fingerprintSha256.isAcceptableOrUnknown(
+              data['fingerprint_sha256']!, _fingerprintSha256Meta));
+    } else if (isInserting) {
+      context.missing(_fingerprintSha256Meta);
+    }
+    if (data.containsKey('first_seen_at')) {
+      context.handle(
+          _firstSeenAtMeta,
+          firstSeenAt.isAcceptableOrUnknown(
+              data['first_seen_at']!, _firstSeenAtMeta));
+    } else if (isInserting) {
+      context.missing(_firstSeenAtMeta);
+    }
+    if (data.containsKey('last_seen_at')) {
+      context.handle(
+          _lastSeenAtMeta,
+          lastSeenAt.isAcceptableOrUnknown(
+              data['last_seen_at']!, _lastSeenAtMeta));
+    } else if (isInserting) {
+      context.missing(_lastSeenAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  KnownHostRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return KnownHostRecord(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      host: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}host'])!,
+      port: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}port'])!,
+      keyType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key_type'])!,
+      fingerprintSha256: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}fingerprint_sha256'])!,
+      firstSeenAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}first_seen_at'])!,
+      lastSeenAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_seen_at'])!,
+    );
+  }
+
+  @override
+  $KnownHostsTableTable createAlias(String alias) {
+    return $KnownHostsTableTable(attachedDatabase, alias);
+  }
+}
+
+class KnownHostRecord extends DataClass implements Insertable<KnownHostRecord> {
+  final String id;
+  final String host;
+  final int port;
+  final String keyType;
+  final String fingerprintSha256;
+  final DateTime firstSeenAt;
+  final DateTime lastSeenAt;
+  const KnownHostRecord(
+      {required this.id,
+      required this.host,
+      required this.port,
+      required this.keyType,
+      required this.fingerprintSha256,
+      required this.firstSeenAt,
+      required this.lastSeenAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['host'] = Variable<String>(host);
+    map['port'] = Variable<int>(port);
+    map['key_type'] = Variable<String>(keyType);
+    map['fingerprint_sha256'] = Variable<String>(fingerprintSha256);
+    map['first_seen_at'] = Variable<DateTime>(firstSeenAt);
+    map['last_seen_at'] = Variable<DateTime>(lastSeenAt);
+    return map;
+  }
+
+  KnownHostsTableCompanion toCompanion(bool nullToAbsent) {
+    return KnownHostsTableCompanion(
+      id: Value(id),
+      host: Value(host),
+      port: Value(port),
+      keyType: Value(keyType),
+      fingerprintSha256: Value(fingerprintSha256),
+      firstSeenAt: Value(firstSeenAt),
+      lastSeenAt: Value(lastSeenAt),
+    );
+  }
+
+  factory KnownHostRecord.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return KnownHostRecord(
+      id: serializer.fromJson<String>(json['id']),
+      host: serializer.fromJson<String>(json['host']),
+      port: serializer.fromJson<int>(json['port']),
+      keyType: serializer.fromJson<String>(json['keyType']),
+      fingerprintSha256: serializer.fromJson<String>(json['fingerprintSha256']),
+      firstSeenAt: serializer.fromJson<DateTime>(json['firstSeenAt']),
+      lastSeenAt: serializer.fromJson<DateTime>(json['lastSeenAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'host': serializer.toJson<String>(host),
+      'port': serializer.toJson<int>(port),
+      'keyType': serializer.toJson<String>(keyType),
+      'fingerprintSha256': serializer.toJson<String>(fingerprintSha256),
+      'firstSeenAt': serializer.toJson<DateTime>(firstSeenAt),
+      'lastSeenAt': serializer.toJson<DateTime>(lastSeenAt),
+    };
+  }
+
+  KnownHostRecord copyWith(
+          {String? id,
+          String? host,
+          int? port,
+          String? keyType,
+          String? fingerprintSha256,
+          DateTime? firstSeenAt,
+          DateTime? lastSeenAt}) =>
+      KnownHostRecord(
+        id: id ?? this.id,
+        host: host ?? this.host,
+        port: port ?? this.port,
+        keyType: keyType ?? this.keyType,
+        fingerprintSha256: fingerprintSha256 ?? this.fingerprintSha256,
+        firstSeenAt: firstSeenAt ?? this.firstSeenAt,
+        lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+      );
+  KnownHostRecord copyWithCompanion(KnownHostsTableCompanion data) {
+    return KnownHostRecord(
+      id: data.id.present ? data.id.value : this.id,
+      host: data.host.present ? data.host.value : this.host,
+      port: data.port.present ? data.port.value : this.port,
+      keyType: data.keyType.present ? data.keyType.value : this.keyType,
+      fingerprintSha256: data.fingerprintSha256.present
+          ? data.fingerprintSha256.value
+          : this.fingerprintSha256,
+      firstSeenAt:
+          data.firstSeenAt.present ? data.firstSeenAt.value : this.firstSeenAt,
+      lastSeenAt:
+          data.lastSeenAt.present ? data.lastSeenAt.value : this.lastSeenAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KnownHostRecord(')
+          ..write('id: $id, ')
+          ..write('host: $host, ')
+          ..write('port: $port, ')
+          ..write('keyType: $keyType, ')
+          ..write('fingerprintSha256: $fingerprintSha256, ')
+          ..write('firstSeenAt: $firstSeenAt, ')
+          ..write('lastSeenAt: $lastSeenAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, host, port, keyType, fingerprintSha256, firstSeenAt, lastSeenAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is KnownHostRecord &&
+          other.id == this.id &&
+          other.host == this.host &&
+          other.port == this.port &&
+          other.keyType == this.keyType &&
+          other.fingerprintSha256 == this.fingerprintSha256 &&
+          other.firstSeenAt == this.firstSeenAt &&
+          other.lastSeenAt == this.lastSeenAt);
+}
+
+class KnownHostsTableCompanion extends UpdateCompanion<KnownHostRecord> {
+  final Value<String> id;
+  final Value<String> host;
+  final Value<int> port;
+  final Value<String> keyType;
+  final Value<String> fingerprintSha256;
+  final Value<DateTime> firstSeenAt;
+  final Value<DateTime> lastSeenAt;
+  final Value<int> rowid;
+  const KnownHostsTableCompanion({
+    this.id = const Value.absent(),
+    this.host = const Value.absent(),
+    this.port = const Value.absent(),
+    this.keyType = const Value.absent(),
+    this.fingerprintSha256 = const Value.absent(),
+    this.firstSeenAt = const Value.absent(),
+    this.lastSeenAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  KnownHostsTableCompanion.insert({
+    required String id,
+    required String host,
+    this.port = const Value.absent(),
+    required String keyType,
+    required String fingerprintSha256,
+    required DateTime firstSeenAt,
+    required DateTime lastSeenAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        host = Value(host),
+        keyType = Value(keyType),
+        fingerprintSha256 = Value(fingerprintSha256),
+        firstSeenAt = Value(firstSeenAt),
+        lastSeenAt = Value(lastSeenAt);
+  static Insertable<KnownHostRecord> custom({
+    Expression<String>? id,
+    Expression<String>? host,
+    Expression<int>? port,
+    Expression<String>? keyType,
+    Expression<String>? fingerprintSha256,
+    Expression<DateTime>? firstSeenAt,
+    Expression<DateTime>? lastSeenAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (host != null) 'host': host,
+      if (port != null) 'port': port,
+      if (keyType != null) 'key_type': keyType,
+      if (fingerprintSha256 != null) 'fingerprint_sha256': fingerprintSha256,
+      if (firstSeenAt != null) 'first_seen_at': firstSeenAt,
+      if (lastSeenAt != null) 'last_seen_at': lastSeenAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  KnownHostsTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? host,
+      Value<int>? port,
+      Value<String>? keyType,
+      Value<String>? fingerprintSha256,
+      Value<DateTime>? firstSeenAt,
+      Value<DateTime>? lastSeenAt,
+      Value<int>? rowid}) {
+    return KnownHostsTableCompanion(
+      id: id ?? this.id,
+      host: host ?? this.host,
+      port: port ?? this.port,
+      keyType: keyType ?? this.keyType,
+      fingerprintSha256: fingerprintSha256 ?? this.fingerprintSha256,
+      firstSeenAt: firstSeenAt ?? this.firstSeenAt,
+      lastSeenAt: lastSeenAt ?? this.lastSeenAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (host.present) {
+      map['host'] = Variable<String>(host.value);
+    }
+    if (port.present) {
+      map['port'] = Variable<int>(port.value);
+    }
+    if (keyType.present) {
+      map['key_type'] = Variable<String>(keyType.value);
+    }
+    if (fingerprintSha256.present) {
+      map['fingerprint_sha256'] = Variable<String>(fingerprintSha256.value);
+    }
+    if (firstSeenAt.present) {
+      map['first_seen_at'] = Variable<DateTime>(firstSeenAt.value);
+    }
+    if (lastSeenAt.present) {
+      map['last_seen_at'] = Variable<DateTime>(lastSeenAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('KnownHostsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('host: $host, ')
+          ..write('port: $port, ')
+          ..write('keyType: $keyType, ')
+          ..write('fingerprintSha256: $fingerprintSha256, ')
+          ..write('firstSeenAt: $firstSeenAt, ')
+          ..write('lastSeenAt: $lastSeenAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$VaultDatabase extends GeneratedDatabase {
   _$VaultDatabase(QueryExecutor e) : super(e);
   $VaultDatabaseManager get managers => $VaultDatabaseManager(this);
@@ -3623,6 +4014,10 @@ abstract class _$VaultDatabase extends GeneratedDatabase {
       $VaultMetadataTableTable(this);
   late final $SyncTombstonesTableTable syncTombstonesTable =
       $SyncTombstonesTableTable(this);
+  late final $KnownHostsTableTable knownHostsTable =
+      $KnownHostsTableTable(this);
+  late final Index knownHostsHostPortIdx = Index('known_hosts_host_port_idx',
+      'CREATE INDEX known_hosts_host_port_idx ON known_hosts (host, port)');
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3634,7 +4029,9 @@ abstract class _$VaultDatabase extends GeneratedDatabase {
         snippetsTable,
         vaultSettingsTable,
         vaultMetadataTable,
-        syncTombstonesTable
+        syncTombstonesTable,
+        knownHostsTable,
+        knownHostsHostPortIdx
       ];
 }
 
@@ -5348,6 +5745,212 @@ typedef $$SyncTombstonesTableTableProcessedTableManager = ProcessedTableManager<
     ),
     SyncTombstoneRecord,
     PrefetchHooks Function()>;
+typedef $$KnownHostsTableTableCreateCompanionBuilder = KnownHostsTableCompanion
+    Function({
+  required String id,
+  required String host,
+  Value<int> port,
+  required String keyType,
+  required String fingerprintSha256,
+  required DateTime firstSeenAt,
+  required DateTime lastSeenAt,
+  Value<int> rowid,
+});
+typedef $$KnownHostsTableTableUpdateCompanionBuilder = KnownHostsTableCompanion
+    Function({
+  Value<String> id,
+  Value<String> host,
+  Value<int> port,
+  Value<String> keyType,
+  Value<String> fingerprintSha256,
+  Value<DateTime> firstSeenAt,
+  Value<DateTime> lastSeenAt,
+  Value<int> rowid,
+});
+
+class $$KnownHostsTableTableFilterComposer
+    extends Composer<_$VaultDatabase, $KnownHostsTableTable> {
+  $$KnownHostsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get host => $composableBuilder(
+      column: $table.host, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get port => $composableBuilder(
+      column: $table.port, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get keyType => $composableBuilder(
+      column: $table.keyType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fingerprintSha256 => $composableBuilder(
+      column: $table.fingerprintSha256,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get firstSeenAt => $composableBuilder(
+      column: $table.firstSeenAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSeenAt => $composableBuilder(
+      column: $table.lastSeenAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$KnownHostsTableTableOrderingComposer
+    extends Composer<_$VaultDatabase, $KnownHostsTableTable> {
+  $$KnownHostsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get host => $composableBuilder(
+      column: $table.host, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get port => $composableBuilder(
+      column: $table.port, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get keyType => $composableBuilder(
+      column: $table.keyType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fingerprintSha256 => $composableBuilder(
+      column: $table.fingerprintSha256,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get firstSeenAt => $composableBuilder(
+      column: $table.firstSeenAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSeenAt => $composableBuilder(
+      column: $table.lastSeenAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$KnownHostsTableTableAnnotationComposer
+    extends Composer<_$VaultDatabase, $KnownHostsTableTable> {
+  $$KnownHostsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get host =>
+      $composableBuilder(column: $table.host, builder: (column) => column);
+
+  GeneratedColumn<int> get port =>
+      $composableBuilder(column: $table.port, builder: (column) => column);
+
+  GeneratedColumn<String> get keyType =>
+      $composableBuilder(column: $table.keyType, builder: (column) => column);
+
+  GeneratedColumn<String> get fingerprintSha256 => $composableBuilder(
+      column: $table.fingerprintSha256, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get firstSeenAt => $composableBuilder(
+      column: $table.firstSeenAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSeenAt => $composableBuilder(
+      column: $table.lastSeenAt, builder: (column) => column);
+}
+
+class $$KnownHostsTableTableTableManager extends RootTableManager<
+    _$VaultDatabase,
+    $KnownHostsTableTable,
+    KnownHostRecord,
+    $$KnownHostsTableTableFilterComposer,
+    $$KnownHostsTableTableOrderingComposer,
+    $$KnownHostsTableTableAnnotationComposer,
+    $$KnownHostsTableTableCreateCompanionBuilder,
+    $$KnownHostsTableTableUpdateCompanionBuilder,
+    (
+      KnownHostRecord,
+      BaseReferences<_$VaultDatabase, $KnownHostsTableTable, KnownHostRecord>
+    ),
+    KnownHostRecord,
+    PrefetchHooks Function()> {
+  $$KnownHostsTableTableTableManager(
+      _$VaultDatabase db, $KnownHostsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$KnownHostsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$KnownHostsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$KnownHostsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> host = const Value.absent(),
+            Value<int> port = const Value.absent(),
+            Value<String> keyType = const Value.absent(),
+            Value<String> fingerprintSha256 = const Value.absent(),
+            Value<DateTime> firstSeenAt = const Value.absent(),
+            Value<DateTime> lastSeenAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KnownHostsTableCompanion(
+            id: id,
+            host: host,
+            port: port,
+            keyType: keyType,
+            fingerprintSha256: fingerprintSha256,
+            firstSeenAt: firstSeenAt,
+            lastSeenAt: lastSeenAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String host,
+            Value<int> port = const Value.absent(),
+            required String keyType,
+            required String fingerprintSha256,
+            required DateTime firstSeenAt,
+            required DateTime lastSeenAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              KnownHostsTableCompanion.insert(
+            id: id,
+            host: host,
+            port: port,
+            keyType: keyType,
+            fingerprintSha256: fingerprintSha256,
+            firstSeenAt: firstSeenAt,
+            lastSeenAt: lastSeenAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$KnownHostsTableTableProcessedTableManager = ProcessedTableManager<
+    _$VaultDatabase,
+    $KnownHostsTableTable,
+    KnownHostRecord,
+    $$KnownHostsTableTableFilterComposer,
+    $$KnownHostsTableTableOrderingComposer,
+    $$KnownHostsTableTableAnnotationComposer,
+    $$KnownHostsTableTableCreateCompanionBuilder,
+    $$KnownHostsTableTableUpdateCompanionBuilder,
+    (
+      KnownHostRecord,
+      BaseReferences<_$VaultDatabase, $KnownHostsTableTable, KnownHostRecord>
+    ),
+    KnownHostRecord,
+    PrefetchHooks Function()>;
 
 class $VaultDatabaseManager {
   final _$VaultDatabase _db;
@@ -5366,4 +5969,6 @@ class $VaultDatabaseManager {
       $$VaultMetadataTableTableTableManager(_db, _db.vaultMetadataTable);
   $$SyncTombstonesTableTableTableManager get syncTombstonesTable =>
       $$SyncTombstonesTableTableTableManager(_db, _db.syncTombstonesTable);
+  $$KnownHostsTableTableTableManager get knownHostsTable =>
+      $$KnownHostsTableTableTableManager(_db, _db.knownHostsTable);
 }

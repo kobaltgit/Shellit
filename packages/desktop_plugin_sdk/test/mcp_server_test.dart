@@ -11,7 +11,8 @@ void main() {
     late int testPort;
 
     setUp(() async {
-      server = McpServerService(port: 0); // Port 0 binds to an available random port
+      server =
+          McpServerService(port: 0); // Port 0 binds to an available random port
       testPort = await server.start();
     });
 
@@ -106,7 +107,8 @@ void main() {
       client.close();
     });
 
-    test('executes tool handler via tools/call and records audit log', () async {
+    test('executes tool handler via tools/call and records audit log',
+        () async {
       server.setToolHandler((toolName, args) async {
         if (toolName == 'shellit_list_servers') {
           return {
@@ -152,11 +154,13 @@ void main() {
       client.close();
     });
 
-    test('serves audit logs at /logs and clears them at /api/logs/clear', () async {
+    test('serves audit logs at /logs and clears them at /api/logs/clear',
+        () async {
       final client = HttpClient();
 
       // 1. Fetch /logs
-      final getReq = await client.getUrl(Uri.parse('http://127.0.0.1:$testPort/logs'));
+      final getReq =
+          await client.getUrl(Uri.parse('http://127.0.0.1:$testPort/logs'));
       final getRes = await getReq.close();
       expect(getRes.statusCode, equals(HttpStatus.ok));
       final getBody = await utf8.decoder.bind(getRes).join();
@@ -164,7 +168,8 @@ void main() {
       expect(getJson.containsKey('logs'), isTrue);
 
       // 2. Clear via /api/logs/clear
-      final postReq = await client.postUrl(Uri.parse('http://127.0.0.1:$testPort/api/logs/clear'));
+      final postReq = await client
+          .postUrl(Uri.parse('http://127.0.0.1:$testPort/api/logs/clear'));
       final postRes = await postReq.close();
       expect(postRes.statusCode, equals(HttpStatus.ok));
 

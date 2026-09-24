@@ -17,6 +17,7 @@ class HostEntity {
   final OsType osType;
   final int keepAliveIntervalSeconds;
   final bool dangerousCommandProtection;
+  final bool isReadOnly;
   final int? lastPingLatencyMs;
   final DateTime? lastConnectedAt;
   final DateTime createdAt;
@@ -36,6 +37,7 @@ class HostEntity {
     this.osType = OsType.genericServer,
     this.keepAliveIntervalSeconds = 30,
     this.dangerousCommandProtection = false,
+    this.isReadOnly = false,
     this.lastPingLatencyMs,
     this.lastConnectedAt,
     required this.createdAt,
@@ -62,6 +64,7 @@ class HostEntity {
     OsType? osType,
     int? keepAliveIntervalSeconds,
     bool? dangerousCommandProtection,
+    bool? isReadOnly,
     int? lastPingLatencyMs,
     DateTime? lastConnectedAt,
     DateTime? createdAt,
@@ -83,6 +86,7 @@ class HostEntity {
           keepAliveIntervalSeconds ?? this.keepAliveIntervalSeconds,
       dangerousCommandProtection:
           dangerousCommandProtection ?? this.dangerousCommandProtection,
+      isReadOnly: isReadOnly ?? this.isReadOnly,
       lastPingLatencyMs: lastPingLatencyMs ?? this.lastPingLatencyMs,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
       createdAt: createdAt ?? this.createdAt,

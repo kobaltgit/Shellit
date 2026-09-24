@@ -796,4 +796,3 @@ class _SftpConflictDialogState extends State<SftpConflictDialog> {
     );
   }
 }
-

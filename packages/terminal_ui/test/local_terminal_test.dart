@@ -101,12 +101,15 @@ void main() {
   });
 
   group('LocalTerminalSession Tests', () {
-    test('LocalTerminalSession outputStream supports multiple listeners and terminates cleanly', () async {
+    test(
+        'LocalTerminalSession outputStream supports multiple listeners and terminates cleanly',
+        () async {
       try {
         const detector = LocalShellDetector();
         final shells = await detector.detectAvailableShells();
         expect(shells, isNotEmpty);
-        final defaultShell = shells.firstWhere((s) => s.isDefault, orElse: () => shells.first);
+        final defaultShell =
+            shells.firstWhere((s) => s.isDefault, orElse: () => shells.first);
 
         final session = await LocalTerminalSession.start(
           profile: defaultShell,
@@ -136,4 +139,3 @@ void main() {
     });
   });
 }
-

@@ -134,7 +134,8 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
 
     if (isWindows) {
       // e.g. C:\Users\Kobalt\Docs
-      final parts = path.split(RegExp(r'[\\/]')).where((p) => p.isNotEmpty).toList();
+      final parts =
+          path.split(RegExp(r'[\\/]')).where((p) => p.isNotEmpty).toList();
       String accumulated = '';
       for (int i = 0; i < parts.length; i++) {
         final part = parts[i];
@@ -199,7 +200,8 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
           // Go Up (Parent)
           IconButton(
             icon: const Icon(Icons.arrow_upward, size: 15),
-            tooltip: context.tr('sftp.go_up', defaultText: 'Up to parent folder'),
+            tooltip:
+                context.tr('sftp.go_up', defaultText: 'Up to parent folder'),
             onPressed: widget.onNavigateUp,
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.all(4),
@@ -209,7 +211,8 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
           // Home (~)
           IconButton(
             icon: const Icon(Icons.home_outlined, size: 15),
-            tooltip: context.tr('sftp.go_home', defaultText: 'Home directory (~)'),
+            tooltip:
+                context.tr('sftp.go_home', defaultText: 'Home directory (~)'),
             onPressed: widget.onNavigateHome,
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.all(4),
@@ -249,7 +252,8 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
                         ),
                         suffixIcon: IconButton(
                           icon: const Icon(Icons.close, size: 14),
-                          tooltip: context.tr('common.cancel', defaultText: 'Cancel'),
+                          tooltip: context.tr('common.cancel',
+                              defaultText: 'Cancel'),
                           onPressed: _cancelEditing,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -264,7 +268,8 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
                     decoration: BoxDecoration(
                       color: ShellitColors.obsidianBackground,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: ShellitColors.border.withValues(alpha: 0.8)),
+                      border: Border.all(
+                          color: ShellitColors.border.withValues(alpha: 0.8)),
                     ),
                     child: Row(
                       children: [
@@ -278,11 +283,14 @@ class _SftpBreadcrumbsBarState extends State<SftpBreadcrumbsBar> {
                                   _BreadcrumbChip(
                                     segment: segments[i],
                                     isLast: i == segments.length - 1,
-                                    onTap: () => widget.onNavigate(segments[i].fullPath),
+                                    onTap: () =>
+                                        widget.onNavigate(segments[i].fullPath),
                                   ),
-                                  if (i < segments.length - 1 && segments[i].name != '/')
+                                  if (i < segments.length - 1 &&
+                                      segments[i].name != '/')
                                     const Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 2),
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 2),
                                       child: Icon(
                                         Icons.chevron_right,
                                         size: 14,
@@ -347,9 +355,8 @@ class _BreadcrumbChip extends StatelessWidget {
             fontSize: 11,
             fontFamily: 'JetBrains Mono',
             fontWeight: isLast ? FontWeight.w600 : FontWeight.normal,
-            color: isLast
-                ? ShellitColors.accentCyan
-                : ShellitColors.textSecondary,
+            color:
+                isLast ? ShellitColors.accentCyan : ShellitColors.textSecondary,
           ),
         ),
       ),

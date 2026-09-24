@@ -247,6 +247,7 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
       service: localizationService,
       locale: effectiveLocale,
       child: MaterialApp(
+        navigatorKey: ref.watch(rootNavigatorKeyProvider),
         title: 'Shellit',
         debugShowCheckedModeBanner: false,
         theme: ShellitTheme.obsidianDarkTheme,

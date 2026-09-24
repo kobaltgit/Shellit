@@ -55,7 +55,7 @@ class SyncManager {
     if (!isInitialized) {
       final record = await (_db.select(_db.vaultMetadataTable)
             ..where((t) => t.metaKey.equals('open_session_key')))
-        .getSingleOrNull();
+          .getSingleOrNull();
       if (record != null && record.metaValue.isNotEmpty) {
         return SecretKey(CryptoUtils.hexToBytes(record.metaValue));
       }

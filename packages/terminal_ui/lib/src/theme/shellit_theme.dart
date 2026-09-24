@@ -14,11 +14,17 @@ class ShellitColors {
   // Borders & Dividers
   static const Color border = Color(0xFF2A2F4C);
   static const Color borderLight = Color(0xFF383F66);
-  static const Color borderFocus = Color(0xFF3B82F6);
+  static const Color borderFocus = Color(0xFF7BE113);
 
-  // Accent & Brand Colors
+  // Accent & Brand Colors (Obsidian Lime identity)
+  static const Color accentLime = Color(0xFF7BE113); // Shellit Logo Lime
+  static const Color accentLimeStart = Color(0xFF5FB300); // CTA gradient start
+  static const Color accentLimeEnd = Color(0xFF8AEB1A); // CTA gradient end
+  static const Color accentLimeGlow = Color(0x617BE113); // rgba(123, 225, 19, 0.38)
+
+  /// Legacy alias maintained for backwards compatibility, redirected to brand lime
+  static const Color accentCyan = accentLime;
   static const Color accentBlue = Color(0xFF3B82F6);
-  static const Color accentCyan = Color(0xFF06B6D4);
   static const Color accentPurple = Color(0xFF8B5CF6);
 
   // Status & Health Colors
@@ -53,12 +59,12 @@ class ShellitTheme {
     return base.copyWith(
       scaffoldBackgroundColor: ShellitColors.obsidianBackground,
       colorScheme: const ColorScheme.dark(
-        primary: ShellitColors.accentBlue,
-        secondary: ShellitColors.accentCyan,
+        primary: ShellitColors.accentLime,
+        secondary: ShellitColors.accentLime,
         surface: ShellitColors.obsidianCard,
         error: ShellitColors.statusRed,
-        onPrimary: Colors.white,
-        onSecondary: Colors.white,
+        onPrimary: Color(0xFF0D0F12),
+        onSecondary: Color(0xFF0D0F12),
         onSurface: ShellitColors.textPrimary,
         onError: Colors.white,
       ),
@@ -103,7 +109,7 @@ class ShellitTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide:
-              const BorderSide(color: ShellitColors.accentBlue, width: 1.5),
+              const BorderSide(color: ShellitColors.accentLime, width: 1.5),
         ),
       ),
       dialogTheme: DialogThemeData(

@@ -21,6 +21,8 @@ class SessionConnectController {
   ISshClientService get _sshService => _ref.read(appSshClientServiceProvider);
   IKeyManager get _keyManager => _ref.read(appKeyManagerProvider);
   IHostRepository get _hostRepository => _ref.read(appHostRepositoryProvider);
+  IKnownHostRepository get _knownHostRepository =>
+      _ref.read(appKnownHostRepositoryProvider);
   IOsDetector get _osDetector => _ref.read(appOsDetectorProvider);
 
   void _triggerBackgroundOsDetection(HostEntity host, dynamic client) {
@@ -91,6 +93,68 @@ class SessionConnectController {
       final recorder = await createRecorder(host);
       session.recorder = recorder;
     }
+  }
+
+  /// Asynchronously verifies SSH server public key fingerprint against vault known hosts.
+  Future<bool> _verifyHostKey({
+    required String hostname,
+    required int port,
+    required String keyType,
+    required String fingerprintSha256,
+    String? expectedFingerprint,
+    bool isMismatch = false,
+  }) async {
+    final knownHost = await _knownHostRepository.findKnownHost(hostname, port);
+    if (knownHost != null && knownHost.fingerprintSha256 == fingerprintSha256) {
+      await _knownHostRepository.saveKnownHost(
+        knownHost.copyWith(lastSeenAt: DateTime.now()),
+      );
+      return true;
+    }
+
+    final hasMismatch =
+        knownHost != null && knownHost.fingerprintSha256 != fingerprintSha256;
+    final expFingerprint = knownHost?.fingerprintSha256;
+
+    final context = _ref.read(rootNavigatorKeyProvider).currentContext;
+    if (context == null || !context.mounted) {
+      AppLogger.w(
+        'Host key verification requested without mounted UI context for $hostname:$port',
+        tag: 'SessionConnectController',
+      );
+      return !hasMismatch;
+    }
+
+    final accepted = await HostKeyDialog.show(
+      context: context,
+      hostname: hostname,
+      port: port,
+      keyType: keyType,
+      fingerprintSha256: fingerprintSha256,
+      expectedFingerprint: expFingerprint,
+      isMismatch: hasMismatch,
+    );
+
+    if (accepted) {
+      final now = DateTime.now();
+      final entity = KnownHostEntity(
+        id:
+            knownHost?.id ??
+            'kh_${hostname}_${port}_${now.millisecondsSinceEpoch}',
+        host: hostname,
+        port: port,
+        keyType: keyType,
+        fingerprintSha256: fingerprintSha256,
+        firstSeenAt: knownHost?.firstSeenAt ?? now,
+        lastSeenAt: now,
+      );
+      await _knownHostRepository.saveKnownHost(entity);
+      AppLogger.i(
+        'Host key fingerprint for $hostname:$port saved/updated in vault as trusted.',
+        tag: 'SessionConnectController',
+      );
+    }
+    return accepted;
   }
 
   /// Connect and return an interactive terminal session
@@ -167,6 +231,8 @@ class SessionConnectController {
       password: password,
       privateKeyBytes: keyBytes,
       recorder: recorder,
+      onVerifyHostKey: _verifyHostKey,
+      isReadOnly: host.isReadOnly,
       onProgress: onProgress,
     );
 
@@ -232,6 +298,7 @@ class SessionConnectController {
       host: host,
       password: password,
       privateKeyBytes: keyBytes,
+      onVerifyHostKey: _verifyHostKey,
       onProgress: onProgress,
     );
 

@@ -33,12 +33,27 @@ class VaultCryptoService {
       hashLength: argon2HashLength,
     );
 
-    final passwordKey = SecretKey(utf8.encode(password));
-    final derived = await argon2id.deriveKey(
-      secretKey: passwordKey,
-      nonce: salt,
+    final passwordBytes = Uint8List.fromList(utf8.encode(password));
+    final passwordKey = SecretKeyData(
+      passwordBytes,
+      overwriteWhenDestroyed: true,
     );
-    return derived;
+    try {
+      final derived = await argon2id.deriveKey(
+        secretKey: passwordKey,
+        nonce: salt,
+      );
+      final derivedBytes = await derived.extractBytes();
+      final secureDerivedKey = SecretKeyData(
+        Uint8List.fromList(derivedBytes),
+        overwriteWhenDestroyed: true,
+      );
+      derived.destroy();
+      return secureDerivedKey;
+    } finally {
+      passwordKey.destroy();
+      zeroize(passwordBytes);
+    }
   }
 
   /// Encrypts [clearText] using AES-256-GCM with [secretKey].
@@ -145,11 +160,27 @@ class VaultCryptoService {
   /// mutation is safely skipped.
   static void zeroize(List<int> buffer) {
     try {
-      for (var i = 0; i < buffer.length; i++) {
-        buffer[i] = 0;
-      }
+      buffer.fillRange(0, buffer.length, 0);
     } on UnsupportedError {
       // Buffer is unmodifiable, cannot zeroize in-place.
+    } catch (_) {
+      try {
+        for (var i = 0; i < buffer.length; i++) {
+          buffer[i] = 0;
+        }
+      } catch (_) {}
+    }
+  }
+
+  /// Safely destroys a [SecretKey] by invoking its [SecretKey.destroy] method.
+  /// If the key is backed by [SecretKeyData] with [overwriteWhenDestroyed],
+  /// this also purges and zeroizes its underlying bytes from memory.
+  static void destroySecretKey(SecretKey? key) {
+    if (key == null || key.isDestroyed) return;
+    try {
+      key.destroy();
+    } catch (_) {
+      // In case destroy throws or is unsupported.
     }
   }
 

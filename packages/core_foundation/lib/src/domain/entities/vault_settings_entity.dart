@@ -111,8 +111,7 @@ class VaultSettingsEntity {
           autoReconnectOnRestore ?? this.autoReconnectOnRestore,
       multilinePasteDefense:
           multilinePasteDefense ?? this.multilinePasteDefense,
-      enableClickableLinks:
-          enableClickableLinks ?? this.enableClickableLinks,
+      enableClickableLinks: enableClickableLinks ?? this.enableClickableLinks,
     );
   }
 

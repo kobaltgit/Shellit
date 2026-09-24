@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'feedback_report_dialog.dart';
 
 /// Card component displaying the "About Shellit" section in the settings screen.
 /// Inspired by modern terminal about blocks with quick action links,
@@ -14,7 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutSettingsCard extends ConsumerStatefulWidget {
   const AboutSettingsCard({super.key});
 
-  static const String defaultAppVersion = '0.8.3';
+  static const String defaultAppVersion = '0.8.4';
   static String appVersion = defaultAppVersion;
   static const String appReleaseChannel = 'α';
   static const String githubRepoUrl = 'https://github.com/kobaltgit/Shellit';
@@ -28,6 +29,7 @@ class AboutSettingsCard extends ConsumerStatefulWidget {
 class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
   bool _isCheckingUpdates = false;
   String _currentVersion = AboutSettingsCard.appVersion;
+  String _buildNumber = '';
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
       if (mounted && info.version.isNotEmpty) {
         setState(() {
           _currentVersion = info.version;
+          _buildNumber = info.buildNumber;
           AboutSettingsCard.appVersion = info.version;
         });
       }
@@ -156,7 +159,9 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _currentVersion,
+                  _buildNumber.isNotEmpty
+                      ? 'v$_currentVersion (Build $_buildNumber)'
+                      : 'v$_currentVersion',
                   style: const TextStyle(
                     color: ShellitColors.textMuted,
                     fontSize: 13,
@@ -185,7 +190,7 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
                   height: 14,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: ShellitColors.accentCyan,
+                    color: ShellitColors.accentLime,
                   ),
                 )
               : const Icon(
@@ -203,6 +208,35 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
                     'settings.about.check_updates_btn',
                     defaultText: 'Check for updates',
                   ),
+            style: const TextStyle(
+              fontSize: 13,
+              color: ShellitColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            backgroundColor: ShellitColors.obsidianBackground,
+            foregroundColor: ShellitColors.textPrimary,
+            side: const BorderSide(color: ShellitColors.border),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          onPressed: () => FeedbackReportDialog.show(context),
+          icon: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 16,
+            color: ShellitColors.accentLime,
+          ),
+          label: Text(
+            context.tr(
+              'settings.about.send_feedback_btn',
+              defaultText: 'Send Feedback / Bug Report',
+            ),
             style: const TextStyle(
               fontSize: 13,
               color: ShellitColors.textPrimary,
@@ -361,28 +395,54 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
             url: htmlUrl,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.tr(
-                  'settings.about.latest_version_installed',
-                  params: {'version': _currentVersion},
-                  defaultText:
-                      'You have the latest version of Shellit installed ($_currentVersion).',
-                ),
-              ),
-              backgroundColor: ShellitColors.statusGreen,
-              duration: const Duration(seconds: 3),
+          _showSnackBar(
+            context.tr(
+              'settings.about.latest_version_installed',
+              params: {'version': _currentVersion},
+              defaultText:
+                  'You have the latest version of Shellit installed ($_currentVersion).',
             ),
+            backgroundColor: ShellitColors.statusGreen,
           );
         }
+      } else if (response.statusCode == 403 || response.statusCode == 429) {
+        _showSnackBar(
+          context.tr(
+            'settings.about.rate_limit_error',
+            defaultText:
+                'GitHub API rate limit exceeded. Please check releases manually on GitHub.',
+          ),
+          backgroundColor: ShellitColors.statusYellow,
+        );
+      } else if (response.statusCode == 404) {
+        _showSnackBar(
+          context.tr(
+            'settings.about.no_releases_found',
+            defaultText:
+                'No remote releases found. You are running the latest preview build.',
+          ),
+          backgroundColor: ShellitColors.obsidianCard,
+        );
       } else {
-        // Fallback if rate limited or releases not found yet
-        _notifyUpdateCheckFallback();
+        _showSnackBar(
+          context.tr(
+            'settings.about.error_checking_updates',
+            defaultText:
+                'Could not check for updates (HTTP ${response.statusCode}).',
+          ),
+          backgroundColor: ShellitColors.statusRed,
+        );
       }
     } catch (_) {
       if (mounted) {
-        _notifyUpdateCheckFallback();
+        _showSnackBar(
+          context.tr(
+            'settings.about.network_error',
+            defaultText:
+                'Network connection failed. Could not check for updates.',
+          ),
+          backgroundColor: ShellitColors.statusRed,
+        );
       }
     } finally {
       if (mounted) {
@@ -391,18 +451,11 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
     }
   }
 
-  void _notifyUpdateCheckFallback() {
+  void _showSnackBar(String message, {required Color backgroundColor}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          context.tr(
-            'settings.about.latest_version_installed',
-            params: {'version': _currentVersion},
-            defaultText:
-                'You have the latest version of Shellit installed ($_currentVersion).',
-          ),
-        ),
-        backgroundColor: ShellitColors.obsidianCard,
+        content: Text(message),
+        backgroundColor: backgroundColor,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -410,16 +463,37 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
 
   bool _isVersionGreater(String remote, String current) {
     try {
-      final remoteParts = remote
+      String cleanVersion(String v) {
+        var s = v.trim();
+        if (s.startsWith('v') || s.startsWith('V')) {
+          s = s.substring(1);
+        }
+        if (s.contains('+')) {
+          s = s.split('+').first;
+        }
+        if (s.contains('-')) {
+          s = s.split('-').first;
+        }
+        return s;
+      }
+
+      final cleanRemote = cleanVersion(remote);
+      final cleanCurrent = cleanVersion(current);
+
+      final remoteParts = cleanRemote
           .split('.')
-          .map((e) => int.tryParse(e.replaceAll(RegExp(r'\D'), '')) ?? 0)
+          .map((e) => int.tryParse(e) ?? 0)
           .toList();
-      final currentParts = current
+      final currentParts = cleanCurrent
           .split('.')
-          .map((e) => int.tryParse(e.replaceAll(RegExp(r'\D'), '')) ?? 0)
+          .map((e) => int.tryParse(e) ?? 0)
           .toList();
 
-      for (int i = 0; i < 3; i++) {
+      final maxLen = remoteParts.length > currentParts.length
+          ? remoteParts.length
+          : currentParts.length;
+
+      for (int i = 0; i < maxLen; i++) {
         final r = i < remoteParts.length ? remoteParts[i] : 0;
         final c = i < currentParts.length ? currentParts[i] : 0;
         if (r > c) return true;

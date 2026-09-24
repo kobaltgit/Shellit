@@ -21,6 +21,7 @@ export 'src/domain/entities/session_recording_entity.dart';
 export 'src/domain/entities/ai_models.dart';
 export 'src/domain/entities/local_shell_entity.dart';
 export 'src/domain/entities/workspace_tab_state.dart';
+export 'src/domain/entities/known_host_entity.dart';
 
 // Interface Contracts (Contract-First Design)
 export 'src/interfaces/storage_interfaces.dart';

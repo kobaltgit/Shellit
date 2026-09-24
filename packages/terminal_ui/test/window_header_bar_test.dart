@@ -4,7 +4,8 @@ import 'package:terminal_ui/terminal_ui.dart';
 
 void main() {
   group('WindowHeaderBar Widget Tests', () {
-    testWidgets('renders logo, Quick Connect button, Ctrl+K button, and window controls',
+    testWidgets(
+        'renders logo, Quick Connect button, Ctrl+K button, and window controls',
         (tester) async {
       bool quickConnectTapped = false;
       bool omniBarTapped = false;

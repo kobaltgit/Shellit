@@ -70,8 +70,23 @@ class TerminalLinkDetector {
   /// Cleans trailing punctuation often attached to URLs and file paths in logs.
   static String _trimTrailingPunctuation(String input) {
     var trimmed = input;
-    const trailingChars = {'.', ',', ';', ':', '!', '?', ')', ']', '}', '"', "'", '`', '>'};
-    while (trimmed.isNotEmpty && trailingChars.contains(trimmed[trimmed.length - 1])) {
+    const trailingChars = {
+      '.',
+      ',',
+      ';',
+      ':',
+      '!',
+      '?',
+      ')',
+      ']',
+      '}',
+      '"',
+      "'",
+      '`',
+      '>'
+    };
+    while (trimmed.isNotEmpty &&
+        trailingChars.contains(trimmed[trimmed.length - 1])) {
       // If closing bracket/paren, only trim if no matching open bracket in trimmed
       final last = trimmed[trimmed.length - 1];
       if (last == ')' && trimmed.contains('(')) break;
@@ -83,7 +98,8 @@ class TerminalLinkDetector {
   }
 
   /// Extracts path and optional line/column number from string like "/var/log/syslog:42:10".
-  static ({String cleanPath, int? line, int? col}) _extractPathAndLine(String raw) {
+  static ({String cleanPath, int? line, int? col}) _extractPathAndLine(
+      String raw) {
     final lineMatch = RegExp(r':(\d+)(?::(\d+))?$').firstMatch(raw);
     if (lineMatch != null) {
       final line = int.tryParse(lineMatch.group(1) ?? '');
@@ -133,7 +149,14 @@ class TerminalLinkDetector {
       var raw = m.group(0)!;
       var start = m.start;
       // If matched leading boundary character, strip it
-      if (raw.isNotEmpty && (raw.startsWith(' ') || raw.startsWith('\t') || raw.startsWith('(') || raw.startsWith('[') || raw.startsWith('{') || raw.startsWith('"') || raw.startsWith("'"))) {
+      if (raw.isNotEmpty &&
+          (raw.startsWith(' ') ||
+              raw.startsWith('\t') ||
+              raw.startsWith('(') ||
+              raw.startsWith('[') ||
+              raw.startsWith('{') ||
+              raw.startsWith('"') ||
+              raw.startsWith("'"))) {
         raw = raw.substring(1);
         start += 1;
       }
@@ -232,8 +255,10 @@ class TerminalLinkDetector {
           parsed.cleanPath != '/' &&
           parsed.cleanPath.split('/').where((s) => s.isNotEmpty).length >= 1) {
         // Exclude common cli flag false positives like /dev/null is ok, but not /v /f
-        final segments = parsed.cleanPath.split('/').where((s) => s.isNotEmpty).toList();
-        if (segments.length >= 2 || (segments.length == 1 && segments.first.length > 2)) {
+        final segments =
+            parsed.cleanPath.split('/').where((s) => s.isNotEmpty).toList();
+        if (segments.length >= 2 ||
+            (segments.length == 1 && segments.first.length > 2)) {
           occupiedRanges.add((m.start, end));
           matches.add(
             TerminalLinkMatch(
@@ -256,7 +281,8 @@ class TerminalLinkDetector {
 
   /// Finds link match at the specified [offset] within the [terminal] buffer.
   /// Seamlessly stitches together wrapped visual lines if line was broken across width.
-  static TerminalLinkMatch? findMatchAtOffset(Terminal terminal, CellOffset offset) {
+  static TerminalLinkMatch? findMatchAtOffset(
+      Terminal terminal, CellOffset offset) {
     final buffer = terminal.buffer;
     if (offset.y < 0 || offset.y >= buffer.lines.length) return null;
 
@@ -268,7 +294,8 @@ class TerminalLinkDetector {
 
     // 2. Locate end of continuous logical line
     var endRow = offset.y;
-    while (endRow < buffer.lines.length - 1 && buffer.lines[endRow + 1].isWrapped) {
+    while (endRow < buffer.lines.length - 1 &&
+        buffer.lines[endRow + 1].isWrapped) {
       endRow++;
     }
 
@@ -299,7 +326,8 @@ class TerminalLinkDetector {
 
     final allMatches = detectLinks(fullLogicalText);
     for (final match in allMatches) {
-      if (match.startIndex <= cursorCharIndex && cursorCharIndex < match.endIndex) {
+      if (match.startIndex <= cursorCharIndex &&
+          cursorCharIndex < match.endIndex) {
         return match;
       }
     }

@@ -42,6 +42,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
   late HostEnvironment _environment;
   late OsType _osType;
   late bool _dangerousCommandProtection;
+  late bool _isReadOnly;
   late bool _obscurePassword;
   String? _selectedKeyId;
 
@@ -69,6 +70,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
     _environment = h?.environment ?? HostEnvironment.defaultEnv;
     _osType = h?.osType ?? OsType.genericServer;
     _dangerousCommandProtection = h?.dangerousCommandProtection ?? false;
+    _isReadOnly = h?.isReadOnly ?? false;
     _obscurePassword = true;
     _selectedKeyId = h?.credentialRefId;
   }
@@ -180,6 +182,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
         tags: tags,
         folderId: _selectedFolderId,
         dangerousCommandProtection: _dangerousCommandProtection,
+        isReadOnly: _isReadOnly,
         lastPingLatencyMs: widget.initialHost?.lastPingLatencyMs,
         createdAt: widget.initialHost?.createdAt ?? now,
         updatedAt: now,
@@ -552,6 +555,38 @@ class _HostFormDialogState extends State<HostFormDialog> {
                   activeThumbColor: ShellitColors.statusRed,
                   onChanged: (val) {
                     setState(() => _dangerousCommandProtection = val);
+                  },
+                ),
+                const SizedBox(height: 10),
+
+                // Read-Only Session Mode switch
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    context.tr(
+                      'hosts.form.read_only_title',
+                      defaultText: 'Read-Only Session Mode',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    context.tr(
+                      'hosts.form.read_only_subtitle',
+                      defaultText:
+                          'Mutes keyboard input in terminal to protect server from accidental commands',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ShellitColors.textSecondary,
+                    ),
+                  ),
+                  value: _isReadOnly,
+                  activeThumbColor: ShellitColors.statusYellow,
+                  onChanged: (val) {
+                    setState(() => _isReadOnly = val);
                   },
                 ),
               ],

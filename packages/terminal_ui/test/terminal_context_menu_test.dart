@@ -60,7 +60,8 @@ void main() {
       expect(copiedLink, isFalse);
     });
 
-    testWidgets('renders Open File and Copy File Path when detectedLink is FilePath',
+    testWidgets(
+        'renders Open File and Copy File Path when detectedLink is FilePath',
         (tester) async {
       bool openedFile = false;
 

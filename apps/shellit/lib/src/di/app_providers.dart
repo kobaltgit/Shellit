@@ -1,9 +1,15 @@
 import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:desktop_plugin_sdk/desktop_plugin_sdk.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ssh_network_core/ssh_network_core.dart';
 import 'package:storage_vault/storage_vault.dart';
+
+/// Global root navigator key provider
+final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>((ref) {
+  return GlobalKey<NavigatorState>();
+});
 
 /// Crypto service provider
 final vaultCryptoServiceProvider = Provider<VaultCryptoService>((ref) {
@@ -67,6 +73,13 @@ final appSnippetRepositoryProvider = Provider<ISnippetRepository>((ref) {
   final db = ref.watch(vaultDatabaseProvider);
   final security = ref.watch(vaultSecurityContextProvider);
   return SnippetRepository(db: db, securityContext: security);
+});
+
+/// Concrete Known Host Repository Provider (TOFU)
+final appKnownHostRepositoryProvider = Provider<IKnownHostRepository>((ref) {
+  final db = ref.watch(vaultDatabaseProvider);
+  final security = ref.watch(vaultSecurityContextProvider);
+  return KnownHostRepository(db: db, securityContext: security);
 });
 
 /// Vault Backup Service Provider

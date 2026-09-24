@@ -86,9 +86,7 @@ class _MultilinePasteDialogState extends State<MultilinePasteDialog> {
       title: Row(
         children: [
           Icon(
-            isProd
-                ? Icons.warning_rounded
-                : Icons.content_paste_go_outlined,
+            isProd ? Icons.warning_rounded : Icons.content_paste_go_outlined,
             color: primaryColor,
             size: 24,
           ),

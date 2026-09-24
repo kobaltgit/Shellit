@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cryptography/cryptography.dart';
+import '../crypto/vault_crypto_service.dart';
 
 /// Centralized security context that holds the active [SecretKey] in RAM
 /// and notifies listeners of lock/unlock state changes.
@@ -25,6 +26,7 @@ class VaultSecurityContext {
 
   /// Locks the vault and zeroizes any references.
   void lock() {
+    VaultCryptoService.destroySecretKey(_activeMasterKey);
     _activeMasterKey = null;
     _lockStateController.add(false);
   }

@@ -127,7 +127,8 @@ void main() {
       await sub.cancel();
     });
 
-    test('forwards inputStream to session stdin', () async {
+    test('forwards inputStream to session stdin when isReadOnly is false',
+        () async {
       final written = <int>[];
       fakeSession._stdinController.stream.listen(written.addAll);
 
@@ -136,6 +137,75 @@ void main() {
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(utf8.decode(written), equals('ls -la\n'));
+    });
+
+    test('discards inputStream keystrokes when isReadOnly is true', () async {
+      final readOnlySession = TerminalSession(
+        id: 'term_readonly_test',
+        hostId: 'host_ro',
+        client: fakeClient,
+        sshSession: fakeSession,
+        isReadOnly: true,
+      );
+
+      final written = <int>[];
+      fakeSession._stdinController.stream.listen(written.addAll);
+
+      final input = utf8.encode('rm -rf / --no-preserve-root\n');
+      readOnlySession.inputStream.add(Uint8List.fromList(input));
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(written, isEmpty);
+
+      await readOnlySession.terminate();
+    });
+
+    test('supports dynamic toggling of isReadOnly at runtime', () async {
+      final written = <int>[];
+      fakeSession._stdinController.stream.listen(written.addAll);
+
+      // Initially false -> input is allowed
+      expect(session.isReadOnly, isFalse);
+      session.inputStream.add(Uint8List.fromList(utf8.encode('step1;')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(utf8.decode(written), equals('step1;'));
+
+      // Enable readOnly -> input is discarded
+      session.isReadOnly = true;
+      session.inputStream
+          .add(Uint8List.fromList(utf8.encode('dangerous_cmd;')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(utf8.decode(written), equals('step1;'));
+
+      // Disable readOnly -> input is accepted again
+      session.isReadOnly = false;
+      session.inputStream.add(Uint8List.fromList(utf8.encode('step2;')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(utf8.decode(written), equals('step1;step2;'));
+    });
+
+    test('streams remote stdout and stderr even when isReadOnly is true',
+        () async {
+      final readOnlySession = TerminalSession(
+        id: 'term_readonly_output',
+        hostId: 'host_ro',
+        client: fakeClient,
+        sshSession: fakeSession,
+        isReadOnly: true,
+      );
+
+      final received = <String>[];
+      final sub = readOnlySession.outputStream.listen((data) {
+        received.add(utf8.decode(data));
+      });
+
+      fakeSession.emitStdout('Remote logs\n');
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(received, contains('Remote logs\n'));
+
+      await sub.cancel();
+      await readOnlySession.terminate();
     });
 
     test('resize changes remote terminal dimensions', () {

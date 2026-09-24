@@ -621,9 +621,37 @@
   - [x] Универсальное модальное окно скачивания (`DownloadModal.astro`) с автоопределением ОС (Windows, Linux, Android, CLI).
   - [x] Диагностика и изоляция сервера Senko: обход занятых портов 80/443 (системный HAProxy) и 8090 (Vibestack).
   - [x] Развертывание Docker-стека в `/opt/shellit`: Nginx Alpine (`shellit_frontend`), PocketBase (`shellit_pocketbase` на внутреннем порту `8095`), Cloudflare Tunnel (`shellit_cloudflared`).
-  - [x] Архитектура Same-Origin: бесшовное проксирование `/api/` и `/_/` через Nginx на одном домене `https://shellit.top` без CORS-проблем.
-  - [x] Подробная инструкция и архитектурный манифест веб-агента в `docs/agents/AGENT_5_WEBSITE.md`.
-  - [ ] **IDEA-028:** Встроенный диалог отзывов и баг-репортов в приложении (раздел «О программе») с модальным окном (в стиле `FeedbackModal.astro`) и авто-отправкой в PocketBase (`https://shellit.top/api/collections/feedback_reports/records`).
+  - [x] **IDEA-028:** Встроенный диалог отзывов и баг-репортов в приложении (раздел «О программе») с модальным окном (`FeedbackReportDialog`) и авто-отправкой в PocketBase (`https://shellit.top/api/collections/feedback_reports/records`).
+  - [x] Синхронизация акцентной палитры приложения с фирменным цветом логотипа Shellit Logo Lime (`#7BE113`, градиент `#5FB300` -> `#8AEB1A`, свечение `rgba(123, 225, 19, 0.38)`).
+  - [x] Исправление парсинга semver с метаданными сборки (`+19`) и информативная обработка лимитов GitHub API (403/429) в карточке «О программе».
+
+---
+
+## Фаза 19: Фундаментальная безопасность и Zero-Trust архитектура (IDEA-029 — Релиз v0.8.4)
+- [x] Защита от Man-in-the-Middle (TOFU & Known Hosts):
+  - [x] Сущность `KnownHostEntity` в `packages/core_foundation` (`id`, `host`, `port`, `keyType`, `fingerprintSha256`, `firstSeenAt`, `lastSeenAt`).
+  - [x] Таблица `known_hosts` в Drift/SQLCipher (`packages/storage_vault`) с составным индексом `(host, port)` и автомиграцией на схему 4.
+  - [x] Репозиторий `KnownHostRepository` (поиск, добавление, удаление, реактивный стрим `watchAllKnownHosts()`).
+  - [x] Интеграция `onVerifyHostKey` в `SshClientService` (`packages/ssh_network_core`) через хуки библиотеки `dartssh2`.
+  - [x] Диалог первого подключения `HostKeyDialog` (`packages/terminal_ui`): показ отпечатка SHA256 и ASCII Randomart (алгоритм Drunken Bishop).
+  - [x] Защита от подмены ключа: аварийный разрыв и блокировка подключения при несовпадении сохраненного отпечатка (MitM Alert).
+- [x] Криптографическая строгость и честный Zero-Knowledge Vault:
+  - [x] Гарантированное зануление памяти: очистка буферов через `zeroize()` и вызов `SecretKey.destroy()` при блокировке хранилища.
+  - [x] Интеграция официальных тест-векторов RFC 9106 (Argon2id, Argon2i, Argon2d) в тестовый сьют `packages/storage_vault`.
+- [x] Zero-Trust песочница плагинов (`packages/desktop_plugin_sdk`):
+  - [x] Строгие HTTP-заголовки безопасности в `PluginStaticServer`: `Content-Security-Policy: connect-src 'none'`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`.
+  - [x] Изоляция хранилища `storageLocal` по `pluginId` с защитой от спуфинга параметров.
+  - [x] Поток событий выполнения команд плагинами `onCommandExecution`.
+- [x] Инженерная защита Production и режим Read-Only:
+  - [x] Поле `isReadOnly` в `HostEntity` и переключатель «Read-Only Session Mode» в форме добавления/редактирования хоста (`HostFormDialog`).
+  - [x] Аппаратное глушение клавиатурного ввода в PTY-канал в `TerminalSession` при `isReadOnly == true`.
+  - [x] Визуальный бейдж `[🔒 Read-Only]` в шапке экрана терминала, блокировка вставки и контекстных действий с всплывающим предупреждением.
+- [x] Интеграция в приложение (`apps/shellit`):
+  - [x] Регистрация провайдера `appKnownHostRepositoryProvider` и `rootNavigatorKeyProvider`.
+  - [x] Автоматическая проверка и вызов диалога верификации хост-кея в `SessionConnectController`.
+  - [x] Все 375 тестов монорепозитория пройдены (54/54 тестов `apps/shellit`, 123/123 `terminal_ui`, 72/72 `ssh_network_core`, 52/52 `storage_vault`, 51/51 `desktop_plugin_sdk`, 23/23 `core_foundation`).
+- [x] Релиз v0.8.4: Core Security Hardening (TOFU, Known Hosts, Drunken Bishop Randomart, Read-Only Sessions, Plugin CSP, RFC 9106 Vectors, Zeroize).
+
 
 
 

@@ -16,6 +16,10 @@ class TerminalSession implements ITerminalSession {
   final SSHSession _sshSession;
   ISessionRecorder? _recorder;
 
+  /// Whether the session is in read-only mode.
+  /// When true, input keystrokes are discarded and never written to remote PTY stdin.
+  bool isReadOnly;
+
   @override
   ISessionRecorder? get recorder => _recorder;
 
@@ -41,6 +45,7 @@ class TerminalSession implements ITerminalSession {
     required SSHClient client,
     required SSHSession sshSession,
     ISessionRecorder? recorder,
+    this.isReadOnly = false,
   })  : _client = client,
         _sshSession = sshSession,
         _recorder = recorder {
@@ -99,6 +104,13 @@ class TerminalSession implements ITerminalSession {
     _inputSub = _inputController.stream.listen(
       (data) {
         if (!_isTerminated) {
+          if (isReadOnly) {
+            AppLogger.d(
+              'Input keystrokes ignored: session $id is in read-only mode',
+              tag: 'TerminalSession',
+            );
+            return;
+          }
           if (recorder != null && recorder!.isRecording) {
             recorder!.recordInput(data);
           }

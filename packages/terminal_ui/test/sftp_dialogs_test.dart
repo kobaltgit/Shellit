@@ -114,7 +114,8 @@ void main() {
       expect(resultConfirm, isTrue);
     });
 
-    testWidgets('SftpConflictDialog returns overwrite decision and applyToAll flag',
+    testWidgets(
+        'SftpConflictDialog returns overwrite decision and applyToAll flag',
         (tester) async {
       SftpConflictResult? conflictResult;
 

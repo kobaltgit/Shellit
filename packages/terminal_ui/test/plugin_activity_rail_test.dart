@@ -17,7 +17,8 @@ void main() {
       expect(find.byType(ListView), findsNothing);
     });
 
-    testWidgets('renders plugin items with tooltips, active indicator and triggers onTap',
+    testWidgets(
+        'renders plugin items with tooltips, active indicator and triggers onTap',
         (tester) async {
       bool dockerTapped = false;
       bool mcpTapped = false;

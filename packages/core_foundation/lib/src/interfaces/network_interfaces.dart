@@ -126,6 +126,16 @@ abstract class ISftpSession {
   dynamic get underlyingClient => null;
 }
 
+/// Handler callback for verifying host keys during SSH handshake.
+typedef HostKeyVerifyCallback = Future<bool> Function({
+  required String hostname,
+  required int port,
+  required String keyType,
+  required String fingerprintSha256,
+  String? expectedFingerprint,
+  bool isMismatch,
+});
+
 /// Contract for SSH network core operations.
 abstract class ISshClientService {
   /// Connects and launches an interactive PTY shell session.
@@ -136,6 +146,8 @@ abstract class ISshClientService {
     List<int>? privateKeyBytes,
     String? passphrase,
     ISessionRecorder? recorder,
+    HostKeyVerifyCallback? onVerifyHostKey,
+    bool isReadOnly,
     void Function(String status)? onProgress,
   });
 
@@ -145,6 +157,7 @@ abstract class ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    HostKeyVerifyCallback? onVerifyHostKey,
     void Function(String status)? onProgress,
   });
 

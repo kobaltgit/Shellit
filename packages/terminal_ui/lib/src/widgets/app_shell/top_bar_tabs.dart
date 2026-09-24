@@ -86,7 +86,6 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     final vaultState = ref.watch(vaultProvider);

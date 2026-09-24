@@ -34,6 +34,10 @@ void main() {
         return {
           'statusCode': resp.statusCode,
           'contentType': resp.headers.contentType?.toString() ?? '',
+          'csp': resp.headers.value('content-security-policy') ?? '',
+          'xContentTypeOptions':
+              resp.headers.value('x-content-type-options') ?? '',
+          'xFrameOptions': resp.headers.value('x-frame-options') ?? '',
           'body': body,
         };
       } finally {
@@ -65,6 +69,28 @@ void main() {
       // 404 for non-existent file
       final notFound = await fetch('http://127.0.0.1:$port/missing.html');
       expect(notFound['statusCode'], 404);
+    });
+
+    test(
+        'serves strict security headers (CSP, nosniff, DENY) on file responses',
+        () async {
+      final port = await server.start(tempDir.path);
+      expect(port, greaterThan(0));
+
+      const expectedCsp =
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none';";
+
+      final indexResp = await fetch('http://127.0.0.1:$port/index.html');
+      expect(indexResp['statusCode'], 200);
+      expect(indexResp['csp'], expectedCsp);
+      expect(indexResp['xContentTypeOptions'], 'nosniff');
+      expect(indexResp['xFrameOptions'], 'DENY');
+
+      final jsResp = await fetch('http://127.0.0.1:$port/plugin.js');
+      expect(jsResp['statusCode'], 200);
+      expect(jsResp['csp'], expectedCsp);
+      expect(jsResp['xContentTypeOptions'], 'nosniff');
+      expect(jsResp['xFrameOptions'], 'DENY');
     });
   });
 }

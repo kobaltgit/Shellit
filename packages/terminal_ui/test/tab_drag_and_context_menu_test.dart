@@ -81,7 +81,8 @@ void main() {
       // Verify pinned square tab is rendered with tooltip containing custom title
       expect(
         find.byWidgetPredicate(
-          (w) => w is Tooltip && (w.message?.contains('My Custom Prod') ?? false),
+          (w) =>
+              w is Tooltip && (w.message?.contains('My Custom Prod') ?? false),
         ),
         findsWidgets,
       );

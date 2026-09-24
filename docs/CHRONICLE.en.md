@@ -1770,6 +1770,81 @@ We refactored `apps/website/src/pages/admin/index.astro`:
 - Changes committed and pushed to `origin/main`.
 - Dashboard at `https://shellit.top/admin/` renders flawlessly across all viewports.
 
+---
+
+## Entry 41. From Prototype to Fortress: TOFU, The Drunken Bishop, and True Zero-Trust Security in Release v0.8.4
+
+*Timestamp: September 24, 2026, 20:20 — 20:45 (~25 minutes)*
+
+### 1. The Context: A Rigorous Security Audit and an Architectural Challenge
+We received a detailed, professional security review of the Shellit codebase. The analysis pinpointed critical exposure points: the `dartssh2` transport connected without verifying host key fingerprints (a textbook Man-in-the-Middle vector), WebView2 plugin runners lacked strict Content Security Policy constraints, and client-side regex command filtering ("Prod Guard") created an illusion of protection without physically guaranteeing safety against accidental destructive commands.
+
+We faced an engineering choice: retreat from our security claims or engineer the system until every promise was backed by rock-solid code. We chose the latter.
+
+### 2. Parallel Subagent Taskforce Across Monorepo Packages
+Shellit’s multi-package monorepo architecture demonstrated its full value: after formalizing the `KnownHostEntity` contract in `core_foundation`, we launched four specialized subagents concurrently without a single file collision or merge conflict:
+
+1. **Storage & Security (`packages/storage_vault`):**
+   - Added the `known_hosts` table to the encrypted Drift/SQLCipher database with composite indexing `(host, port)` and seamless schema version 4 migration.
+   - Implemented `KnownHostRepository` with full reactive stream support (`watchAllKnownHosts`).
+   - Hardened RAM memory management: invoked `SecretKey.destroy()` during vault lock and zeroized intermediate byte buffers.
+   - Integrated official RFC 9106 test vectors (Argon2id, Argon2i, Argon2d) into the automated test suite.
+2. **Network & SSH (`packages/ssh_network_core`):**
+   - Wired `onVerifyHostKey` into the `dartssh2` client transport pipeline.
+   - Built the canonical OpenSSH Drunken Bishop Randomart generator, transforming SHA-256 fingerprints into 11x19 ASCII art boxes.
+   - Added hardware-level **Read-Only Mode** to `TerminalSession`: all keyboard keystrokes are discarded within the PTY pipeline before reaching the remote shell.
+3. **Desktop Plugin SDK (`packages/desktop_plugin_sdk`):**
+   - Enforced strict HTTP headers in `PluginStaticServer`: `Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'none'; frame-ancestors 'none';`, completely isolating WebViews from external network leaks.
+   - Sandboxed `storageLocal` strictly per `pluginId` namespace with parameter anti-spoofing.
+4. **Terminal UI (`packages/terminal_ui`):**
+   - Created `HostKeyDialog` supporting Trust-On-First-Use (TOFU) and a high-severity MitM alert modal with connection blocking until manual risk confirmation.
+   - Added an ambient `[🔒 Read-Only]` header badge, suppressing keystrokes, pastes, and displaying alert toasts on input attempts.
+   - Added the "Read-Only Session Mode" switch to the host form editor dialog (`HostFormDialog`).
+5. **Application Integration (`apps/shellit`):**
+   - Wired `appKnownHostRepositoryProvider`, registered a global navigator key, and automated host verification in `SessionConnectController`.
+   - Bumped application release version to **0.8.4+19**.
+
+### 3. Verification & Outcome
+- All monorepo test suites executed cleanly: **375/375 tests passing (0 failures)**.
+- Dart static analysis clean: 0 warnings, 0 errors.
+- MitM vulnerability eliminated; Shellit now provides complete OpenSSH-grade TOFU key verification.
+
+---
+
+## Entry 42. Shellit Logo Lime Accent, Faithful Semver Parsing, and Direct In-App Feedback Reporter
+
+*Timestamp: September 24, 2026, 21:05 — 21:25 (~20 minutes)*
+
+### 1. Goals & Motivation
+With release 0.8.4 establishing rock-solid security foundations (TOFU, Randomart, and Read-Only sessions), we focused on visual and operational refinement:
+1. **Obsidian Lime Visual Identity:** While the web portal (`shellit.top`) and the brand vector logo adopted our vibrant Lime (`#7BE113`), parts of the client application still used legacy cyan (`#06B6D4`). It was time to unify the application theme with the brand palette.
+2. **Update Checker Reliability:** We resolved a critical semver parsing bug: build metadata like `+19` in `0.8.4+19` was previously stripped into `419`, causing newer releases like `0.8.5` to be falsely rejected. Additionally, GitHub API rate limits (403/429) and network failures needed clear, informative user feedback.
+3. **In-App Feedback & Bug Reporter (IDEA-028):** Positioned right under the "Check for updates" button, provide an instant feedback dialog wired directly to the PocketBase backend on `shellit.top`.
+
+### 2. Implementation Highlights
+
+1. **Brand Identity Unification (Shellit Logo Lime):**
+   - In `packages/terminal_ui`, constants in `ShellitColors` were expanded: `accentLime` (`#7BE113`), `accentLimeStart` (`#5FB300`), `accentLimeEnd` (`#8AEB1A`), and neon glow `accentLimeGlow` (`rgba(123, 225, 19, 0.38)`).
+   - `accentCyan` was redirected to `accentLime`, propagating the vibrant brand green to SFTP breadcrumbs, connecting spinners, and accent badges.
+   - `ShellitTheme.obsidianDarkTheme` updated with `accentLime` for `primary`, `secondary`, and focus borders, paired with high-contrast text (`#0D0F12`) on primary surfaces.
+
+2. **Accurate Semver Comparison & API Resilience:**
+   - Rewrote `_isVersionGreater` to strip prefixes (`v/V`) and metadata tags (`+...` and `-...`), ensuring faithful numeric comparison across major, minor, and patch segments.
+   - Differentiated HTTP responses: 200 (version comparison), 403/429 (rate limit warning), 404 (preview build notice), and network errors.
+   - The About card dynamically extracts and displays both version and build number from `PackageInfo.fromPlatform()`.
+
+3. **In-App Feedback Dialog (`FeedbackReportDialog` / IDEA-028):**
+   - Placed a dedicated "Send Feedback / Bug Report" button under the update checker button.
+   - Styled with Dark Obsidian aesthetics and a neon accent top line (`#7BE113` → `#8B5CF6` → `#7BE113`).
+   - Supports 3 categories (🐛 Bug Report, 💡 Feature Request, 💬 General Feedback), required field validation, and optional email follow-up.
+   - Posts directly to PocketBase at `https://shellit.top/api/collections/feedback_reports/records` with safe Zero-Knowledge telemetry (`Platform.operatingSystem` and app version).
+
+### 3. Verification & Outcome
+- Added comprehensive unit and widget tests in `apps/shellit/test/about_settings_card_test.dart` and `apps/shellit/test/feedback_report_dialog_test.dart`.
+- Monorepo test suites executed cleanly with **382/382 tests passing**.
+- Changes were hot-reloaded into the running application via DTD without downtime.
+
+
 
 
 

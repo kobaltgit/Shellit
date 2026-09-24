@@ -132,6 +132,24 @@ class VaultMetadataTable extends Table {
   Set<Column> get primaryKey => {metaKey};
 }
 
+@DataClassName('KnownHostRecord')
+@TableIndex(name: 'known_hosts_host_port_idx', columns: {#host, #port})
+class KnownHostsTable extends Table {
+  @override
+  String get tableName => 'known_hosts';
+
+  TextColumn get id => text()();
+  TextColumn get host => text()();
+  IntColumn get port => integer().withDefault(const Constant(22))();
+  TextColumn get keyType => text()();
+  TextColumn get fingerprintSha256 => text()();
+  DateTimeColumn get firstSeenAt => dateTime()();
+  DateTimeColumn get lastSeenAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   HostsTable,
   KeysTable,
@@ -140,12 +158,13 @@ class VaultMetadataTable extends Table {
   VaultSettingsTable,
   VaultMetadataTable,
   SyncTombstonesTable,
+  KnownHostsTable,
 ])
 class VaultDatabase extends _$VaultDatabase {
   VaultDatabase(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -195,8 +214,8 @@ class VaultDatabase extends _$VaultDatabase {
                   vaultSettingsTable, vaultSettingsTable.lastSyncedAt);
             } catch (_) {}
             try {
-              await m.addColumn(
-                  vaultSettingsTable, vaultSettingsTable.encryptedSyncPassphrase);
+              await m.addColumn(vaultSettingsTable,
+                  vaultSettingsTable.encryptedSyncPassphrase);
             } catch (_) {}
             try {
               await m.addColumn(
@@ -225,6 +244,9 @@ class VaultDatabase extends _$VaultDatabase {
                   vaultSettingsTable, vaultSettingsTable.isAiSnippetEnabled);
             } catch (_) {}
           }
+          if (from < 4) {
+            await m.createTable(knownHostsTable);
+          }
         },
         beforeOpen: (details) async {
           await customStatement('''
@@ -233,6 +255,20 @@ class VaultDatabase extends _$VaultDatabase {
               "entity_type" TEXT NOT NULL,
               "deleted_at" INTEGER NOT NULL
             );
+          ''');
+          await customStatement('''
+            CREATE TABLE IF NOT EXISTS "known_hosts" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "host" TEXT NOT NULL,
+              "port" INTEGER NOT NULL DEFAULT 22,
+              "key_type" TEXT NOT NULL,
+              "fingerprint_sha256" TEXT NOT NULL,
+              "first_seen_at" INTEGER NOT NULL,
+              "last_seen_at" INTEGER NOT NULL
+            );
+          ''');
+          await customStatement('''
+            CREATE INDEX IF NOT EXISTS "known_hosts_host_port_idx" ON "known_hosts" ("host", "port");
           ''');
           try {
             await customStatement(
@@ -415,6 +451,21 @@ extension VaultSettingsRecordMapper on VaultSettingsRecord {
       geminiApiKey: decryptedGeminiApiKey ?? geminiApiKey,
       geminiModelId: geminiModelId,
       isAiSnippetEnabled: isAiSnippetEnabled,
+    );
+  }
+}
+
+/// Mapper extension to convert [KnownHostRecord] to/from [KnownHostEntity].
+extension KnownHostRecordMapper on KnownHostRecord {
+  KnownHostEntity toEntity() {
+    return KnownHostEntity(
+      id: id,
+      host: host,
+      port: port,
+      keyType: keyType,
+      fingerprintSha256: fingerprintSha256,
+      firstSeenAt: firstSeenAt,
+      lastSeenAt: lastSeenAt,
     );
   }
 }

@@ -95,7 +95,8 @@ class _WindowControlsState extends State<WindowControls> {
               onTap: widget.onClose,
               child: Container(
                 width: 46,
-                color: _hoverClose ? const Color(0xFFE81123) : Colors.transparent,
+                color:
+                    _hoverClose ? const Color(0xFFE81123) : Colors.transparent,
                 child: Center(
                   child: Icon(
                     Icons.close,
@@ -136,9 +137,10 @@ class _WindowControlsState extends State<WindowControls> {
               height: 8,
               decoration: BoxDecoration(
                 border: Border(
-                  top: BorderSide(color: ShellitColors.textSecondary, width: 1.2),
-                  right:
-                      BorderSide(color: ShellitColors.textSecondary, width: 1.2),
+                  top: BorderSide(
+                      color: ShellitColors.textSecondary, width: 1.2),
+                  right: BorderSide(
+                      color: ShellitColors.textSecondary, width: 1.2),
                 ),
               ),
             ),

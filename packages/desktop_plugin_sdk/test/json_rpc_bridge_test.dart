@@ -235,4 +235,291 @@ void main() {
       expect(msg.containsKey('id'), isFalse);
     });
   });
+
+  group('DesktopPluginBridge - Terminal Command Execution Events', () {
+    late DesktopPluginBridge bridge;
+
+    setUp(() {
+      bridge = DesktopPluginBridge();
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: 'com.test.terminal-plugin',
+          name: 'Terminal Plugin',
+          version: '1.0.0',
+          author: 'Test',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: ['terminal:execute'],
+        ),
+      );
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: 'com.test.unauthorized-plugin',
+          name: 'Unauthorized',
+          version: '1.0.0',
+          author: 'Test',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: [],
+        ),
+      );
+      bridge.registerHandler(
+        'terminal.runCommand',
+        (pluginId, params) async => {'done': true},
+        requiredPermission: PluginPermissions.terminalExecute,
+      );
+    });
+
+    tearDown(() => bridge.dispose());
+
+    test('broadcasts PluginCommandEvent on authorized terminal command',
+        () async {
+      final eventFuture = bridge.onCommandExecution.first;
+
+      await bridge.handleIncomingMessage(
+        'com.test.terminal-plugin',
+        {
+          'jsonrpc': '2.0',
+          'id': 'cmd-1',
+          'method': 'terminal.runCommand',
+          'params': {'command': 'uptime'},
+        },
+      );
+
+      final event = await eventFuture;
+      expect(event.pluginId, 'com.test.terminal-plugin');
+      expect(event.method, 'terminal.runCommand');
+      expect(event.command, 'uptime');
+      expect(event.params, {'command': 'uptime'});
+      expect(event.timestamp, isNotNull);
+    });
+
+    test('does not broadcast PluginCommandEvent when permission denied',
+        () async {
+      var eventEmitted = false;
+      final sub = bridge.onCommandExecution.listen((_) => eventEmitted = true);
+
+      await bridge.handleIncomingMessage(
+        'com.test.unauthorized-plugin',
+        {
+          'jsonrpc': '2.0',
+          'id': 'cmd-2',
+          'method': 'terminal.runCommand',
+          'params': {'command': 'reboot'},
+        },
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(eventEmitted, isFalse);
+      await sub.cancel();
+    });
+
+    test('notifyCommandExecution manually broadcasts to onCommandExecution',
+        () async {
+      final eventFuture = bridge.onCommandExecution.first;
+
+      final customEvent = PluginCommandEvent(
+        pluginId: 'manual.plugin',
+        method: 'terminal.execute',
+        params: {'command': 'top'},
+      );
+      bridge.notifyCommandExecution(customEvent);
+
+      final received = await eventFuture;
+      expect(received.pluginId, 'manual.plugin');
+      expect(received.method, 'terminal.execute');
+      expect(received.command, 'top');
+    });
+  });
+
+  group('DesktopPluginBridge - Isolated Local Storage Namespaces', () {
+    late DesktopPluginBridge bridge;
+    const pluginA = 'com.shellit.pluginA';
+    const pluginB = 'com.shellit.pluginB';
+    const unauthPlugin = 'com.shellit.unauth';
+
+    setUp(() {
+      bridge = DesktopPluginBridge();
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: pluginA,
+          name: 'Plugin A',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: ['storage:local'],
+        ),
+      );
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: pluginB,
+          name: 'Plugin B',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: ['storage:local'],
+        ),
+      );
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: unauthPlugin,
+          name: 'Unauth Plugin',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: [],
+        ),
+      );
+    });
+
+    tearDown(() => bridge.dispose());
+
+    test('enforces strict storage namespace isolation between plugins',
+        () async {
+      // 1. Plugin A sets key 'theme' -> 'dark'
+      final outA1 = bridge.outgoingMessagesStream(pluginA).first;
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-1',
+        'method': 'storage.set',
+        'params': {'key': 'theme', 'value': 'dark'},
+      });
+      final resA1 = await outA1;
+      expect(resA1['result']['success'], isTrue);
+
+      // 2. Plugin B sets same key 'theme' -> 'solarized'
+      final outB1 = bridge.outgoingMessagesStream(pluginB).first;
+      await bridge.handleIncomingMessage(pluginB, {
+        'jsonrpc': '2.0',
+        'id': 'b-1',
+        'method': 'storage.set',
+        'params': {'key': 'theme', 'value': 'solarized'},
+      });
+      final resB1 = await outB1;
+      expect(resB1['result']['success'], isTrue);
+
+      // 3. Plugin A gets 'theme' -> must be 'dark'
+      final outA2 = bridge.outgoingMessagesStream(pluginA).first;
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-2',
+        'method': 'storage.get',
+        'params': {'key': 'theme'},
+      });
+      final resA2 = await outA2;
+      expect(resA2['result']['value'], 'dark');
+
+      // 4. Plugin B gets 'theme' -> must be 'solarized'
+      final outB2 = bridge.outgoingMessagesStream(pluginB).first;
+      await bridge.handleIncomingMessage(pluginB, {
+        'jsonrpc': '2.0',
+        'id': 'b-2',
+        'method': 'storage.get',
+        'params': {'key': 'theme'},
+      });
+      final resB2 = await outB2;
+      expect(resB2['result']['value'], 'solarized');
+
+      // 5. Host level inspection verifies isolation
+      expect(bridge.getPluginStorage(pluginA), {'theme': 'dark'});
+      expect(bridge.getPluginStorage(pluginB), {'theme': 'solarized'});
+    });
+
+    test('prevents namespace spoofing via params', () async {
+      // Plugin B sets secret
+      await bridge.handleIncomingMessage(pluginB, {
+        'jsonrpc': '2.0',
+        'id': 'b-set',
+        'method': 'storage.set',
+        'params': {'key': 'secret', 'value': 'b_secret_value'},
+      });
+
+      // Plugin A attempts to spoof pluginId in params
+      final outA = bridge.outgoingMessagesStream(pluginA).first;
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-hack',
+        'method': 'storage.get',
+        'params': {'key': 'secret', 'pluginId': pluginB},
+      });
+      final resA = await outA;
+      // Plugin A gets null, cannot read Plugin B's data
+      expect(resA['result']['value'], isNull);
+    });
+
+    test('denies storage operations when storage:local permission is missing',
+        () async {
+      final out = bridge.outgoingMessagesStream(unauthPlugin).first;
+      await bridge.handleIncomingMessage(unauthPlugin, {
+        'jsonrpc': '2.0',
+        'id': 'unauth-1',
+        'method': 'storage.set',
+        'params': {'key': 'foo', 'value': 'bar'},
+      });
+      final res = await out;
+      expect(res['error']['code'], JsonRpcErrorCodes.permissionDenied);
+      expect(res['error']['message'],
+          contains("Missing permission 'storage:local'"));
+    });
+
+    test(
+        'supports storage.delete and storage.clear without cross-contamination',
+        () async {
+      // Setup data for both plugins
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-init1',
+        'method': 'storage.set',
+        'params': {'key': 'k1', 'value': 'v1'},
+      });
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-init2',
+        'method': 'storage.set',
+        'params': {'key': 'k2', 'value': 'v2'},
+      });
+      await bridge.handleIncomingMessage(pluginB, {
+        'jsonrpc': '2.0',
+        'id': 'b-init1',
+        'method': 'storage.set',
+        'params': {'key': 'k1', 'value': 'b_v1'},
+      });
+
+      // Delete k1 on Plugin A
+      final outDel = bridge.outgoingMessagesStream(pluginA).first;
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-del',
+        'method': 'storage.delete',
+        'params': {'key': 'k1'},
+      });
+      final resDel = await outDel;
+      expect(resDel['result']['deleted'], isTrue);
+
+      // Plugin A has only k2; Plugin B still has k1
+      expect(bridge.getPluginStorage(pluginA), {'k2': 'v2'});
+      expect(bridge.getPluginStorage(pluginB), {'k1': 'b_v1'});
+
+      // Clear Plugin A
+      final outClr = bridge.outgoingMessagesStream(pluginA).first;
+      await bridge.handleIncomingMessage(pluginA, {
+        'jsonrpc': '2.0',
+        'id': 'a-clr',
+        'method': 'storage.clear',
+      });
+      final resClr = await outClr;
+      expect(resClr['result']['success'], isTrue);
+
+      expect(bridge.getPluginStorage(pluginA), isEmpty);
+      expect(bridge.getPluginStorage(pluginB), {'k1': 'b_v1'});
+    });
+  });
 }

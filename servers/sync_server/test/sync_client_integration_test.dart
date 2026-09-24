@@ -142,7 +142,8 @@ void main() {
         // Must NOT contain plaintext
         expect(item['encryptedBlob'], isNot(contains('Production Cluster')));
         expect(item['encryptedBlob'], isNot(contains('kubectl get pods')));
-        expect(item['encryptedBlob'], isNot(contains('super_secret_ssh_private_key_bytes')));
+        expect(item['encryptedBlob'],
+            isNot(contains('super_secret_ssh_private_key_bytes')));
       }
 
       // 5. Phone syncs from server

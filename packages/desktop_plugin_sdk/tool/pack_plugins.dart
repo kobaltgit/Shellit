@@ -19,8 +19,7 @@ void main() async {
 
     res.when(
       success: (file) {
-        print(
-            'Successfully created ${file.path} (${file.lengthSync()} bytes)');
+        print('Successfully created ${file.path} (${file.lengthSync()} bytes)');
         // Also copy to root plugins/ folder
         final rootPluginsDir =
             p.normalize(p.join(current, '..', '..', 'plugins'));

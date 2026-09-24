@@ -7,6 +7,7 @@ export 'src/database/vault_database.dart';
 export 'src/repositories/folder_repository.dart';
 export 'src/repositories/host_repository.dart';
 export 'src/repositories/key_manager.dart';
+export 'src/repositories/known_host_repository.dart';
 export 'src/repositories/snippet_repository.dart';
 export 'src/repositories/vault_repository.dart';
 export 'src/security/biometric_storage.dart';

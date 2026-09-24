@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:core_foundation/core_foundation.dart';
 import 'package:dartssh2/dartssh2.dart';
@@ -23,6 +25,8 @@ class SshClientService implements ISshClientService {
     List<int>? privateKeyBytes,
     String? passphrase,
     ISessionRecorder? recorder,
+    HostKeyVerifyCallback? onVerifyHostKey,
+    bool isReadOnly = false,
     void Function(String status)? onProgress,
   }) async {
     try {
@@ -61,6 +65,24 @@ class SshClientService implements ISshClientService {
         keepAliveInterval: host.keepAliveIntervalSeconds > 0
             ? Duration(seconds: host.keepAliveIntervalSeconds)
             : null,
+        onVerifyHostKey: (String type, Uint8List fingerprint) async {
+          final fingerprintStr = utf8.decode(fingerprint);
+          if (onVerifyHostKey != null) {
+            final accepted = await onVerifyHostKey(
+              hostname: host.hostname,
+              port: host.port,
+              keyType: type,
+              fingerprintSha256: fingerprintStr,
+            );
+            if (!accepted) return false;
+            return true;
+          }
+          AppLogger.w(
+            'Host key verification bypassed (no callback provided) for ${host.connectionTarget} [$type: $fingerprintStr]',
+            tag: 'SshClientService',
+          );
+          return true;
+        },
       );
 
       onProgress?.call('Authenticating as ${host.username}...');
@@ -113,6 +135,7 @@ class SshClientService implements ISshClientService {
         client: client,
         sshSession: sshSession,
         recorder: recorder,
+        isReadOnly: isReadOnly,
       );
 
       AppLogger.i(
@@ -128,6 +151,14 @@ class SshClientService implements ISshClientService {
       return Result.error(NetworkFailure.timeout(host.connectionTarget));
     } on SSHAuthFailError catch (e) {
       return Result.error(NetworkFailure.authFailed(host.username, e));
+    } on SSHHostkeyError catch (e) {
+      return Result.error(
+        NetworkFailure(
+          'Host key verification rejected: $e',
+          type: NetworkFailureType.channelError,
+          cause: e,
+        ),
+      );
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(
@@ -146,6 +177,7 @@ class SshClientService implements ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    HostKeyVerifyCallback? onVerifyHostKey,
     void Function(String status)? onProgress,
   }) async {
     try {
@@ -184,6 +216,24 @@ class SshClientService implements ISshClientService {
         keepAliveInterval: host.keepAliveIntervalSeconds > 0
             ? Duration(seconds: host.keepAliveIntervalSeconds)
             : null,
+        onVerifyHostKey: (String type, Uint8List fingerprint) async {
+          final fingerprintStr = utf8.decode(fingerprint);
+          if (onVerifyHostKey != null) {
+            final accepted = await onVerifyHostKey(
+              hostname: host.hostname,
+              port: host.port,
+              keyType: type,
+              fingerprintSha256: fingerprintStr,
+            );
+            if (!accepted) return false;
+            return true;
+          }
+          AppLogger.w(
+            'Host key verification bypassed (no callback provided) for ${host.connectionTarget} [$type: $fingerprintStr]',
+            tag: 'SshClientService',
+          );
+          return true;
+        },
       );
 
       onProgress?.call('Authenticating as ${host.username}...');
@@ -216,6 +266,14 @@ class SshClientService implements ISshClientService {
       return Result.error(NetworkFailure.timeout(host.connectionTarget));
     } on SSHAuthFailError catch (e) {
       return Result.error(NetworkFailure.authFailed(host.username, e));
+    } on SSHHostkeyError catch (e) {
+      return Result.error(
+        NetworkFailure(
+          'Host key verification rejected: $e',
+          type: NetworkFailureType.channelError,
+          cause: e,
+        ),
+      );
     } catch (e, stack) {
       return Result.error(
         NetworkFailure(

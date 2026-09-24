@@ -54,7 +54,8 @@ abstract class McpStandardTools {
       'properties': {
         'command': {
           'type': 'string',
-          'description': 'The command line to execute on the server (e.g. "uptime", "docker ps").',
+          'description':
+              'The command line to execute on the server (e.g. "uptime", "docker ps").',
         },
         'serverId': {
           'type': 'string',
@@ -76,7 +77,8 @@ abstract class McpStandardTools {
       'properties': {
         'lines': {
           'type': 'integer',
-          'description': 'Number of lines to retrieve from the end of the buffer (default: 50).',
+          'description':
+              'Number of lines to retrieve from the end of the buffer (default: 50).',
           'default': 50,
         },
       },
@@ -102,7 +104,8 @@ abstract class McpStandardTools {
         },
         'maxBytes': {
           'type': 'integer',
-          'description': 'Maximum number of bytes to read (default 65536 = 64KB).',
+          'description':
+              'Maximum number of bytes to read (default 65536 = 64KB).',
           'default': 65536,
         },
       },

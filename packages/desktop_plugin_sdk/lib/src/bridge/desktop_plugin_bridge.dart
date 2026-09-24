@@ -7,6 +7,43 @@ import 'json_rpc_message.dart';
 typedef PluginMethodHandler = Future<dynamic> Function(
     String pluginId, dynamic params);
 
+/// Event broadcast when a plugin invokes a terminal execution method.
+class PluginCommandEvent {
+  /// The ID of the plugin initiating the command execution.
+  final String pluginId;
+
+  /// The JSON-RPC method invoked (e.g. `terminal.runCommand`, `terminal.execute`).
+  final String method;
+
+  /// The parameters associated with the command invocation.
+  final dynamic params;
+
+  /// Timestamp when the execution event was emitted.
+  final DateTime timestamp;
+
+  PluginCommandEvent({
+    required this.pluginId,
+    required this.method,
+    this.params,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  /// Convenient helper to extract the command string if present in params.
+  String? get command {
+    if (params is Map) {
+      return (params as Map)['command'] as String?;
+    }
+    if (params is String) {
+      return params as String;
+    }
+    return null;
+  }
+
+  @override
+  String toString() =>
+      'PluginCommandEvent(pluginId: $pluginId, method: $method, params: $params, timestamp: $timestamp)';
+}
+
 /// Desktop implementation of [IPluginBridge] managing two-way JSON-RPC 2.0 communication
 /// and permission enforcement between Shellit and JS plugin sandboxes.
 class DesktopPluginBridge implements IPluginBridge {
@@ -17,10 +54,37 @@ class DesktopPluginBridge implements IPluginBridge {
   final Map<String, StreamController<Map<String, dynamic>>>
       _outgoingControllers = {};
   final Map<dynamic, Completer<dynamic>> _pendingRequests = {};
+  final StreamController<PluginCommandEvent> _commandExecutionController =
+      StreamController<PluginCommandEvent>.broadcast();
+
+  /// Isolated in-memory storage namespaces strictly separated per [pluginId].
+  final Map<String, Map<String, dynamic>> _pluginStorage = {};
+
   int _nextRequestId = 1;
+
+  /// Stream of terminal command executions initiated by plugins.
+  Stream<PluginCommandEvent> get onCommandExecution =>
+      _commandExecutionController.stream;
+
+  /// Broadcasts a command execution event to [onCommandExecution] listeners.
+  void notifyCommandExecution(PluginCommandEvent event) {
+    if (!_commandExecutionController.isClosed) {
+      _commandExecutionController.add(event);
+    }
+  }
+
+  /// Retrieves a read-only copy of the isolated local storage for [pluginId].
+  Map<String, dynamic> getPluginStorage(String pluginId) =>
+      Map<String, dynamic>.unmodifiable(_pluginStorage[pluginId] ?? {});
+
+  /// Clears isolated local storage for [pluginId].
+  void clearPluginStorage(String pluginId) {
+    _pluginStorage.remove(pluginId);
+  }
 
   DesktopPluginBridge() {
     _registerDefaultMethodPermissions();
+    _registerDefaultStorageHandlers();
   }
 
   void _registerDefaultMethodPermissions() {
@@ -35,10 +99,72 @@ class DesktopPluginBridge implements IPluginBridge {
         PluginPermissions.vaultReadHosts;
     _defaultRequiredPermissions['storage.get'] = PluginPermissions.storageLocal;
     _defaultRequiredPermissions['storage.set'] = PluginPermissions.storageLocal;
+    _defaultRequiredPermissions['storage.delete'] =
+        PluginPermissions.storageLocal;
+    _defaultRequiredPermissions['storage.clear'] =
+        PluginPermissions.storageLocal;
     _defaultRequiredPermissions['clipboard.read'] =
         PluginPermissions.clipboardRead;
     _defaultRequiredPermissions['clipboard.write'] =
         PluginPermissions.clipboardWrite;
+  }
+
+  void _registerDefaultStorageHandlers() {
+    registerHandler(
+      'storage.get',
+      (pluginId, params) async {
+        final pluginMap = _pluginStorage[pluginId] ?? {};
+        if (params is Map && params.containsKey('key')) {
+          final key = params['key']?.toString();
+          return {'key': key, 'value': pluginMap[key]};
+        }
+        return {'values': Map<String, dynamic>.from(pluginMap)};
+      },
+      requiredPermission: PluginPermissions.storageLocal,
+    );
+
+    registerHandler(
+      'storage.set',
+      (pluginId, params) async {
+        if (params is! Map) {
+          throw ArgumentError(
+              'Parameters must be a map containing "key" and "value"');
+        }
+        final key = params['key']?.toString();
+        if (key == null || key.isEmpty) {
+          throw ArgumentError(
+              'Parameter "key" is required and cannot be empty');
+        }
+        final value = params['value'];
+        final pluginMap = _pluginStorage.putIfAbsent(pluginId, () => {});
+        pluginMap[key] = value;
+        return {'success': true, 'key': key, 'value': value};
+      },
+      requiredPermission: PluginPermissions.storageLocal,
+    );
+
+    registerHandler(
+      'storage.delete',
+      (pluginId, params) async {
+        if (params is! Map) {
+          throw ArgumentError('Parameters must be a map containing "key"');
+        }
+        final key = params['key']?.toString();
+        final pluginMap = _pluginStorage[pluginId];
+        final removed = pluginMap?.remove(key);
+        return {'success': true, 'key': key, 'deleted': removed != null};
+      },
+      requiredPermission: PluginPermissions.storageLocal,
+    );
+
+    registerHandler(
+      'storage.clear',
+      (pluginId, params) async {
+        _pluginStorage[pluginId]?.clear();
+        return {'success': true};
+      },
+      requiredPermission: PluginPermissions.storageLocal,
+    );
   }
 
   final Map<String, String> _defaultRequiredPermissions = {};
@@ -214,6 +340,19 @@ class DesktopPluginBridge implements IPluginBridge {
       }
     }
 
+    // Broadcast terminal command execution event if applicable
+    if (requiredPermission == PluginPermissions.terminalExecute ||
+        method == 'terminal.runCommand' ||
+        method == 'terminal.execute') {
+      notifyCommandExecution(
+        PluginCommandEvent(
+          pluginId: pluginId,
+          method: method,
+          params: request.params,
+        ),
+      );
+    }
+
     // 4. Execution
     try {
       final result = await registered.handler(pluginId, request.params);
@@ -274,6 +413,7 @@ class DesktopPluginBridge implements IPluginBridge {
 
   /// Closes all controllers and clears state.
   void dispose() {
+    _commandExecutionController.close();
     for (final c in _incomingControllers.values) {
       c.close();
     }
@@ -285,6 +425,7 @@ class DesktopPluginBridge implements IPluginBridge {
     _pendingRequests.clear();
     _registeredManifests.clear();
     _methodHandlers.clear();
+    _pluginStorage.clear();
   }
 }
 

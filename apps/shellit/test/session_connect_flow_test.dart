@@ -179,6 +179,8 @@ class FakeSshClientService implements ISshClientService {
     List<int>? privateKeyBytes,
     String? passphrase,
     ISessionRecorder? recorder,
+    HostKeyVerifyCallback? onVerifyHostKey,
+    bool isReadOnly = false,
     void Function(String status)? onProgress,
   }) async {
     onProgress?.call('Connecting...');
@@ -193,6 +195,7 @@ class FakeSshClientService implements ISshClientService {
     String? password,
     List<int>? privateKeyBytes,
     String? passphrase,
+    HostKeyVerifyCallback? onVerifyHostKey,
     void Function(String status)? onProgress,
   }) async {
     onProgress?.call('Opening SFTP...');

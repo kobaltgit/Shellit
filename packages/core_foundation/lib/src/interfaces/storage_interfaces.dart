@@ -3,6 +3,7 @@ import '../common/result.dart';
 import '../domain/entities/folder_entity.dart';
 import '../domain/entities/host_entity.dart';
 import '../domain/entities/key_entity.dart';
+import '../domain/entities/known_host_entity.dart';
 import '../domain/entities/snippet_entity.dart';
 import '../domain/entities/vault_settings_entity.dart';
 
@@ -111,4 +112,13 @@ abstract class ISnippetRepository {
   Stream<List<SnippetEntity>> watchAllSnippets();
   Future<Result<void, VaultFailure>> saveSnippet(SnippetEntity snippet);
   Future<Result<void, VaultFailure>> deleteSnippet(String id);
+}
+
+/// Contract for storing and verifying known SSH host fingerprints (TOFU).
+abstract class IKnownHostRepository {
+  Future<KnownHostEntity?> findKnownHost(String host, int port);
+  Future<Result<void, VaultFailure>> saveKnownHost(KnownHostEntity entity);
+  Future<Result<void, VaultFailure>> deleteKnownHost(String host, int port);
+  Future<List<KnownHostEntity>> getAllKnownHosts();
+  Stream<List<KnownHostEntity>> watchAllKnownHosts();
 }

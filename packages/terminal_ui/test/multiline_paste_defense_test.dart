@@ -32,7 +32,8 @@ void main() {
   );
 
   group('MultilinePasteDialog Widget Tests', () {
-    testWidgets('renders dialog with line count badge and code preview on dev host',
+    testWidgets(
+        'renders dialog with line count badge and code preview on dev host',
         (tester) async {
       String? pasteResult;
       const textToPaste = 'echo "Starting deploy"\ncd /var/www\ngit pull\n';
@@ -116,10 +117,12 @@ void main() {
 
       // Verify PROD badges
       expect(find.text('PROD'), findsOneWidget);
-      expect(find.text('PROD GUARD'), findsOneWidget); // Dangerous command indicator
+      expect(find.text('PROD GUARD'),
+          findsOneWidget); // Dangerous command indicator
 
       // Find the Paste button and verify it is initially disabled
-      final submitButtonFinder = find.widgetWithText(ElevatedButton, 'Paste 3 lines');
+      final submitButtonFinder =
+          find.widgetWithText(ElevatedButton, 'Paste 3 lines');
       expect(submitButtonFinder, findsOneWidget);
 
       final submitBtnBefore = tester.widget<ElevatedButton>(submitButtonFinder);
@@ -128,8 +131,7 @@ void main() {
       // Find and check the PROD confirmation checkbox
       final prodConfirmCheckboxFinder = find.byWidgetPredicate(
         (widget) =>
-            widget is Checkbox &&
-            widget.activeColor == ShellitColors.statusRed,
+            widget is Checkbox && widget.activeColor == ShellitColors.statusRed,
       );
       expect(prodConfirmCheckboxFinder, findsOneWidget);
 

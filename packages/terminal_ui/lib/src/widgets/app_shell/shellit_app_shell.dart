@@ -466,7 +466,9 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                           setState(() {
                             _currentSection = section;
                           });
-                          ref.read(sessionManagerProvider.notifier).showCatalog();
+                          ref
+                              .read(sessionManagerProvider.notifier)
+                              .showCatalog();
                         },
                         onToggleCollapse: isSmallScreen
                             ? null
@@ -507,8 +509,10 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                             ),
 
                             // Mobile Accessory Bar on touch devices or small screens
-                            if ((defaultTargetPlatform == TargetPlatform.android ||
-                                    defaultTargetPlatform == TargetPlatform.iOS ||
+                            if ((defaultTargetPlatform ==
+                                        TargetPlatform.android ||
+                                    defaultTargetPlatform ==
+                                        TargetPlatform.iOS ||
                                     isSmallScreen) &&
                                 activeTab != null &&
                                 activeTab.type != TabType.sftp)

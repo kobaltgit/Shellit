@@ -58,7 +58,9 @@ void main() {
     expect(rawRecord.encryptedGeminiApiKey, isNotNull);
   });
 
-  test('saves and retrieves Gemini API settings when master password is not set (activeKey == null)', () async {
+  test(
+      'saves and retrieves Gemini API settings when master password is not set (activeKey == null)',
+      () async {
     // Uninitialized security context and repo without master password
     final uninitDb = VaultDatabase(NativeDatabase.memory());
     final uninitSecurity = VaultSecurityContext();
