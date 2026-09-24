@@ -1738,6 +1738,39 @@ Created an exhaustive technical manual for the autonomous Website Agent:
 - Administration center and database panel are operational at **`https://shellit.top/admin/`** and **`https://shellit.top/_/`**.
 - Full Website Agent instructions committed to **`docs/agents/AGENT_5_WEBSITE.md`**.
 
+---
+
+## Entry 40. True Responsiveness: Rescuing the Command Center Header & Footer from Vertical Text Ribbons
+
+*Timestamp: September 24, 2026, 16:35 — 16:45 (~10 minutes)*
+
+### 1. The Bottleneck: When Narrow Screens Squash Desktop Flexboxes
+Deploying the admin dashboard to `shellit.top/admin/` revealed a classic flexbox layout trap on tablet and mobile viewports.
+The dashboard header relied on a rigid `flex items-center justify-between` container: the right cluster containing time range selectors (`Today`, `7D`, `30D`, `All Time`), GitHub sync, CSV export, and logout buttons demanded over 600px. Consequently, the branding block was crushed into a 50px column, forcing "Shellit Analytics" into an awkward vertical column of letters while the "PROD DASHBOARD" badge overlapped adjacent controls.
+Even more critical was the footer card area: inside the inbound user reports block (`feedback_reports`), the section title squished into a narrow ribbon where every single word wrapped onto a new line, while four filter buttons stubbornly held their horizontal line.
+
+### 2. Under the Hood: Responsive Architecture & Official Shellit Lime Identity
+We refactored `apps/website/src/pages/admin/index.astro`:
+1. **Adaptive Two-Tier Header:**
+   - On wide desktop viewports (`lg:`), the header preserves a single unified bar within `max-w-7xl mx-auto`.
+   - On screens `< 1024px`, the header fluidly decouples into two purpose-built rows: Row 1 hosts the logo, non-wrapping `whitespace-nowrap` title "Shellit Analytics", `PROD` badge, and a `← Public Site` link. Row 2 holds the compact time range selector and action buttons with responsive labels (`Sync`, `CSV`, `PB`).
+   - All branding items now enforce `shrink-0` and `whitespace-nowrap`.
+2. **Rescuing the Feedback Reports Card (`feedback_reports`):**
+   - Transformed the card header to `flex flex-col sm:flex-row sm:items-center justify-between gap-3`.
+   - Filter buttons now wrap cleanly (`flex-wrap shrink-0`), while the text block utilizes `min-w-0 flex-1`, completely eliminating word squishing.
+   - Feedback list items received responsive layouts with word-break protections (`break-words`).
+3. **Official Shellit Lime Accent:**
+   - Replaced legacy cyan styling across range selectors, filter pills, charts, and status indicators with official `#7BE113` / `#8AEB1A` and `.shadow-glow-lime`.
+4. **Dedicated Responsive Admin Footer:**
+   - Mounted a stylish backdrop-blur footer featuring live Senko node telemetry (`144.31.19.22`), portal quick links, roadmap pulse, GitHub repository, and PocketBase engine links.
+
+### 3. Outcome
+- Astro build verified clean (27 pages generated in 8.14s).
+- Production assets deployed directly to Senko via secure SCP tunnel.
+- Changes committed and pushed to `origin/main`.
+- Dashboard at `https://shellit.top/admin/` renders flawlessly across all viewports.
+
+
 
 
 
