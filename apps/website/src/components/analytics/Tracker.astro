@@ -61,7 +61,7 @@
           visitor_hash: getVisitorHash()
         };
 
-        const pbBase = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+        const pbBase = (typeof window !== 'undefined' && window.__PUBLIC_POCKETBASE_URL__) ? window.__PUBLIC_POCKETBASE_URL__ : '';
         const endpoint = pbBase + '/api/collections/site_visits/records';
         
         fetch(endpoint, {

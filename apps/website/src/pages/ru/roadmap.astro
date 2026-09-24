@@ -106,7 +106,7 @@ const roadmapData = getRoadmapColumns(lang);
   </div>
 
   <script is:inline>
-  const PB_URL = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+  const PB_URL = (typeof window !== 'undefined' && window.__PUBLIC_POCKETBASE_URL__) ? window.__PUBLIC_POCKETBASE_URL__ : '';
   const STORAGE_KEY = 'shellit_voted_features';
   const TOKEN_KEY = 'shellit_voter_token';
 

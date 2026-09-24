@@ -246,7 +246,7 @@ const t = {
         }
 
         try {
-          const pbBase = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+          const pbBase = (typeof window !== 'undefined' && window.__PUBLIC_POCKETBASE_URL__) ? window.__PUBLIC_POCKETBASE_URL__ : '';
           const res = await fetch(`${pbBase}/api/collections/feedback_reports/records`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
