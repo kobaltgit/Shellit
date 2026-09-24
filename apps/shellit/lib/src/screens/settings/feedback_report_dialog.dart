@@ -13,10 +13,7 @@ import 'package:terminal_ui/terminal_ui.dart';
 class FeedbackReportDialog extends StatefulWidget {
   final String? initialType;
 
-  const FeedbackReportDialog({
-    super.key,
-    this.initialType,
-  });
+  const FeedbackReportDialog({super.key, this.initialType});
 
   static const String feedbackEndpoint =
       'https://shellit.top/api/collections/feedback_reports/records';
@@ -231,8 +228,14 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close, size: 20, color: ShellitColors.textMuted),
-                onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.close,
+                  size: 20,
+                  color: ShellitColors.textMuted,
+                ),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 splashRadius: 18,
                 tooltip: context.tr('common.close', defaultText: 'Close'),
               ),
@@ -253,7 +256,11 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, size: 18, color: ShellitColors.statusRed),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 18,
+                    color: ShellitColors.statusRed,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -333,7 +340,10 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
           TextFormField(
             controller: _subjectController,
             enabled: !_isSubmitting,
-            style: const TextStyle(fontSize: 13, color: ShellitColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: ShellitColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: context.tr(
                 'feedback.subject_placeholder',
@@ -369,11 +379,15 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
             enabled: !_isSubmitting,
             maxLines: 4,
             minLines: 3,
-            style: const TextStyle(fontSize: 13, color: ShellitColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: ShellitColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: context.tr(
                 'feedback.message_placeholder',
-                defaultText: 'Describe what happened or what you would like to see...',
+                defaultText:
+                    'Describe what happened or what you would like to see...',
               ),
               isDense: true,
             ),
@@ -391,7 +405,10 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
 
           // Email Input (Optional)
           Text(
-            context.tr('feedback.email_label', defaultText: 'Your Email (Optional)'),
+            context.tr(
+              'feedback.email_label',
+              defaultText: 'Your Email (Optional)',
+            ),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -404,7 +421,10 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
             controller: _emailController,
             enabled: !_isSubmitting,
             keyboardType: TextInputType.emailAddress,
-            style: const TextStyle(fontSize: 13, color: ShellitColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 13,
+              color: ShellitColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: context.tr(
                 'feedback.email_placeholder',
@@ -432,10 +452,15 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
-                onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 style: TextButton.styleFrom(
                   foregroundColor: ShellitColors.textMuted,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 child: Text(
                   context.tr('feedback.cancel_btn', defaultText: 'Cancel'),
@@ -448,7 +473,10 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
                 style: FilledButton.styleFrom(
                   backgroundColor: ShellitColors.accentLime,
                   foregroundColor: const Color(0xFF0D0F12),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -465,8 +493,14 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
                     : const Icon(Icons.send_rounded, size: 16),
                 label: Text(
                   _isSubmitting
-                      ? context.tr('feedback.sending_btn', defaultText: 'Sending...')
-                      : context.tr('feedback.send_btn', defaultText: 'Send Report'),
+                      ? context.tr(
+                          'feedback.sending_btn',
+                          defaultText: 'Sending...',
+                        )
+                      : context.tr(
+                          'feedback.send_btn',
+                          defaultText: 'Send Report',
+                        ),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -499,9 +533,7 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
               : ShellitColors.obsidianBackground,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected
-                ? accentColor
-                : ShellitColors.border,
+            color: isSelected ? accentColor : ShellitColors.border,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),

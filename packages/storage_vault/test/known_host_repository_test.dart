@@ -188,8 +188,7 @@ void main() {
             equals(expected));
 
         // Lowercase prefix is normalized to uppercase SHA256:
-        expect(
-            KnownHostRepository.canonicalizeFingerprint('sha256:$raw'),
+        expect(KnownHostRepository.canonicalizeFingerprint('sha256:$raw'),
             equals(expected));
 
         // Raw base64 gets SHA256: prepended
@@ -203,17 +202,18 @@ void main() {
             equals(expected));
 
         // Whitespace is trimmed
-        expect(
-            KnownHostRepository.canonicalizeFingerprint('   $expected   '),
+        expect(KnownHostRepository.canonicalizeFingerprint('   $expected   '),
             equals(expected));
       });
 
-      test('saveKnownHost normalizes fingerprint to canonical SHA256 format in database',
+      test(
+          'saveKnownHost normalizes fingerprint to canonical SHA256 format in database',
           () async {
         final hostWithRaw = testHost1.copyWith(
           id: 'kh-raw',
           host: 'raw-host.internal',
-          fingerprintSha256: 'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
+          fingerprintSha256:
+              'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
         );
 
         await repositoryOpen.saveKnownHost(hostWithRaw);
@@ -227,7 +227,8 @@ void main() {
         );
       });
 
-      test('findKnownHostByFingerprint looks up host by canonical or raw fingerprint',
+      test(
+          'findKnownHostByFingerprint looks up host by canonical or raw fingerprint',
           () async {
         await repositoryOpen.saveKnownHost(testHost1);
 
@@ -264,8 +265,7 @@ void main() {
           await repositoryOpen.matchesFingerprint(
             host: 'github.com',
             port: 22,
-            fingerprint:
-                'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
+            fingerprint: 'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
           ),
           isTrue,
         );

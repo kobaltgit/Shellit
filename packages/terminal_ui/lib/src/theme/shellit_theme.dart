@@ -20,7 +20,8 @@ class ShellitColors {
   static const Color accentLime = Color(0xFF7BE113); // Shellit Logo Lime
   static const Color accentLimeStart = Color(0xFF5FB300); // CTA gradient start
   static const Color accentLimeEnd = Color(0xFF8AEB1A); // CTA gradient end
-  static const Color accentLimeGlow = Color(0x617BE113); // rgba(123, 225, 19, 0.38)
+  static const Color accentLimeGlow =
+      Color(0x617BE113); // rgba(123, 225, 19, 0.38)
 
   /// Legacy alias maintained for backwards compatibility, redirected to brand lime
   static const Color accentCyan = accentLime;

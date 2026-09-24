@@ -125,7 +125,8 @@ void main() {
       expect(key, isNull);
     });
 
-    test('byte-based passphrase and key APIs correctly zeroize buffers', () async {
+    test('byte-based passphrase and key APIs correctly zeroize buffers',
+        () async {
       final pwdBytes = Uint8List.fromList(utf8.encode('BytePassword123!'));
       final saveRes = await keyManager.savePasswordCredentialBytes(
         id: 'pwd-byte-1',
@@ -139,7 +140,8 @@ void main() {
 
       // Test withDecryptedPassphraseBytes
       Uint8List? capturedPassphrase;
-      final passRes = await keyManager.withDecryptedPassphraseBytes('pwd-byte-1', (bytes) {
+      final passRes =
+          await keyManager.withDecryptedPassphraseBytes('pwd-byte-1', (bytes) {
         capturedPassphrase = bytes;
         expect(utf8.decode(bytes!), equals('BytePassword123!'));
         return true;
@@ -162,7 +164,8 @@ void main() {
 
       // Test withDecryptedPrivateKey
       Uint8List? capturedKey;
-      final keyRes = await keyManager.withDecryptedPrivateKey('key-byte-1', (bytes) {
+      final keyRes =
+          await keyManager.withDecryptedPrivateKey('key-byte-1', (bytes) {
         capturedKey = bytes;
         expect(bytes, equals([1, 2, 3, 4, 5, 6, 7, 8]));
         return 42;

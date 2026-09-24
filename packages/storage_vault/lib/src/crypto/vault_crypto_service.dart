@@ -127,7 +127,8 @@ class VaultCryptoService {
           Uint8List(nonce.length + macBytes.length + cipherText.length);
       output.setRange(0, nonce.length, nonce);
       output.setRange(nonce.length, nonce.length + macBytes.length, macBytes);
-      output.setRange(nonce.length + macBytes.length, output.length, cipherText);
+      output.setRange(
+          nonce.length + macBytes.length, output.length, cipherText);
 
       return output;
     } finally {

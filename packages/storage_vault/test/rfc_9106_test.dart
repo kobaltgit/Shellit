@@ -264,7 +264,9 @@ void main() {
       expect(key.isDestroyed, isTrue);
     });
 
-    test('VaultSecurityContext.unlockWithKeyBytes zeroizes source when requested', () {
+    test(
+        'VaultSecurityContext.unlockWithKeyBytes zeroizes source when requested',
+        () {
       final context = VaultSecurityContext();
       final sourceBytes = Uint8List.fromList([10, 20, 30, 40, 50]);
 
@@ -277,7 +279,8 @@ void main() {
       expect(context.isUnlocked, isFalse);
     });
 
-    test('VaultSecurityContext.withMasterKeyBytes zeroizes extracted buffer', () async {
+    test('VaultSecurityContext.withMasterKeyBytes zeroizes extracted buffer',
+        () async {
       final context = VaultSecurityContext();
       final key = SecretKeyData(Uint8List.fromList([1, 2, 3, 4]));
       context.unlock(key);
@@ -306,7 +309,8 @@ void main() {
       expect(() => VaultCryptoService.zeroize(empty), returnsNormally);
     });
 
-    test('deriveMasterKey zeroizes raw passwordBytes and salt when requested', () async {
+    test('deriveMasterKey zeroizes raw passwordBytes and salt when requested',
+        () async {
       final cryptoService = VaultCryptoService(
         argon2Memory: 1024,
         argon2Iterations: 2,
@@ -333,7 +337,8 @@ void main() {
       expect(key.isDestroyed, isTrue);
     });
 
-    test('deriveMasterKeyFromBytes works and zeroizes buffers when requested', () async {
+    test('deriveMasterKeyFromBytes works and zeroizes buffers when requested',
+        () async {
       final cryptoService = VaultCryptoService(
         argon2Memory: 1024,
         argon2Iterations: 2,
@@ -342,7 +347,8 @@ void main() {
       );
 
       final passwordBytes = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF]);
-      final salt = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+      final salt = Uint8List.fromList(
+          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
       final key = await cryptoService.deriveMasterKeyFromBytes(
         passwordBytes: passwordBytes,
@@ -358,7 +364,8 @@ void main() {
       VaultCryptoService.destroySecretKey(key);
     });
 
-    test('withDecryptedBytes zeroizes cleartext even if action throws', () async {
+    test('withDecryptedBytes zeroizes cleartext even if action throws',
+        () async {
       final cryptoService = VaultCryptoService(
         argon2Memory: 1024,
         argon2Iterations: 2,

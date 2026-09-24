@@ -135,56 +135,59 @@ void main() {
   });
 
   group('Version comparison logic tests (BUG fix & semver metadata)', () {
-    test('Correctly identifies newer semver even with build metadata in current version', () {
-      // Expose or verify the semver comparison rule:
-      bool isVersionGreater(String remote, String current) {
-        String cleanVersion(String v) {
-          var s = v.trim();
-          if (s.startsWith('v') || s.startsWith('V')) {
-            s = s.substring(1);
+    test(
+      'Correctly identifies newer semver even with build metadata in current version',
+      () {
+        // Expose or verify the semver comparison rule:
+        bool isVersionGreater(String remote, String current) {
+          String cleanVersion(String v) {
+            var s = v.trim();
+            if (s.startsWith('v') || s.startsWith('V')) {
+              s = s.substring(1);
+            }
+            if (s.contains('+')) {
+              s = s.split('+').first;
+            }
+            if (s.contains('-')) {
+              s = s.split('-').first;
+            }
+            return s;
           }
-          if (s.contains('+')) {
-            s = s.split('+').first;
+
+          final cleanRemote = cleanVersion(remote);
+          final cleanCurrent = cleanVersion(current);
+
+          final remoteParts = cleanRemote
+              .split('.')
+              .map((e) => int.tryParse(e) ?? 0)
+              .toList();
+          final currentParts = cleanCurrent
+              .split('.')
+              .map((e) => int.tryParse(e) ?? 0)
+              .toList();
+
+          final maxLen = remoteParts.length > currentParts.length
+              ? remoteParts.length
+              : currentParts.length;
+
+          for (int i = 0; i < maxLen; i++) {
+            final r = i < remoteParts.length ? remoteParts[i] : 0;
+            final c = i < currentParts.length ? currentParts[i] : 0;
+            if (r > c) return true;
+            if (r < c) return false;
           }
-          if (s.contains('-')) {
-            s = s.split('-').first;
-          }
-          return s;
+          return false;
         }
 
-        final cleanRemote = cleanVersion(remote);
-        final cleanCurrent = cleanVersion(current);
-
-        final remoteParts = cleanRemote
-            .split('.')
-            .map((e) => int.tryParse(e) ?? 0)
-            .toList();
-        final currentParts = cleanCurrent
-            .split('.')
-            .map((e) => int.tryParse(e) ?? 0)
-            .toList();
-
-        final maxLen = remoteParts.length > currentParts.length
-            ? remoteParts.length
-            : currentParts.length;
-
-        for (int i = 0; i < maxLen; i++) {
-          final r = i < remoteParts.length ? remoteParts[i] : 0;
-          final c = i < currentParts.length ? currentParts[i] : 0;
-          if (r > c) return true;
-          if (r < c) return false;
-        }
-        return false;
-      }
-
-      // Regression: 0.8.4+19 was previously parsed as [0, 8, 419], breaking update checks for 0.8.5
-      expect(isVersionGreater('0.8.5', '0.8.4+19'), isTrue);
-      expect(isVersionGreater('v0.8.5', '0.8.4+19'), isTrue);
-      expect(isVersionGreater('0.9.0', '0.8.4+19'), isTrue);
-      expect(isVersionGreater('1.0.0', '0.8.4+19'), isTrue);
-      expect(isVersionGreater('0.8.4', '0.8.4+19'), isFalse);
-      expect(isVersionGreater('0.8.4+20', '0.8.4+19'), isFalse);
-      expect(isVersionGreater('0.8.3', '0.8.4+19'), isFalse);
-    });
+        // Regression: 0.8.4+19 was previously parsed as [0, 8, 419], breaking update checks for 0.8.5
+        expect(isVersionGreater('0.8.5', '0.8.4+19'), isTrue);
+        expect(isVersionGreater('v0.8.5', '0.8.4+19'), isTrue);
+        expect(isVersionGreater('0.9.0', '0.8.4+19'), isTrue);
+        expect(isVersionGreater('1.0.0', '0.8.4+19'), isTrue);
+        expect(isVersionGreater('0.8.4', '0.8.4+19'), isFalse);
+        expect(isVersionGreater('0.8.4+20', '0.8.4+19'), isFalse);
+        expect(isVersionGreater('0.8.3', '0.8.4+19'), isFalse);
+      },
+    );
   });
 }

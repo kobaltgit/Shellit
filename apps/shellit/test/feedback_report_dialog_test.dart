@@ -19,42 +19,39 @@ void main() {
   Widget createWidget() {
     return const ProviderScope(
       child: MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: FeedbackReportDialog(),
-          ),
-        ),
+        home: Scaffold(body: Center(child: FeedbackReportDialog())),
       ),
     );
   }
 
   group('FeedbackReportDialog Tests (IDEA-028)', () {
-    testWidgets('Renders all elements: title, category pills, form inputs, buttons', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Renders all elements: title, category pills, form inputs, buttons',
+      (tester) async {
+        await tester.pumpWidget(createWidget());
+        await tester.pumpAndSettle();
 
-      expect(find.text('Send Feedback or Bug Report'), findsOneWidget);
-      expect(
-        find.text('Help us make Shellit better. We read every submission.'),
-        findsOneWidget,
-      );
+        expect(find.text('Send Feedback or Bug Report'), findsOneWidget);
+        expect(
+          find.text('Help us make Shellit better. We read every submission.'),
+          findsOneWidget,
+        );
 
-      // Categories
-      expect(find.text('🐛 Bug Report'), findsOneWidget);
-      expect(find.text('💡 Feature'), findsOneWidget);
-      expect(find.text('💬 Feedback'), findsOneWidget);
+        // Categories
+        expect(find.text('🐛 Bug Report'), findsOneWidget);
+        expect(find.text('💡 Feature'), findsOneWidget);
+        expect(find.text('💬 Feedback'), findsOneWidget);
 
-      // Form fields
-      expect(find.text('Subject'), findsOneWidget);
-      expect(find.text('Details'), findsOneWidget);
-      expect(find.text('Your Email (Optional)'), findsOneWidget);
+        // Form fields
+        expect(find.text('Subject'), findsOneWidget);
+        expect(find.text('Details'), findsOneWidget);
+        expect(find.text('Your Email (Optional)'), findsOneWidget);
 
-      // Buttons
-      expect(find.text('Cancel'), findsOneWidget);
-      expect(find.text('Send Report'), findsOneWidget);
-    });
+        // Buttons
+        expect(find.text('Cancel'), findsOneWidget);
+        expect(find.text('Send Report'), findsOneWidget);
+      },
+    );
 
     testWidgets('Tapping category pill updates selected category', (
       tester,
@@ -96,11 +93,17 @@ void main() {
 
       // Fill in subject & message
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Brief summary of the issue or idea...'),
+        find.widgetWithText(
+          TextFormField,
+          'Brief summary of the issue or idea...',
+        ),
         'Test Subject',
       );
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Describe what happened or what you would like to see...'),
+        find.widgetWithText(
+          TextFormField,
+          'Describe what happened or what you would like to see...',
+        ),
         'Test Details',
       );
 

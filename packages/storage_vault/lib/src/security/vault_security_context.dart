@@ -83,4 +83,3 @@ class VaultSecurityContext {
     await _lockStateController.close();
   }
 }
-
