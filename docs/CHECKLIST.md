@@ -623,5 +623,7 @@
   - [x] Развертывание Docker-стека в `/opt/shellit`: Nginx Alpine (`shellit_frontend`), PocketBase (`shellit_pocketbase` на внутреннем порту `8095`), Cloudflare Tunnel (`shellit_cloudflared`).
   - [x] Архитектура Same-Origin: бесшовное проксирование `/api/` и `/_/` через Nginx на одном домене `https://shellit.top` без CORS-проблем.
   - [x] Подробная инструкция и архитектурный манифест веб-агента в `docs/agents/AGENT_5_WEBSITE.md`.
+  - [ ] **IDEA-028:** Встроенный диалог отзывов и баг-репортов в приложении (раздел «О программе») с модальным окном (в стиле `FeedbackModal.astro`) и авто-отправкой в PocketBase (`https://shellit.top/api/collections/feedback_reports/records`).
+
 
 
