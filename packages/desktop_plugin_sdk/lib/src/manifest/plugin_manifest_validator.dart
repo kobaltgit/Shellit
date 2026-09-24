@@ -104,9 +104,11 @@ class PluginManifestValidator {
       );
     }
     final entryPoint = entryPointVal.trim();
-    if (p.isAbsolute(entryPoint) ||
+    if (p.posix.isAbsolute(entryPoint) ||
+        p.windows.isAbsolute(entryPoint) ||
         entryPoint.startsWith('/') ||
         entryPoint.startsWith('\\') ||
+        RegExp(r'^[a-zA-Z]:').hasMatch(entryPoint) ||
         entryPoint.contains('..')) {
       return Result.error(
         PluginFailure.invalidManifest(
