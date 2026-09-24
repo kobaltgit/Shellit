@@ -88,7 +88,9 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
         final tabStates = WorkspaceTabState.decodeList(savedJson);
         if (tabStates.isNotEmpty && mounted) {
           _hasRestoredWorkspace = true;
-          ref.read(sessionManagerProvider.notifier).restoreWorkspaceTabs(
+          ref
+              .read(sessionManagerProvider.notifier)
+              .restoreWorkspaceTabs(
                 tabStates,
                 hosts,
                 autoReconnect: settings.autoReconnectOnRestore,
@@ -108,8 +110,9 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
       final settings = await vaultRepo.getSettings();
       if (!settings.restoreWorkspaceSessions) return;
 
-      final tabStates =
-          ref.read(sessionManagerProvider.notifier).exportWorkspaceState();
+      final tabStates = ref
+          .read(sessionManagerProvider.notifier)
+          .exportWorkspaceState();
       final jsonStr = WorkspaceTabState.encodeList(tabStates);
       await vaultRepo.setMetadata('workspace_tabs', jsonStr);
     } catch (_) {}
@@ -161,13 +164,14 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
       final installedPlugins = pluginsAsync.valueOrNull ?? [];
       final enabledSidebarPlugins = installedPlugins
           .where(
-            (p) =>
-                p.isEnabled && p.manifest.target == PluginTarget.sidebar,
+            (p) => p.isEnabled && p.manifest.target == PluginTarget.sidebar,
           )
           .toList();
 
       if (enabledSidebarPlugins.isNotEmpty) {
-        pluginRailItems = enabledSidebarPlugins.map<PluginActivityRailItem>((plugin) {
+        pluginRailItems = enabledSidebarPlugins.map<PluginActivityRailItem>((
+          plugin,
+        ) {
           final isSelected = activePlugin?.manifest.id == plugin.manifest.id;
           final isMcp = plugin.manifest.id == 'com.shellit.mcp-server';
           final isDocker = plugin.manifest.id == 'com.shellit.docker-monitor';
@@ -177,21 +181,22 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
                   defaultText: 'MCP AI',
                 )
               : (isDocker
-                  ? localizationService.translate(
-                      'plugins.docker_short_name',
-                      defaultText: 'Docker',
-                    )
-                  : plugin.manifest.name);
+                    ? localizationService.translate(
+                        'plugins.docker_short_name',
+                        defaultText: 'Docker',
+                      )
+                    : plugin.manifest.name);
 
           return PluginActivityRailItem(
             id: plugin.manifest.id,
             label: label,
             icon: isMcp
-                ? McpVectorIcon(
-                    size: 16,
-                    color: isSelected
-                        ? ShellitColors.accentPurple
-                        : ShellitColors.textMuted,
+                ? Opacity(
+                    opacity: isSelected ? 1.0 : 0.7,
+                    child: const McpVectorIcon(
+                      size: 18,
+                      useOriginalColors: true,
+                    ),
                   )
                 : Text(
                     isDocker ? '🐳' : '🧩',
@@ -209,9 +214,9 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
                 final sessionState = ref.read(sessionManagerProvider);
                 if (sessionState.activeTab == null) {
                   if (sessionState.tabs.isNotEmpty) {
-                    ref.read(sessionManagerProvider.notifier).setActiveTab(
-                          sessionState.tabs.last.id,
-                        );
+                    ref
+                        .read(sessionManagerProvider.notifier)
+                        .setActiveTab(sessionState.tabs.last.id);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -252,7 +257,7 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
           onConnectSftp: isMobilePlatform
               ? null
               : (host, {onProgress}) =>
-                  connectController.connectSftp(host, onProgress: onProgress),
+                    connectController.connectSftp(host, onProgress: onProgress),
           onToggleRecording: (session, host) =>
               connectController.toggleRecording(session, host),
           onWindowMinimize: _isDesktop ? () => windowManager.minimize() : null,
@@ -277,8 +282,7 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
                   final activePlugin = ref.watch(activeSidebarPluginProvider);
                   if (activePlugin == null) return const SizedBox.shrink();
 
-                  final activeTab =
-                      ref.watch(sessionManagerProvider).activeTab;
+                  final activeTab = ref.watch(sessionManagerProvider).activeTab;
                   if (activePlugin.manifest.id ==
                           'com.shellit.docker-monitor' &&
                       activeTab == null) {

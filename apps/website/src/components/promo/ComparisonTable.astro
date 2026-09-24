@@ -1,0 +1,137 @@
+---
+import { Check, X, Shield, Sparkles, Server, Zap, Lock, Cpu } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const rows = t.compare.rows;
+---
+
+<section id="compare" class="py-20 bg-obsidian-card/40 border-y border-obsidian-border/80 relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-cyber-cyan mb-3">
+        <Sparkles class="w-3.5 h-3.5" />
+        <span>{t.compare.badge}</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        {t.compare.title}
+      </h2>
+      <p class="mt-3 text-slate-400 text-sm sm:text-base">
+        {t.compare.subtitle}
+      </p>
+    </div>
+
+    <!-- Table Container with Horizontal Scroll for Mobile -->
+    <div class="overflow-x-auto pb-4">
+      <table class="w-full min-w-[760px] text-left border-collapse">
+        <thead>
+          <tr class="border-b border-obsidian-border">
+            <th class="py-4 px-4 text-xs font-mono uppercase tracking-wider text-slate-400 w-2/5">
+              {t.compare.thFeature}
+            </th>
+            
+            <!-- Shellit Column Header (Highlighted) -->
+            <th class="py-4 px-5 text-sm font-bold text-cyber-cyan w-1/4 bg-cyber-cyan/5 border-x border-t border-cyber-cyan/30 rounded-t-xl">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyber-cyan shadow-glow-cyan"></span>
+                <span class="text-white text-base">{t.compare.thShellit}</span>
+                <span class="px-1.5 py-0.2 rounded bg-cyber-cyan/20 text-cyber-cyan text-[10px] font-mono">{t.compare.openSourceBadge}</span>
+              </div>
+            </th>
+
+            <!-- Termius Column Header -->
+            <th class="py-4 px-4 text-sm font-bold text-slate-200 w-1/5">
+              <div class="flex items-center gap-1.5">
+                <span>{t.compare.thTermius}</span>
+                <Lock class="w-3.5 h-3.5 text-slate-500" />
+              </div>
+            </th>
+
+            <!-- PuTTY Column Header -->
+            <th class="py-4 px-4 text-sm font-bold text-slate-400 w-1/6">
+              {t.compare.thPutty}
+            </th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-obsidian-border text-xs font-sans">
+          {rows.map((row) => (
+            <tr class="hover:bg-obsidian-surface/40 transition-colors">
+              <!-- Feature name & description -->
+              <td class="py-4 px-4">
+                <div class="font-semibold text-slate-100 text-sm">{row.feature}</div>
+                <div class="text-slate-400 text-xs mt-0.5">{row.desc}</div>
+              </td>
+
+              <!-- Shellit Column Cell (Highlighted with cyber border) -->
+              <td class="py-4 px-5 bg-cyber-cyan/5 border-x border-cyber-cyan/20">
+                <div class="flex items-start gap-2">
+                  {row.shellit.dev ? (
+                    <span class="inline-block w-2 h-2 rounded-full bg-cyber-amber mt-1 flex-shrink-0 animate-pulse"></span>
+                  ) : row.shellit.icon !== false ? (
+                    <Check class="w-4 h-4 text-cyber-green mt-0.5 flex-shrink-0 stroke-[2.5]" />
+                  ) : null}
+                  <span class={`font-medium leading-normal ${
+                    row.shellit.badge === 'green' ? 'text-cyber-green' :
+                    row.shellit.badge === 'yellow' ? 'text-cyber-amber' : 'text-slate-200'
+                  }`}>
+                    {row.shellit.text}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Termius Column Cell -->
+              <td class="py-4 px-4">
+                <div class="flex items-start gap-2 text-slate-400">
+                  {row.termius.icon === false ? (
+                    <X class="w-4 h-4 text-cyber-red mt-0.5 flex-shrink-0 stroke-[2]" />
+                  ) : row.termius.icon === true ? (
+                    <Check class="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
+                  ) : null}
+                  <span class={`leading-normal ${
+                    row.termius.badge === 'yellow' ? 'text-amber-300/80' :
+                    row.termius.badge === 'red' ? 'text-slate-500' : 'text-slate-300'
+                  }`}>
+                    {row.termius.text}
+                  </span>
+                </div>
+              </td>
+
+              <!-- PuTTY Column Cell -->
+              <td class="py-4 px-4 text-slate-500">
+                <div class="flex items-start gap-2">
+                  {row.putty.icon === false ? (
+                    <X class="w-4 h-4 text-slate-600 mt-0.5 flex-shrink-0" />
+                  ) : null}
+                  <span class="leading-normal">{row.putty.text}</span>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bottom comparison footnote -->
+    <div class="mt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-4 border-t border-obsidian-border pt-4">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyber-green"></span>
+        <span>{lang === 'ru' ? 'Данные актуальны для Shellit v0.1.0 и Termius 2026' : 'Data verified for Shellit v0.1.0 and Termius 2026'}</span>
+      </div>
+      <a
+        href={lang === 'ru' ? '/ru/roadmap' : '/roadmap'}
+        class="text-cyber-cyan hover:underline flex items-center gap-1"
+      >
+        <span>{lang === 'ru' ? 'Смотреть подробный роадмап' : 'View detailed product roadmap'}</span>
+        <span>→</span>
+      </a>
+    </div>
+  </div>
+</section>

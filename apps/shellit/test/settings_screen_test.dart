@@ -301,7 +301,9 @@ void main() {
       },
     );
 
-    testWidgets('Renders Workspace & Sessions settings card on desktop', (tester) async {
+    testWidgets('Renders Workspace & Sessions settings card on desktop', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -317,7 +319,9 @@ void main() {
       }
     });
 
-    testWidgets('Hides Workspace & Sessions settings card on mobile', (tester) async {
+    testWidgets('Hides Workspace & Sessions settings card on mobile', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

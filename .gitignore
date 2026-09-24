@@ -15,6 +15,11 @@
 **/doc/api/
 **/.packages
 
+# Web & Node Artifacts
+**/node_modules/
+**/dist/
+**/.astro/
+
 # Symbolication & Obfuscation
 **/app.*.symbols
 **/app.*.map.json

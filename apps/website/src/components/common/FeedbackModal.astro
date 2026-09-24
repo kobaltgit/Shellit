@@ -1,0 +1,273 @@
+---
+import { MessageSquare, X, Send, Bug, Sparkles, CheckCircle2 } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+
+const t = {
+  en: {
+    triggerBtn: 'Feedback & Bugs',
+    title: 'Send Feedback or Bug Report',
+    subtitle: 'Help us make Shellit better. We read every submission.',
+    typeLabel: 'Category',
+    typeBug: '🐛 Bug Report',
+    typeFeature: '💡 Feature Request',
+    typeGeneral: '💬 General Feedback',
+    subjectLabel: 'Subject',
+    subjectPlaceholder: 'Brief summary of the issue or idea...',
+    messageLabel: 'Details',
+    messagePlaceholder: 'Describe what happened or what you would like to see...',
+    emailLabel: 'Your Email (Optional)',
+    emailPlaceholder: 'you@domain.com (for follow-up)',
+    sendBtn: 'Send Report',
+    sendingBtn: 'Sending...',
+    successTitle: 'Report Received!',
+    successDesc: 'Thank you! Your feedback has been submitted to the engineering dashboard.',
+    closeBtn: 'Close'
+  },
+  ru: {
+    triggerBtn: 'Отзыв / Баг-репорт',
+    title: 'Отправить отзыв или сообщение об ошибке',
+    subtitle: 'Помогите сделать Shellit лучше. Мы читаем каждое сообщение.',
+    typeLabel: 'Категория',
+    typeBug: '🐛 Сообщение об ошибке',
+    typeFeature: '💡 Предложение фичи',
+    typeGeneral: '💬 Общий отзыв',
+    subjectLabel: 'Тема',
+    subjectPlaceholder: 'Краткая суть проблемы или предложения...',
+    messageLabel: 'Подробности',
+    messagePlaceholder: 'Опишите, что пошло не так или что вы хотите увидеть...',
+    emailLabel: 'Ваш Email (необязательно)',
+    emailPlaceholder: 'you@domain.com (для ответа)',
+    sendBtn: 'Отправить сообщение',
+    sendingBtn: 'Отправка...',
+    successTitle: 'Сообщение отправлено!',
+    successDesc: 'Спасибо! Ваш отчет передан в панель управления разработчиков.',
+    closeBtn: 'Закрыть'
+  }
+}[lang] || t['en'];
+---
+
+<!-- Floating Feedback Pill (Fixed bottom right, left of ScrollToTop) -->
+<div class="fixed bottom-6 right-20 z-40">
+  <button
+    id="feedback-trigger-btn"
+    type="button"
+    class="flex items-center gap-2 px-3.5 py-2 rounded-full bg-obsidian-card/90 backdrop-blur-md border border-obsidian-border hover:border-cyber-cyan/50 text-slate-300 hover:text-white text-xs font-mono shadow-xl hover:shadow-glow-cyan transition-all hover:scale-105 cursor-pointer"
+    title={t.triggerBtn}
+  >
+    <MessageSquare class="w-3.5 h-3.5 text-cyber-cyan" />
+    <span class="hidden sm:inline">{t.triggerBtn}</span>
+  </button>
+</div>
+
+<!-- Modal Backdrop -->
+<div
+  id="feedback-modal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-bg/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="relative w-full max-w-lg rounded-2xl bg-obsidian-card border border-obsidian-border p-6 shadow-2xl space-y-5 overflow-hidden">
+    <!-- Neon Top Accent Line -->
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyber-cyan via-cyber-purple to-cyber-cyan"></div>
+
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+      <div>
+        <h3 class="text-lg font-bold text-white tracking-wide">{t.title}</h3>
+        <p class="text-xs text-slate-400 mt-1">{t.subtitle}</p>
+      </div>
+      <button
+        id="feedback-close-btn"
+        type="button"
+        class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-obsidian-surface transition-colors"
+      >
+        <X class="w-5 h-5" />
+      </button>
+    </div>
+
+    <!-- Form Content -->
+    <form id="feedback-form" class="space-y-4">
+      <div>
+        <label class="block text-xs font-mono text-slate-300 mb-1.5">{t.typeLabel}</label>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-obsidian-surface border border-obsidian-border cursor-pointer has-[:checked]:border-cyber-cyan has-[:checked]:bg-cyber-cyan/10 has-[:checked]:text-cyber-cyan transition-all">
+            <input type="radio" name="feedback_type" value="bug" checked class="hidden" />
+            <span>{t.typeBug}</span>
+          </label>
+          <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-obsidian-surface border border-obsidian-border cursor-pointer has-[:checked]:border-cyber-purple has-[:checked]:bg-cyber-purple/10 has-[:checked]:text-cyber-purple transition-all">
+            <input type="radio" name="feedback_type" value="feature_request" class="hidden" />
+            <span>{t.typeFeature}</span>
+          </label>
+          <label class="flex items-center justify-center gap-1.5 p-2 rounded-xl bg-obsidian-surface border border-obsidian-border cursor-pointer has-[:checked]:border-cyber-blue has-[:checked]:bg-cyber-blue/10 has-[:checked]:text-cyber-blue transition-all">
+            <input type="radio" name="feedback_type" value="general" class="hidden" />
+            <span>{t.typeGeneral}</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-mono text-slate-300 mb-1">{t.subjectLabel}</label>
+        <input
+          type="text"
+          id="feedback-subject"
+          required
+          placeholder={t.subjectPlaceholder}
+          class="w-full px-3 py-2 rounded-xl bg-obsidian-surface border border-obsidian-border text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyber-cyan transition-colors"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-mono text-slate-300 mb-1">{t.messageLabel}</label>
+        <textarea
+          id="feedback-message"
+          rows="4"
+          required
+          placeholder={t.messagePlaceholder}
+          class="w-full px-3 py-2 rounded-xl bg-obsidian-surface border border-obsidian-border text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyber-cyan transition-colors resize-none"
+        ></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-mono text-slate-300 mb-1">{t.emailLabel}</label>
+        <input
+          type="email"
+          id="feedback-email"
+          placeholder={t.emailPlaceholder}
+          class="w-full px-3 py-2 rounded-xl bg-obsidian-surface border border-obsidian-border text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyber-cyan transition-colors"
+        />
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-3">
+        <button
+          type="button"
+          id="feedback-cancel-btn"
+          class="px-4 py-2 rounded-xl text-xs font-mono text-slate-400 hover:text-white transition-colors"
+        >
+          {t.closeBtn}
+        </button>
+        <button
+          type="submit"
+          id="feedback-submit-btn"
+          class="flex items-center gap-2 px-5 py-2 rounded-xl bg-cyber-cyan/20 border border-cyber-cyan/50 text-cyber-cyan hover:bg-cyber-cyan hover:text-obsidian-bg text-xs font-mono font-bold transition-all shadow-glow-cyan"
+        >
+          <Send class="w-3.5 h-3.5" />
+          <span>{t.sendBtn}</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- Success View -->
+    <div id="feedback-success" class="hidden text-center py-6 space-y-4">
+      <div class="w-12 h-12 rounded-full bg-cyber-green/20 border border-cyber-green/40 flex items-center justify-center mx-auto text-cyber-green">
+        <CheckCircle2 class="w-6 h-6" />
+      </div>
+      <div>
+        <h4 class="text-base font-bold text-white">{t.successTitle}</h4>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">{t.successDesc}</p>
+      </div>
+      <button
+        type="button"
+        id="feedback-done-btn"
+        class="px-5 py-2 rounded-xl bg-obsidian-surface border border-obsidian-border text-slate-200 text-xs font-mono hover:border-slate-500 transition-colors"
+      >
+        {t.closeBtn}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    const triggerBtn = document.getElementById('feedback-trigger-btn');
+    const modal = document.getElementById('feedback-modal');
+    const closeBtn = document.getElementById('feedback-close-btn');
+    const cancelBtn = document.getElementById('feedback-cancel-btn');
+    const doneBtn = document.getElementById('feedback-done-btn');
+    const form = document.getElementById('feedback-form');
+    const successView = document.getElementById('feedback-success');
+    const submitBtn = document.getElementById('feedback-submit-btn');
+
+    if (!triggerBtn || !modal) return;
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => modal.classList.remove('opacity-0'));
+    }
+
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+        if (form && successView) {
+          form.reset();
+          form.classList.remove('hidden');
+          successView.classList.add('hidden');
+        }
+      }, 300);
+    }
+
+    triggerBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (doneBtn) doneBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const typeEl = form.querySelector('input[name="feedback_type"]:checked');
+        const subjectEl = document.getElementById('feedback-subject');
+        const messageEl = document.getElementById('feedback-message');
+        const emailEl = document.getElementById('feedback-email');
+
+        const payload = {
+          type: typeEl ? typeEl.value : 'general',
+          subject: subjectEl ? subjectEl.value : '',
+          message: messageEl ? messageEl.value : '',
+          email: emailEl ? emailEl.value : '',
+          os_info: navigator.userAgent || 'Unknown OS',
+          app_version: 'Web Portal v0.8.3',
+          status: 'new'
+        };
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-60');
+        }
+
+        try {
+          const pbBase = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+          const res = await fetch(`${pbBase}/api/collections/feedback_reports/records`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (res.ok) {
+            form.classList.add('hidden');
+            successView.classList.remove('hidden');
+          } else {
+            alert('Failed to send report. Please try again.');
+          }
+        } catch (err) {
+          alert('Network error. Backend might be unreachable.');
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-60');
+          }
+        }
+      });
+    }
+  })();
+</script>

@@ -1,0 +1,232 @@
+---
+import { Download, Terminal, ChevronDown, Check, Copy, Shield, Sparkles, Layers } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+import { getLatestRelease } from '../../lib/github-releases';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const basePath = lang === 'ru' ? '/ru' : '';
+const latestRelease = await getLatestRelease();
+---
+
+<section id="download" class="relative pt-12 pb-20 md:pt-20 md:pb-28 overflow-hidden" data-lang={lang}>
+  <!-- Subtle Background Neon Glows -->
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-cyber-cyan/10 blur-[120px] rounded-full pointer-events-none -z-10"></div>
+  <div class="absolute top-1/3 right-10 w-[400px] h-[300px] bg-cyber-purple/10 blur-[140px] rounded-full pointer-events-none -z-10"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <!-- Release Badge -->
+    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-slate-300 mb-6 shadow-sm hover:border-cyber-cyan/40 transition-colors">
+      <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
+      <span>Shellit {latestRelease.version} {lang === 'ru' ? 'Релиз • Open Source & Zero-Knowledge' : 'Release • Open Source & Zero-Knowledge'}</span>
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-[1.15]">
+      {t.hero.title1} <br class="hidden sm:inline" />
+      <span class="bg-gradient-to-r from-cyber-cyan via-[#8AEB1A] to-emerald-400 bg-clip-text text-transparent">
+        {t.hero.title2}
+      </span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="mt-5 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+      {t.hero.subtitle}
+    </p>
+
+    <!-- CTAs & Downloads -->
+    <div class="mt-8 flex flex-col items-center justify-center">
+      <!-- Buttons Row (Perfect top/center alignment) -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
+        <!-- Primary Download Button with dynamic OS detection -->
+        <a
+          id="primary-download-btn"
+          href={latestRelease.downloads.windowsInstaller || latestRelease.htmlUrl}
+          data-win-url={latestRelease.downloads.windowsInstaller || latestRelease.htmlUrl}
+          data-linux-url={latestRelease.downloads.linuxAppImage || latestRelease.htmlUrl}
+          data-android-url={latestRelease.downloads.androidApk || latestRelease.htmlUrl}
+          class="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-sm tracking-wide shadow-glow-cyan transition-all hover:scale-[1.02] active:scale-[0.98] w-full sm:w-auto"
+        >
+          <Download class="w-4 h-4 stroke-[2.5]" />
+          <span id="primary-download-text">{t.hero.downloadWin}</span>
+        </a>
+
+        <!-- Secondary action: Docs -->
+        <a
+          href={`${basePath}/getting-started/quick-start`}
+          class="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-200 hover:text-white font-medium text-sm transition-all w-full sm:w-auto"
+        >
+          <span>{t.hero.docsBtn}</span>
+          <span class="text-slate-500">→</span>
+        </a>
+      </div>
+
+      <!-- Platform Modal Trigger (Centered below buttons) -->
+      <button
+        type="button"
+        data-open-download-modal
+        class="mt-3 text-[11px] font-mono text-slate-400 hover:text-cyber-cyan transition-colors underline underline-offset-4 decoration-slate-700 hover:decoration-cyber-cyan cursor-pointer"
+      >
+        {lang === 'ru' ? 'Все платформы: Linux, Android, Portable .zip →' : 'All platforms: Linux, Android, Portable .zip →'}
+      </button>
+    </div>
+
+    <!-- Terminal Quick-Install One-Liner Box -->
+    <div class="mt-10 max-w-xl mx-auto">
+      <div class="rounded-xl bg-obsidian-card border border-obsidian-border overflow-hidden shadow-xl text-left">
+        <!-- Window Top Bar & Tabs -->
+        <div class="flex items-center justify-between px-3.5 py-2 border-b border-obsidian-border bg-obsidian-surface/60">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+          </div>
+
+          <!-- Tabs for package managers -->
+          <div class="flex items-center gap-1 font-mono text-[11px]" id="cli-tabs">
+            <button
+              class="cli-tab-btn active px-2.5 py-1 rounded bg-obsidian-bg text-cyber-cyan border border-cyber-cyan/30 transition-colors"
+              data-tab="winget"
+            >
+              winget
+            </button>
+            <button
+              class="cli-tab-btn px-2.5 py-1 rounded text-slate-400 hover:text-slate-200 transition-colors"
+              data-tab="scoop"
+            >
+              scoop
+            </button>
+            <button
+              class="cli-tab-btn px-2.5 py-1 rounded text-slate-400 hover:text-slate-200 transition-colors"
+              data-tab="curl"
+            >
+              linux (curl)
+            </button>
+          </div>
+        </div>
+
+        <!-- Command Line & Copy Button -->
+        <div class="p-3.5 flex items-center justify-between gap-3 bg-obsidian-bg font-mono text-xs text-slate-200">
+          <div class="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-none py-1">
+            <span class="text-cyber-cyan font-bold select-none">$</span>
+            <code id="cli-command-text" class="text-slate-300">winget install Kobalt.Shellit</code>
+          </div>
+
+          <button
+            id="copy-cli-btn"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-obsidian-surface hover:bg-obsidian-border text-slate-300 hover:text-white transition-colors flex-shrink-0 text-[11px]"
+            title={t.hero.copy}
+            data-copied={t.hero.copied}
+            data-copy={t.hero.copy}
+          >
+            <Copy class="w-3.5 h-3.5" id="copy-icon" />
+            <Check class="w-3.5 h-3.5 text-cyber-green hidden" id="check-icon" />
+            <span id="copy-text">{t.hero.copy}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real Application Showcase (Hero Dashboard Screenshot) -->
+    <div class="mt-14 relative max-w-5xl mx-auto">
+      <div class="rounded-2xl bg-obsidian-card border border-obsidian-border shadow-2xl overflow-hidden p-1.5 bg-gradient-to-b from-obsidian-border to-obsidian-bg group">
+        <div class="relative rounded-xl overflow-hidden border border-obsidian-border/80 shadow-glow-cyan">
+          <img
+            src="/screenshots/01_hero_dashboard.png"
+            alt="Shellit Dashboard — Hosts Catalog with Live Telemetry and Vault"
+            class="w-full h-auto object-cover transform transition-transform duration-500 group-hover:scale-[1.01]"
+            loading="eager"
+          />
+          <div class="absolute bottom-3 left-4 right-4 hidden sm:flex items-center justify-between pointer-events-none">
+            <div class="px-3 py-1 rounded-full bg-obsidian-bg/85 backdrop-blur-md border border-obsidian-border text-[11px] font-mono text-slate-300">
+              <span class="text-cyber-green font-bold">{t.hero.previewBadge}</span> — {t.hero.previewDesc}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Client Side Scripts for OS Detection, CLI Tabs and Dropdown -->
+<script>
+  // 1. OS Detection (Strictly NO macOS download)
+  const heroSection = document.getElementById('download');
+  const isRu = heroSection?.getAttribute('data-lang') === 'ru';
+  const downloadText = document.getElementById('primary-download-text');
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  const primaryBtn = document.getElementById('primary-download-btn');
+
+  if (userAgent.includes('win')) {
+    if (downloadText) downloadText.textContent = isRu ? 'Скачать для Windows (.exe)' : 'Download for Windows (.exe)';
+    if (primaryBtn) primaryBtn.href = primaryBtn.getAttribute('data-win-url') || '';
+  } else if (userAgent.includes('android')) {
+    if (downloadText) downloadText.textContent = isRu ? 'Скачать APK для Android' : 'Download APK for Android';
+    if (primaryBtn) primaryBtn.href = primaryBtn.getAttribute('data-android-url') || '';
+  } else if (userAgent.includes('linux')) {
+    if (downloadText) downloadText.textContent = isRu ? 'Скачать для Linux (.tar.gz)' : 'Download for Linux (.tar.gz)';
+    if (primaryBtn) primaryBtn.href = primaryBtn.getAttribute('data-linux-url') || '';
+  } else {
+    if (downloadText) downloadText.textContent = isRu ? 'Скачать Shellit' : 'Download Shellit';
+  }
+
+  // 2. CLI Command Tabs
+  const commands: Record<string, string> = {
+    winget: 'winget install Kobalt.Shellit',
+    scoop: 'scoop bucket add shellit https://github.com/kobaltgit/Shellit && scoop install shellit',
+    curl: 'curl -fsSL https://shellit.dev/install.sh | bash',
+  };
+
+  const commandText = document.getElementById('cli-command-text');
+  const tabButtons = document.querySelectorAll('.cli-tab-btn');
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-tab');
+      if (tab && commands[tab]) {
+        if (commandText) commandText.textContent = commands[tab];
+
+        tabButtons.forEach((b) => {
+          b.classList.remove('active', 'bg-obsidian-bg', 'text-cyber-cyan', 'border', 'border-cyber-cyan/30');
+          b.classList.add('text-slate-400');
+        });
+
+        btn.classList.add('active', 'bg-obsidian-bg', 'text-cyber-cyan', 'border', 'border-cyber-cyan/30');
+        btn.classList.remove('text-slate-400');
+      }
+    });
+  });
+
+  // 4. Copy to clipboard button
+  const copyBtn = document.getElementById('copy-cli-btn');
+  const copyIcon = document.getElementById('copy-icon');
+  const checkIcon = document.getElementById('check-icon');
+  const copyText = document.getElementById('copy-text');
+  const copiedLabel = copyBtn?.getAttribute('data-copied') || 'Copied!';
+  const copyLabel = copyBtn?.getAttribute('data-copy') || 'Copy';
+
+  copyBtn?.addEventListener('click', async () => {
+    if (commandText?.textContent) {
+      try {
+        await navigator.clipboard.writeText(commandText.textContent);
+        copyIcon?.classList.add('hidden');
+        checkIcon?.classList.remove('hidden');
+        if (copyText) copyText.textContent = copiedLabel;
+
+        setTimeout(() => {
+          copyIcon?.classList.remove('hidden');
+          checkIcon?.classList.add('hidden');
+          if (copyText) copyText.textContent = copyLabel;
+        }, 2000);
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
+    }
+  });
+</script>

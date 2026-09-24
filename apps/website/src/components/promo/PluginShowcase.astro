@@ -1,0 +1,126 @@
+---
+import { Puzzle, Terminal, ArrowRight, Layers, ExternalLink, Code2 } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const basePath = lang === 'ru' ? '/ru' : '';
+const plugins = t.plugins.pluginsList;
+---
+
+<section id="plugins" class="py-20 relative">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-cyber-cyan mb-3">
+          <Puzzle class="w-3.5 h-3.5" />
+          <span>{t.plugins.badge}</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          {t.plugins.title}
+        </h2>
+        <p class="mt-3 text-slate-400 text-sm sm:text-base max-w-xl">
+          {t.plugins.subtitle}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a
+          href={`${basePath}/plugins/creating-plugins`}
+          class="flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-200 text-xs font-mono font-medium transition-colors"
+        >
+          <Code2 class="w-4 h-4 text-cyber-cyan" />
+          <span>{t.plugins.docsBtn}</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Real Plugin Manager Screenshot Preview -->
+    <div class="mb-12 rounded-2xl bg-obsidian-card border border-obsidian-border shadow-2xl p-1.5 overflow-hidden group">
+      <div class="rounded-xl overflow-hidden border border-obsidian-border bg-obsidian-bg">
+        <div class="flex items-center justify-between px-3 py-2 bg-obsidian-surface/60 border-b border-obsidian-border text-[11px] font-mono text-slate-400">
+          <span class="flex items-center gap-1.5">
+            <Puzzle class="w-3.5 h-3.5 text-cyber-cyan" />
+            <span>{t.plugins.managerTitle}</span>
+          </span>
+          <span class="text-cyber-cyan text-[10px]">{t.plugins.managerSubtitle}</span>
+        </div>
+        <img
+          src="/screenshots/06_plugins_manager.png"
+          alt="Shellit Plugins Manager — Управление установленными расширениями"
+          class="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-300"
+          loading="lazy"
+        />
+      </div>
+    </div>
+
+    <!-- Plugin Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {plugins.map((plugin) => (
+        <div class="rounded-2xl bg-obsidian-card border border-obsidian-border p-6 flex flex-col justify-between hover:border-slate-600 transition-colors group">
+          <div class="space-y-4">
+            <!-- Top tag & file name -->
+            <div class="flex items-center justify-between">
+              <span class={`text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                plugin.badgeColor === 'purple' ? 'bg-cyber-purple/20 text-cyber-purple border border-cyber-purple/30' :
+                plugin.badgeColor === 'cyan' ? 'bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30' :
+                'bg-cyber-green/20 text-cyber-green border border-cyber-green/30'
+              }`}>
+                {plugin.category}
+              </span>
+              <span class="text-xs font-mono text-slate-500">.{plugin.file.split('.').pop()}</span>
+            </div>
+
+            <!-- Plugin Name -->
+            <h3 class="text-lg font-bold text-white group-hover:text-cyber-cyan transition-colors">
+              {plugin.name}
+            </h3>
+
+            <!-- Description -->
+            <p class="text-xs text-slate-400 leading-relaxed">
+              {plugin.description}
+            </p>
+          </div>
+
+          <!-- Permissions Tags & Action -->
+          <div class="pt-6 mt-6 border-t border-obsidian-border flex items-center justify-between">
+            <div class="flex flex-wrap gap-1">
+              {plugin.tags.map((tag) => (
+                <span class="px-1.5 py-0.5 rounded bg-obsidian-surface text-[10px] font-mono text-slate-400 border border-obsidian-border">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <code class="text-[11px] font-mono text-slate-400">{plugin.file}</code>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Bottom Developer Callout -->
+    <div class="mt-12 p-6 rounded-2xl bg-gradient-to-r from-obsidian-card to-obsidian-surface border border-obsidian-border flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan flex-shrink-0">
+          <Terminal class="w-5 h-5" />
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-white">{t.plugins.calloutTitle}</h4>
+          <p class="text-xs text-slate-400 mt-0.5">{t.plugins.calloutDesc}</p>
+        </div>
+      </div>
+      <a
+        href={`${basePath}/plugins/creating-plugins`}
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-bg border border-obsidian-border hover:border-cyber-cyan/50 text-cyber-cyan text-xs font-mono transition-colors flex-shrink-0"
+      >
+        <span>{t.plugins.calloutBtn}</span>
+      </a>
+    </div>
+
+  </div>
+</section>

@@ -1,0 +1,22 @@
+{
+  "name": "shellit-website",
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "node --max-old-space-size=768 ./node_modules/astro/astro.js build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/starlight": "^0.32.1",
+    "@astrojs/tailwind": "^5.1.5",
+    "astro": "^5.4.2",
+    "lucide-astro": "^0.556.0",
+    "pocketbase": "^0.25.0",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}

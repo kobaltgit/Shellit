@@ -1,0 +1,26 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Hero from '../components/promo/Hero.astro';
+import Scrollytelling from '../components/promo/Scrollytelling.astro';
+import ComparisonTable from '../components/promo/ComparisonTable.astro';
+import SyncServerSection from '../components/promo/SyncServerSection.astro';
+import McpAiSection from '../components/promo/McpAiSection.astro';
+import PluginShowcase from '../components/promo/PluginShowcase.astro';
+import CTABanner from '../components/promo/CTABanner.astro';
+
+const lang = 'en';
+---
+
+<Layout 
+  lang={lang}
+  title="Shellit — Modern Cross-Platform SSH & SFTP Client"
+  description="Shellit is a modern, secure, cross-platform SSH & SFTP client with 2x2 matrix splits, Prod Guard destructive command intercept, native MCP server, and self-hosted E2EE sync."
+>
+  <Hero lang={lang} />
+  <Scrollytelling lang={lang} />
+  <ComparisonTable lang={lang} />
+  <SyncServerSection lang={lang} />
+  <McpAiSection lang={lang} />
+  <PluginShowcase lang={lang} />
+  <CTABanner lang={lang} />
+</Layout>

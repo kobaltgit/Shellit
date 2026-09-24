@@ -351,10 +351,7 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
         final releaseName = data['name'] as String? ?? tagName;
         final releaseBody = data['body'] as String? ?? '';
 
-        final isNewer = _isVersionGreater(
-          tagName,
-          _currentVersion,
-        );
+        final isNewer = _isVersionGreater(tagName, _currentVersion);
 
         if (isNewer) {
           _showUpdateAvailableDialog(

@@ -1,0 +1,83 @@
+---
+// Lightweight zero-cookie, GDPR-friendly privacy analytics beacon
+---
+
+<script is:inline>
+  (function () {
+    try {
+      const path = window.location.pathname;
+      // Do not track admin portal visits
+      if (path.startsWith('/admin')) return;
+
+      function getOS() {
+        const ua = navigator.userAgent;
+        if (/android/i.test(ua)) return 'Android';
+        if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+        if (/Win/i.test(ua)) return 'Windows';
+        if (/Mac/i.test(ua)) return 'macOS';
+        if (/Linux/i.test(ua)) return 'Linux';
+        return 'Other';
+      }
+
+      function getBrowser() {
+        const ua = navigator.userAgent;
+        if (/edg/i.test(ua)) return 'Edge';
+        if (/chrome|crios/i.test(ua)) return 'Chrome';
+        if (/firefox|fxios/i.test(ua)) return 'Firefox';
+        if (/safari/i.test(ua)) return 'Safari';
+        return 'Other';
+      }
+
+      function getDeviceType() {
+        const ua = navigator.userAgent;
+        if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return 'tablet';
+        if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated/i.test(ua)) return 'mobile';
+        return 'desktop';
+      }
+
+      // Generate anonymous daily hash
+      function getVisitorHash() {
+        try {
+          const raw = (navigator.userAgent || '') + (screen.width || '') + (navigator.language || '') + new Date().toDateString();
+          let hash = 0;
+          for (let i = 0; i < raw.length; i++) {
+            hash = (hash << 5) - hash + raw.charCodeAt(i);
+            hash |= 0;
+          }
+          return 'vh_' + Math.abs(hash).toString(16);
+        } catch {
+          return 'vh_anon';
+        }
+      }
+
+      function sendBeacon() {
+        const payload = {
+          path: path,
+          referrer: document.referrer || 'direct',
+          os: getOS(),
+          browser: getBrowser(),
+          device_type: getDeviceType(),
+          lang: (navigator.language || 'en').slice(0, 2),
+          visitor_hash: getVisitorHash()
+        };
+
+        const pbBase = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+        const endpoint = pbBase + '/api/collections/site_visits/records';
+        
+        fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(function () {});
+      }
+
+      // Record visit quickly without blocking critical render
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(sendBeacon, { timeout: 1000 });
+      } else {
+        setTimeout(sendBeacon, 300);
+      }
+    } catch (e) {}
+  })();
+</script>

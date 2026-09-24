@@ -1,0 +1,9 @@
+# Node dependencies
+node_modules/
+npm-debug.log*
+
+# Production build output
+dist/
+
+# Astro cache & generated types
+.astro/

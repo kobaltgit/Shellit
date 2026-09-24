@@ -1,0 +1,206 @@
+---
+import { Server, ShieldCheck, Zap, Lock, Copy, Check, ArrowRight } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const basePath = lang === 'ru' ? '/ru' : '';
+
+const composeCode = `version: '3.8'
+
+services:
+  shellit-sync:
+    image: ghcr.io/shellit/sync-server:latest
+    container_name: shellit-sync
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      - PORT=8080
+      - DATA_PATH=/data/shellit-sync.db
+      - REGISTRATION_TOKEN=your-secret-token`;
+---
+
+<section id="sync" class="py-20 relative overflow-hidden">
+  <!-- Subtle background glow -->
+  <div class="absolute bottom-10 left-10 w-[500px] h-[300px] bg-cyber-cyan/10 blur-[130px] rounded-full pointer-events-none -z-10"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      
+      <!-- Left Column: Narrative (6 cols) -->
+      <div class="lg:col-span-6 space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-cyber-cyan">
+          <Server class="w-3.5 h-3.5" />
+          <span>{t.sync.badge}</span>
+        </div>
+
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+          {t.sync.title1} <br />
+          <span class="bg-gradient-to-r from-cyber-cyan to-blue-400 bg-clip-text text-transparent">
+            {t.sync.title2}
+          </span>
+        </h2>
+
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+          {t.sync.desc}
+        </p>
+
+        <!-- Bullet List -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+          <div class="p-3.5 rounded-xl bg-obsidian-card border border-obsidian-border space-y-1.5">
+            <div class="flex items-center gap-2 text-cyber-cyan text-xs font-bold font-mono">
+              <ShieldCheck class="w-4 h-4" />
+              <span>{t.sync.cardE2eeTitle}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-normal">
+              {t.sync.cardE2eeDesc}
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-obsidian-card border border-obsidian-border space-y-1.5">
+            <div class="flex items-center gap-2 text-cyber-green text-xs font-bold font-mono">
+              <Zap class="w-4 h-4" />
+              <span>{t.sync.cardRamTitle}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-normal">
+              {t.sync.cardRamDesc}
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-obsidian-card border border-obsidian-border space-y-1.5">
+            <div class="flex items-center gap-2 text-cyber-purple text-xs font-bold font-mono">
+              <Lock class="w-4 h-4" />
+              <span>{t.sync.cardTransportTitle}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-normal">
+              {t.sync.cardTransportDesc}
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-obsidian-card border border-obsidian-border space-y-1.5">
+            <div class="flex items-center gap-2 text-cyber-blue text-xs font-bold font-mono">
+              <Server class="w-4 h-4" />
+              <span>{t.sync.cardWsTitle}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-normal">
+              {t.sync.cardWsDesc}
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <a
+            href={`${basePath}/sync/docker-deployment`}
+            class="inline-flex items-center gap-2 text-cyber-cyan text-xs font-mono hover:underline group"
+          >
+            <span>{t.sync.docLink}</span>
+            <ArrowRight class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Visual Docker Compose & Architecture Card (6 cols) -->
+      <div class="lg:col-span-6 space-y-6">
+        
+        <!-- Real Zero-Knowledge Keychain Vault Screenshot Card -->
+        <div class="rounded-2xl bg-obsidian-card border border-obsidian-border shadow-2xl p-1.5 overflow-hidden group">
+          <div class="rounded-xl overflow-hidden border border-obsidian-border bg-obsidian-bg">
+            <div class="flex items-center justify-between px-3 py-2 bg-obsidian-surface/60 border-b border-obsidian-border text-[11px] font-mono text-slate-400">
+              <span class="flex items-center gap-1.5">
+                <Lock class="w-3.5 h-3.5 text-cyber-cyan" />
+                <span>{t.sync.keychainTitle}</span>
+              </span>
+              <span class="text-cyber-green text-[10px]">{t.sync.keychainBadge}</span>
+            </div>
+            <img
+              src="/screenshots/02_keychain_vault.png"
+              alt="Shellit Keychain Vault — Zero-Knowledge локальное хранилище ключей"
+              class="w-full h-auto object-cover transform group-hover:scale-[1.01] transition-transform duration-300"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
+        <!-- Docker Compose Interactive Box -->
+        <div class="rounded-2xl bg-obsidian-card border border-obsidian-border overflow-hidden shadow-2xl">
+          <!-- Card Header -->
+          <div class="flex items-center justify-between px-4 py-3 border-b border-obsidian-border bg-obsidian-surface/80">
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
+              </div>
+              <span class="text-xs font-mono text-slate-300 ml-2">docker-compose.yml</span>
+            </div>
+
+            <button
+              id="copy-compose-btn"
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-obsidian-bg border border-obsidian-border hover:border-slate-500 text-slate-300 text-xs font-mono transition-colors"
+              title={t.sync.copyCompose}
+              data-copied={t.sync.copiedCompose}
+              data-copy={t.sync.copyCompose}
+            >
+              <Copy class="w-3 h-3" id="copy-compose-icon" />
+              <Check class="w-3 h-3 text-cyber-green hidden" id="check-compose-icon" />
+              <span id="copy-compose-text">{t.sync.copyCompose}</span>
+            </button>
+          </div>
+
+          <!-- Code Body -->
+          <div class="p-4 bg-obsidian-bg text-xs font-mono overflow-x-auto text-slate-300">
+            <pre class="leading-relaxed"><code id="compose-code-content">{composeCode}</code></pre>
+          </div>
+
+          <!-- Footer Status -->
+          <div class="px-4 py-2.5 bg-obsidian-surface/40 border-t border-obsidian-border flex items-center justify-between text-[11px] font-mono text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-cyber-green animate-pulse"></span>
+              <span>image: ghcr.io/shellit/sync-server:latest</span>
+            </span>
+            <span>RAM: ~18 MB</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const copyBtn = document.getElementById('copy-compose-btn');
+  const copyIcon = document.getElementById('copy-compose-icon');
+  const checkIcon = document.getElementById('check-compose-icon');
+  const copyText = document.getElementById('copy-compose-text');
+  const codeEl = document.getElementById('compose-code-content');
+  const copiedLabel = copyBtn?.getAttribute('data-copied') || 'Copied!';
+  const copyLabel = copyBtn?.getAttribute('data-copy') || 'Copy';
+
+  copyBtn?.addEventListener('click', async () => {
+    if (codeEl?.textContent) {
+      try {
+        await navigator.clipboard.writeText(codeEl.textContent);
+        copyIcon?.classList.add('hidden');
+        checkIcon?.classList.remove('hidden');
+        if (copyText) copyText.textContent = copiedLabel;
+
+        setTimeout(() => {
+          copyIcon?.classList.remove('hidden');
+          checkIcon?.classList.add('hidden');
+          if (copyText) copyText.textContent = copyLabel;
+        }, 2000);
+      } catch (err) {
+        console.error('Error copying code:', err);
+      }
+    }
+  });
+</script>

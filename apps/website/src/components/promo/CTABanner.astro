@@ -1,0 +1,72 @@
+---
+import { Download, Github, Shield, Sparkles } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+const basePath = lang === 'ru' ? '/ru' : '';
+---
+
+<section class="py-20 relative overflow-hidden">
+  <!-- Glowing center backdrop -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
+    <div class="w-[600px] h-[300px] bg-gradient-to-r from-cyber-cyan/15 to-cyber-purple/15 blur-[120px] rounded-full"></div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+    <div class="rounded-3xl bg-obsidian-card border border-obsidian-border p-8 sm:p-14 shadow-2xl relative overflow-hidden">
+      <!-- Glow border line -->
+      <div class="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyber-cyan to-transparent"></div>
+
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+        {t.cta.title}
+      </h2>
+
+      <p class="mt-4 text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+        {t.cta.subtitle}
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button
+          type="button"
+          data-open-download-modal
+          class="flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-sm shadow-glow-cyan transition-all hover:scale-[1.02] w-full sm:w-auto cursor-pointer"
+        >
+          <Download class="w-4 h-4 stroke-[2.5]" />
+          <span>{t.cta.btn}</span>
+        </button>
+
+        <a
+          href="https://github.com/kobaltgit/Shellit"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-obsidian-surface border border-obsidian-border text-slate-200 hover:text-white hover:border-slate-500 font-mono text-sm transition-colors w-full sm:w-auto"
+        >
+          <Github class="w-4 h-4" />
+          <span>{t.cta.repoBtn}</span>
+        </a>
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="mt-10 pt-8 border-t border-obsidian-border/60 flex flex-wrap items-center justify-center gap-6 text-xs font-mono text-slate-400">
+        <div class="flex items-center gap-1.5">
+          <Shield class="w-4 h-4 text-cyber-cyan" />
+          <span>{t.cta.trust1}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-cyber-green"></span>
+          <span>{t.cta.trust2}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <Sparkles class="w-4 h-4 text-cyber-purple" />
+          <span>{t.cta.trust3}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

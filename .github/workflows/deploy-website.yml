@@ -1,0 +1,114 @@
+name: Build and Deploy Website & Docs
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/website/**'
+      - 'servers/portal_backend/**'
+      - 'docs/roadmap.data.json'
+      - '.github/workflows/deploy-website.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'apps/website/**'
+      - 'docs/roadmap.data.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: 'production-website'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & Validate Website
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/website
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: apps/website/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Astro Website & Starlight Docs
+        run: npm run build
+        env:
+          NODE_ENV: production
+          ASTRO_TELEMETRY_DISABLED: 1
+
+      - name: Verify Build Artifacts
+        run: |
+          test -f dist/index.html || exit 1
+          test -f dist/ru/index.html || exit 1
+          test -f dist/roadmap/index.html || exit 1
+          test -f dist/ru/roadmap/index.html || exit 1
+          test -f dist/getting-started/quick-start/index.html || exit 1
+          test -f dist/ru/getting-started/quick-start/index.html || exit 1
+          echo "All critical pages built successfully!"
+
+      - name: Archive Production Dist
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+        run: tar -czf site_deploy.tar.gz -C dist .
+
+      - name: Upload Production Dist Artifact
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist-archive
+          path: apps/website/site_deploy.tar.gz
+          retention-days: 2
+
+  deploy-senko:
+    name: Deploy to Senko (https://shellit.top)
+    needs: build
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Dist Archive
+        uses: actions/download-artifact@v4
+        with:
+          name: site-dist-archive
+
+      - name: Deploy to Senko via SSH
+        env:
+          SSH_KEY: ${{ secrets.SENKO_SSH_KEY }}
+          HOST: ${{ secrets.SENKO_HOST }}
+          USER: ${{ secrets.SENKO_USER || 'root' }}
+        run: |
+          if [ -z "$SSH_KEY" ]; then
+            echo "❌ Secret SENKO_SSH_KEY is not set in GitHub repository settings!"
+            echo "Please add SENKO_SSH_KEY under Settings -> Secrets and variables -> Actions"
+            exit 1
+          fi
+          if [ -z "$HOST" ]; then
+            echo "❌ Secret SENKO_HOST is not set in GitHub repository settings!"
+            echo "Please add SENKO_HOST under Settings -> Secrets and variables -> Actions"
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+          scp site_deploy.tar.gz "$USER@$HOST:/opt/shellit/"
+          ssh "$USER@$HOST" "mkdir -p /opt/shellit/frontend/dist && tar -xzf /opt/shellit/site_deploy.tar.gz -C /opt/shellit/frontend/dist && rm -f /opt/shellit/site_deploy.tar.gz"
+          echo "🚀 https://shellit.top successfully deployed and live!"

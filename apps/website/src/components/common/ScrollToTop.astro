@@ -1,0 +1,37 @@
+---
+import { ArrowUp } from 'lucide-astro';
+---
+
+<button
+  id="scroll-to-top"
+  aria-label="Наверх"
+  title="Наверх"
+  class="fixed bottom-6 right-6 z-50 p-3 rounded-xl bg-obsidian-card/90 backdrop-blur-md border border-obsidian-border/80 text-slate-400 hover:text-cyber-cyan hover:border-cyber-cyan/60 hover:shadow-glow-cyan shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4 focus:outline-none focus:ring-2 focus:ring-cyber-cyan/40 group"
+>
+  <ArrowUp class="w-5 h-5 transition-transform duration-200 group-hover:-translate-y-0.5" />
+</button>
+
+<script>
+  const scrollBtn = document.getElementById('scroll-to-top');
+
+  function checkScrollPosition() {
+    if (!scrollBtn) return;
+    if (window.scrollY > 350) {
+      scrollBtn.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-4');
+      scrollBtn.classList.add('opacity-100', 'pointer-events-auto', 'translate-y-0');
+    } else {
+      scrollBtn.classList.remove('opacity-100', 'pointer-events-auto', 'translate-y-0');
+      scrollBtn.classList.add('opacity-0', 'pointer-events-none', 'translate-y-4');
+    }
+  }
+
+  scrollBtn?.addEventListener('click', () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  });
+
+  window.addEventListener('scroll', checkScrollPosition, { passive: true });
+  checkScrollPosition();
+</script>

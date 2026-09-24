@@ -12,8 +12,8 @@ import 'src/shellit_app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final isDesktop = !kIsWeb &&
-      (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+  final isDesktop =
+      !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
   if (isDesktop) {
     await windowManager.ensureInitialized();
     const windowOptions = WindowOptions(

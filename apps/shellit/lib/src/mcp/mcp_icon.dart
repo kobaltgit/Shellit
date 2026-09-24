@@ -1,73 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:terminal_ui/terminal_ui.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// Stylish vector icon for MCP (Model Context Protocol) AI Gateway.
+/// Official vector icon for MCP (Model Context Protocol) AI Gateway.
 class McpVectorIcon extends StatelessWidget {
   final double size;
   final Color? color;
+  final bool useOriginalColors;
 
-  const McpVectorIcon({super.key, this.size = 14, this.color});
+  const McpVectorIcon({
+    super.key,
+    this.size = 18,
+    this.color,
+    this.useOriginalColors = false,
+  });
+
+  static const String _rawSvg = '''
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mcpGrad" gradientUnits="userSpaceOnUse" x1="256" y1="450.4" x2="256" y2="35.3">
+      <stop offset="0" stop-color="#5F55FF"/>
+      <stop offset="1" stop-color="#2EEBFF"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#mcpGrad)" d="M318.4,479c-5.6,0-11.2-2.1-15.5-6.4l-15.5-15.5c-8.3-8.3-12.8-19.3-12.8-31c0-11.7,4.6-22.7,12.8-31l116.3-116.3c10.4-10.4,16.1-24.1,16.1-38.7c0-14.6-5.7-28.4-16.1-38.8c-20.8-20.7-56.9-20.7-77.5,0l-85.2,85.3c-5.7,5.6-13.7,7.6-20.9,5.8c-3.7-0.9-7.3-2.9-10.2-5.8c-8.6-8.6-8.6-22.4,0-31l85.3-85.3c21.3-21.3,21.3-56.1,0-77.4c-21.4-21.3-56.2-21.3-77.5,0L85.9,224.6c-8.6,8.6-22.4,8.6-31,0s-8.6-22.4,0-31L186.7,61.8c38.4-38.4,101-38.4,139.5,0c21.9,21.9,31.3,51.6,28.3,80.2c28.4-2.8,58.4,6.4,80.3,28.3c38.4,38.5,38.4,101,0,139.5L318.4,426.1l15.5,15.5c8.6,8.6,8.6,22.4,0,31C329.6,476.9,324,479,318.4,479z M225.4,369.7c-25.3,0-50.6-9.6-69.8-28.9c-38.4-38.4-38.4-101,0-139.5l85.3-85.3c8.6-8.6,22.4-8.6,31,0s8.6,22.4,0,31l-85.3,85.3c-21.3,21.4-21.4,56.2,0,77.5c21.5,21.4,56.2,21.4,77.5,0l85.3-85.3c8.6-8.6,22.4-8.6,31,0c8.6,8.6,8.6,22.4,0,31l-85.3,85.3C275.9,360,250.7,369.7,225.4,369.7z"/>
+</svg>
+''';
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = color ?? ShellitColors.accentCyan;
+    final effectiveColorFilter = (!useOriginalColors && color != null)
+        ? ColorFilter.mode(color!, BlendMode.srcIn)
+        : null;
 
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _McpIconPainter(activeColor),
+    return SvgPicture.string(
+      _rawSvg,
+      width: size,
+      height: size,
+      colorFilter: effectiveColorFilter,
     );
   }
-}
-
-class _McpIconPainter extends CustomPainter {
-  final Color color;
-
-  _McpIconPainter(this.color);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final strokePaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.3
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final glowPaint = Paint()
-      ..color = color.withValues(alpha: 0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
-
-    final fillPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    // Central diamond / core
-    final path = Path()
-      ..moveTo(w * 0.5, h * 0.1)
-      ..lineTo(w * 0.9, h * 0.5)
-      ..lineTo(w * 0.5, h * 0.9)
-      ..lineTo(w * 0.1, h * 0.5)
-      ..close();
-
-    canvas.drawPath(path, glowPaint);
-    canvas.drawPath(path, strokePaint);
-
-    // Connecting circuit spurs
-    canvas.drawLine(Offset(0, h * 0.5), Offset(w * 0.1, h * 0.5), strokePaint);
-    canvas.drawLine(Offset(w * 0.9, h * 0.5), Offset(w, h * 0.5), strokePaint);
-    canvas.drawLine(Offset(w * 0.5, 0), Offset(w * 0.5, h * 0.1), strokePaint);
-    canvas.drawLine(Offset(w * 0.5, h * 0.9), Offset(w * 0.5, h), strokePaint);
-
-    // Center processor node
-    canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.15, fillPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _McpIconPainter oldDelegate) =>
-      oldDelegate.color != color;
 }

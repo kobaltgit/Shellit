@@ -1,0 +1,29 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((app) => {
+  const collection = app.findCollectionByNameOrId("roadmap_items");
+  if (!collection) return;
+
+  const initialItems = [
+    { feature_id: "feat-matrix-splits", status: "shipped", tag: "Terminal", order: 1, votes: 128, title_en: "2x2 Matrix Splits & Broadcast", title_ru: "Матричный сплит 2x2 & Broadcast", desc_en: "Split window into 4 independent panes with concurrent command execution.", desc_ru: "Разделение окна на 4 независимые панели с одновременным вводом команд." },
+    { feature_id: "feat-prod-guard", status: "shipped", tag: "Security", order: 2, votes: 95, title_en: "Prod Guard & Contextual Security", title_ru: "Prod Guard & Контекстная безопасность", desc_en: "Environment color coding and interception of destructive commands (rm -rf, DROP).", desc_ru: "Цветовая маркировка сред и перехват деструктивных команд (rm -rf, DROP)." },
+    { feature_id: "feat-sync-server", status: "shipped", tag: "Sync", order: 3, votes: 142, title_en: "Self-Hosted E2EE Sync Server", title_ru: "Self-Hosted E2EE Sync Server", desc_en: "Autonomous sync server built with Dart/SQLite with <20 MB RAM footprint.", desc_ru: "Автономный сервер синхронизации на Dart/SQLite с потреблением <20 МБ RAM." },
+    { feature_id: "feat-zk-vault", status: "shipped", tag: "Security", order: 4, votes: 88, title_en: "Zero-Knowledge Vault (Argon2id)", title_ru: "Zero-Knowledge Vault (Argon2id)", desc_en: "Client-side encryption of passwords, keys, and settings with in-memory zeroization.", desc_ru: "Локальное шифрование паролей, ключей и настроек с защитой в памяти." },
+    { feature_id: "feat-mcp-server", status: "shipped", tag: "AI & MCP", order: 5, votes: 176, title_en: "Native Model Context Protocol (MCP)", title_ru: "Нативный Model Context Protocol (MCP)", desc_en: "Embedded tool server for Claude Desktop, Cursor, and Antigravity.", desc_ru: "Встроенный сервер инструментов для Claude Desktop, Cursor и Antigravity." },
+    { feature_id: "feat-gemini-byok", status: "shipped", tag: "AI & MCP", order: 6, votes: 110, title_en: "Gemini AI Snippets Chat (BYOK)", title_ru: "Gemini AI Snippets Chat (BYOK)", desc_en: "Shell command generator using Bring Your Own Key via Google AI Studio.", desc_ru: "Генератор shell-команд по модели Bring Your Own Key через Google AI Studio." },
+    { feature_id: "feat-rtt-ping", status: "shipped", tag: "Terminal", order: 7, votes: 64, title_en: "Live Host RTT Ping", title_ru: "Живой RTT-пинг хостов", desc_en: "Continuous latency polling with real-time status indicators on cards.", desc_ru: "Непрерывный замер задержки серверов с отображением статуса на карточках." },
+    { feature_id: "feat-sftp-tunnels", status: "shipped", tag: "SFTP", order: 8, votes: 83, title_en: "Dual-Pane SFTP & Port Forwarding", title_ru: "Двухпанельный SFTP & Port Forwarding", desc_en: "Remote file management and visual SSH tunnel configuration.", desc_ru: "Управление удаленными файлами и визуальная настройка SSH-туннелей." },
+    { feature_id: "feat-startup-snippets", status: "in-progress", tag: "Terminal", order: 9, votes: 135, title_en: "Startup Snippets (Auto-Run)", title_ru: "Startup-сниппеты (автовыполнение)", desc_en: "Automatic execution of scripts and aliases immediately upon server connection.", desc_ru: "Автоматический запуск набора скриптов и алиасов сразу после подключения к серверу." },
+    { feature_id: "feat-winget-scoop", status: "in-progress", tag: "Deploy", order: 10, votes: 92, title_en: "Winget & Scoop Package Publishing", title_ru: "Публикация в Winget & Scoop", desc_en: "Official manifests for one-command installation in Windows terminals.", desc_ru: "Официальные манифесты для установки одной строчкой в консоли Windows." },
+    { feature_id: "feat-history-sync", status: "in-progress", tag: "Sync", order: 11, votes: 78, title_en: "Terminal History Sync", title_ru: "Синхронизация истории терминала", desc_en: "Optional encrypted synchronization of executed command history across devices.", desc_ru: "Опциональная зашифрованная синхронизация истории введенных команд между ПК и ноутбуком." },
+    { feature_id: "feat-color-themes", status: "in-progress", tag: "UI", order: 12, votes: 114, title_en: "Custom Color Themes", title_ru: "Кастомные цветовые темы", desc_en: "Support for custom UI styling themes via CSS/JSON configurations.", desc_ru: "Поддержка пользовательских тем оформления через CSS/JSON конфиги." },
+    { feature_id: "feat-jump-hosts", status: "planned", tag: "Network", order: 13, votes: 160, title_en: "Jump Hosts & ProxyJump Graph", title_ru: "Jump Hosts & ProxyJump граф", desc_en: "Visual bastion host chain builder with interactive node graph.", desc_ru: "Визуальный конструктор цепочек бастион-серверов с отображением узлов на интерактивной карте." },
+    { feature_id: "feat-prometheus", status: "planned", tag: "DevOps", order: 14, votes: 55, title_en: "Prometheus Metrics Exporter", title_ru: "Экспорт метрик в Prometheus", desc_en: "Background export of host uptime and RTT telemetry to monitoring systems.", desc_ru: "Фоновый экспорт статуса доступности и RTT ваших серверов в систему мониторинга." },
+    { feature_id: "feat-mosh", status: "planned", tag: "Terminal", order: 15, votes: 89, title_en: "Mosh Protocol Support", title_ru: "Поддержка сессий Mosh", desc_en: "Drop-tolerant mobile connectivity for high-latency or unstable networks.", desc_ru: "Устойчивое к обрывам связи мобильное подключение для нестабильных сетей." },
+    { feature_id: "feat-web-client", status: "planned", tag: "Web", order: 16, votes: 122, title_en: "Web Client (Self-Hosted)", title_ru: "Web-версия клиента (Self-Hosted)", desc_en: "Connect to your servers via a secure browser-based interface.", desc_ru: "Возможность подключиться к своим серверам через защищенный браузерный интерфейс." }
+  ];
+
+  for (const item of initialItems) {
+    const record = new Record(collection, item);
+    app.save(record);
+  }
+});

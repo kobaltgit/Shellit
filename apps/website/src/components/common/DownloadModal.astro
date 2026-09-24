@@ -1,0 +1,397 @@
+---
+import {
+  Download,
+  X,
+  Check,
+  Copy,
+  Monitor,
+  Smartphone,
+  Terminal,
+  ExternalLink,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { getLatestRelease } from '../../lib/github-releases';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const latestRelease = await getLatestRelease();
+
+const t = {
+  en: {
+    title: 'Download Shellit',
+    subtitle: 'Free, open-source, and zero-knowledge. Choose your platform.',
+    verified: 'Binaries built & verified with GitHub Actions',
+    yourOs: 'Your System',
+    winTitle: 'Windows',
+    winDesc: 'Windows 10 / 11 (64-bit)',
+    winSetup: 'Installer (.exe)',
+    winZip: 'Portable (.zip)',
+    linuxTitle: 'Linux',
+    linuxDesc: 'Ubuntu, Debian, Fedora, Arch',
+    linuxTar: 'Tarball (.tar.gz)',
+    linuxDeb: 'GitHub Releases',
+    androidTitle: 'Android',
+    androidDesc: 'Phones & Tablets (8.0+)',
+    androidApk: 'Download APK',
+    cliTitle: 'Install via Command Line',
+    allFiles: 'View all checksums & releases on GitHub →',
+    copy: 'Copy',
+    copied: 'Copied!',
+    close: 'Close',
+  },
+  ru: {
+    title: 'Скачать Shellit',
+    subtitle: 'Бесплатный, открытый и безопасный. Выберите вашу платформу.',
+    verified: 'Сборки проверены и скомпилированы через GitHub Actions',
+    yourOs: 'Ваша система',
+    winTitle: 'Windows',
+    winDesc: 'Windows 10 / 11 (64-bit)',
+    winSetup: 'Установщик (.exe)',
+    winZip: 'Портативная (.zip)',
+    linuxTitle: 'Linux',
+    linuxDesc: 'Ubuntu, Debian, Fedora, Arch',
+    linuxTar: 'Архив (.tar.gz)',
+    linuxDeb: 'Релизы на GitHub',
+    androidTitle: 'Android',
+    androidDesc: 'Смартфоны и планшеты (8.0+)',
+    androidApk: 'Скачать APK',
+    cliTitle: 'Установка через консоль',
+    allFiles: 'Все файлы и контрольные суммы SHA-256 на GitHub →',
+    copy: 'Копировать',
+    copied: 'Скопировано!',
+    close: 'Закрыть',
+  },
+}[lang] || t.en;
+---
+
+<!-- Modal Backdrop -->
+<div
+  id="download-modal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-obsidian-bg/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-300"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="download-modal-title"
+>
+  <div class="relative w-full max-w-2xl rounded-2xl bg-obsidian-card border border-obsidian-border p-5 sm:p-6 shadow-2xl space-y-5 overflow-hidden">
+    <!-- Neon Top Accent Gradient -->
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#5FB300] via-[#8AEB1A] to-[#5FB300]"></div>
+
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h3 id="download-modal-title" class="text-xl font-bold text-white tracking-wide">{t.title}</h3>
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-xs font-mono font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+            {latestRelease.version}
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">{t.subtitle}</p>
+      </div>
+
+      <button
+        id="download-modal-close-btn"
+        type="button"
+        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-obsidian-surface transition-colors cursor-pointer"
+        aria-label={t.close}
+      >
+        <X class="w-5 h-5" />
+      </button>
+    </div>
+
+    <!-- Platform Cards Grid (Windows, Linux, Android) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <!-- Windows Card -->
+      <div
+        id="modal-platform-win"
+        class="platform-card flex flex-col justify-between p-4 rounded-xl bg-obsidian-surface border border-obsidian-border transition-all duration-300 relative group"
+      >
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-9 h-9 rounded-lg bg-cyber-cyan/10 border border-cyber-cyan/25 flex items-center justify-center text-cyber-cyan">
+              <Monitor class="w-5 h-5" />
+            </div>
+            <span class="os-badge hidden px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-cyber-cyan text-slate-950 uppercase tracking-wider">
+              {t.yourOs}
+            </span>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">{t.winTitle}</div>
+            <div class="text-[11px] text-slate-400 leading-tight mt-0.5">{t.winDesc}</div>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-2">
+          <a
+            href={latestRelease.downloads.windowsInstaller || latestRelease.htmlUrl}
+            class="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-xs shadow-glow-cyan transition-all hover:scale-[1.02]"
+          >
+            <Download class="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>{t.winSetup}</span>
+          </a>
+          <a
+            href={latestRelease.downloads.windowsPortable || latestRelease.htmlUrl}
+            class="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <span>{t.winZip}</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Linux Card -->
+      <div
+        id="modal-platform-linux"
+        class="platform-card flex flex-col justify-between p-4 rounded-xl bg-obsidian-surface border border-obsidian-border transition-all duration-300 relative group"
+      >
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+              <Terminal class="w-5 h-5" />
+            </div>
+            <span class="os-badge hidden px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-400 text-slate-950 uppercase tracking-wider">
+              {t.yourOs}
+            </span>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">{t.linuxTitle}</div>
+            <div class="text-[11px] text-slate-400 leading-tight mt-0.5">{t.linuxDesc}</div>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-2">
+          <a
+            href={latestRelease.downloads.linuxAppImage || latestRelease.htmlUrl}
+            class="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-xs shadow-glow-cyan transition-all hover:scale-[1.02]"
+          >
+            <Download class="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>{t.linuxTar}</span>
+          </a>
+          <a
+            href={latestRelease.htmlUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <span>{t.linuxDeb}</span>
+            <ExternalLink class="w-3 h-3 text-slate-400" />
+          </a>
+        </div>
+      </div>
+
+      <!-- Android Card -->
+      <div
+        id="modal-platform-android"
+        class="platform-card flex flex-col justify-between p-4 rounded-xl bg-obsidian-surface border border-obsidian-border transition-all duration-300 relative group"
+      >
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+              <Smartphone class="w-5 h-5" />
+            </div>
+            <span class="os-badge hidden px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-400 text-slate-950 uppercase tracking-wider">
+              {t.yourOs}
+            </span>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-white">{t.androidTitle}</div>
+            <div class="text-[11px] text-slate-400 leading-tight mt-0.5">{t.androidDesc}</div>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-2">
+          <a
+            href={latestRelease.downloads.androidApk || latestRelease.htmlUrl}
+            class="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-xs shadow-glow-cyan transition-all hover:scale-[1.02]"
+          >
+            <Download class="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>{t.androidApk}</span>
+          </a>
+          <a
+            href={latestRelease.htmlUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-300 hover:text-white text-xs font-mono transition-colors"
+          >
+            <span>v0.8.3 Direct</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLI Package Manager Box -->
+    <div class="rounded-xl bg-obsidian-surface border border-obsidian-border p-3 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">{t.cliTitle}</span>
+        <div class="flex items-center gap-1 text-[11px] font-mono" id="modal-cli-tabs">
+          <button type="button" class="modal-tab-btn active px-2 py-0.5 rounded bg-obsidian-card text-cyber-cyan border border-cyber-cyan/30" data-tab="winget">winget</button>
+          <button type="button" class="modal-tab-btn px-2 py-0.5 rounded text-slate-400 hover:text-white" data-tab="scoop">scoop</button>
+          <button type="button" class="modal-tab-btn px-2 py-0.5 rounded text-slate-400 hover:text-white" data-tab="curl">curl</button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-2 bg-obsidian-bg border border-obsidian-border/80 px-3 py-2 rounded-lg">
+        <code id="modal-command-text" class="text-xs font-mono text-cyber-cyan truncate">winget install Kobalt.Shellit</code>
+        <button
+          id="modal-copy-cli-btn"
+          type="button"
+          class="flex items-center gap-1 px-2 py-1 rounded bg-obsidian-surface hover:bg-obsidian-card text-slate-300 hover:text-white text-[11px] font-mono transition-colors shrink-0"
+          data-copy={t.copy}
+          data-copied={t.copied}
+        >
+          <Copy class="w-3 h-3" id="modal-copy-icon" />
+          <Check class="w-3 h-3 text-cyber-green hidden" id="modal-check-icon" />
+          <span id="modal-copy-text">{t.copy}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer Note -->
+    <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400 font-mono">
+      <div class="flex items-center gap-1.5 text-slate-500">
+        <ShieldCheck class="w-3.5 h-3.5 text-cyber-cyan" />
+        <span>{t.verified}</span>
+      </div>
+      <a
+        href={latestRelease.htmlUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-cyber-cyan hover:underline transition-all"
+      >
+        {t.allFiles}
+      </a>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    const modal = document.getElementById('download-modal');
+    const closeBtn = document.getElementById('download-modal-close-btn');
+
+    if (!modal) return;
+
+    function openModal() {
+      // 1. Detect OS and highlight corresponding card
+      const ua = navigator.userAgent.toLowerCase();
+      let detected = 'win';
+      if (ua.includes('android')) {
+        detected = 'android';
+      } else if (ua.includes('linux')) {
+        detected = 'linux';
+      }
+
+      const winCard = document.getElementById('modal-platform-win');
+      const linuxCard = document.getElementById('modal-platform-linux');
+      const androidCard = document.getElementById('modal-platform-android');
+
+      [winCard, linuxCard, androidCard].forEach((c) => {
+        if (!c) return;
+        c.classList.remove('border-cyber-cyan', 'ring-2', 'ring-cyber-cyan/40', 'shadow-glow-cyan');
+        const b = c.querySelector('.os-badge');
+        if (b) b.classList.add('hidden');
+      });
+
+      let targetCard = winCard;
+      if (detected === 'linux') targetCard = linuxCard;
+      if (detected === 'android') targetCard = androidCard;
+
+      if (targetCard) {
+        targetCard.classList.add('border-cyber-cyan', 'ring-2', 'ring-cyber-cyan/40', 'shadow-glow-cyan');
+        const badge = targetCard.querySelector('.os-badge');
+        if (badge) badge.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      requestAnimationFrame(() => modal.classList.remove('opacity-0'));
+    }
+
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    // Attach listeners to all download triggers across the page
+    function attachTriggers() {
+      document.querySelectorAll('[data-open-download-modal], .download-modal-trigger').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          openModal();
+        });
+      });
+    }
+
+    attachTriggers();
+    document.addEventListener('DOMContentLoaded', attachTriggers);
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+
+    // CLI tabs
+    const commands = {
+      winget: 'winget install Kobalt.Shellit',
+      scoop: 'scoop bucket add shellit https://github.com/kobaltgit/Shellit && scoop install shellit',
+      curl: 'curl -fsSL https://shellit.dev/install.sh | bash',
+    };
+
+    const commandText = document.getElementById('modal-command-text');
+    const tabButtons = document.querySelectorAll('.modal-tab-btn');
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        if (tab && commands[tab]) {
+          if (commandText) commandText.textContent = commands[tab];
+
+          tabButtons.forEach((b) => {
+            b.classList.remove('active', 'bg-obsidian-card', 'text-cyber-cyan', 'border', 'border-cyber-cyan/30');
+            b.classList.add('text-slate-400');
+          });
+
+          btn.classList.add('active', 'bg-obsidian-card', 'text-cyber-cyan', 'border', 'border-cyber-cyan/30');
+          btn.classList.remove('text-slate-400');
+        }
+      });
+    });
+
+    // Copy CLI command
+    const copyBtn = document.getElementById('modal-copy-cli-btn');
+    const copyIcon = document.getElementById('modal-copy-icon');
+    const checkIcon = document.getElementById('modal-check-icon');
+    const copyText = document.getElementById('modal-copy-text');
+    const copyLabel = copyBtn?.getAttribute('data-copy') || 'Copy';
+    const copiedLabel = copyBtn?.getAttribute('data-copied') || 'Copied!';
+
+    copyBtn?.addEventListener('click', async () => {
+      if (commandText?.textContent) {
+        try {
+          await navigator.clipboard.writeText(commandText.textContent);
+          copyIcon?.classList.add('hidden');
+          checkIcon?.classList.remove('hidden');
+          if (copyText) copyText.textContent = copiedLabel;
+
+          setTimeout(() => {
+            copyIcon?.classList.remove('hidden');
+            checkIcon?.classList.add('hidden');
+            if (copyText) copyText.textContent = copyLabel;
+          }, 2000);
+        } catch (_) {}
+      }
+    });
+  })();
+</script>

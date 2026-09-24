@@ -120,8 +120,7 @@ class FakeSftpSession implements ISftpSession {
   Future<Result<void, SftpFailure>> writeFile(
     String remotePath,
     Uint8List data,
-  ) async =>
-      const Result.success(null);
+  ) async => const Result.success(null);
 }
 
 class FakeHostRepository implements IHostRepository {

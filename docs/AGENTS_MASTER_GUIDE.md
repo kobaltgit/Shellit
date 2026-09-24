@@ -15,6 +15,7 @@
 * `packages/terminal_ui/` — **Зона Агента 3**. Рендеринг терминала (`xterm.dart`), адаптивные компоненты интерфейса (Grid/List/Tree хостов, вкладки, матричные сплиты, виртуальная клавиатура).
 * `packages/desktop_plugin_sdk/` — **Зона Агента 4**. Загрузчик плагинов (`.shellit`), IPC WebView мост (JSON-RPC), манифесты.
 * `apps/shellit/` — **Главное приложение**. Сборка dependency injection, маршрутизация, нативные платформенные раннеры (Windows, macOS, Linux, Android, iOS).
+* `apps/website/` — **Зона Агента 5**. Официальный веб-портал Shellit (Промо-страница со Scrollytelling-блоком фич, Вики/Документация на Starlight, Роадмап, Витрина плагинов, клиент PocketBase).
 * `chronicle_writer` — **Агент-Летописец**. Ведение хроники проекта и разбора багфиксов в `docs/CHRONICLE.md` в авторском стиле (`author-devlog-writer`).
 
 ---

@@ -188,7 +188,7 @@ void main() {
       final hostB = HostEntity(
         id: 'h2',
         label: 'Senko',
-        hostname: '144.31.19.22',
+        hostname: '192.168.1.50',
         username: 'root',
         authType: HostAuthType.password,
         createdAt: now,

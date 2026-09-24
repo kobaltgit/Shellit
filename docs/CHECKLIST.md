@@ -540,8 +540,88 @@
   - [x] Нулевой хардкод UI-строк: регистрация всех ключей `settings.terminal.*`, `multiline_paste.*`, `terminal_context.*` в `default_strings.dart` (en).
   - [x] Полный перевод на русский язык в `ru.json` языкового пакета.
   - [x] Виджет-тесты `terminal_settings_card_test.dart`.
-- [x] Тестирование и верификация:
-  - [x] 100% прохождение тестов по всем пакетам монорепозитория (110/110 `terminal_ui`, 51/51 `apps/shellit`, 37/37 `storage_vault`, 23/23 `core_foundation`).
-  - [x] 0 ошибок и 0 предупреждений во `flutter analyze`.
+- [x] Релиз v0.8.3: Multiline Paste Defense (IDEA-018) + Clickable Links & File Matchers (IDEA-017) + Terminal Padding (Фаза 17); 51/51 тестов, 0 ошибок анализатора.
+
+---
+
+## Фаза 18: Официальный веб-портал Shellit (apps/website/ — Astro, Starlight, Obsidian Cyberpunk, Scrollytelling, Честное сравнение)
+- [x] Архитектура и инициализация стека (`apps/website`):
+  - [x] Фреймворк Astro 5 с поддержкой TypeScript и интеграциями TailwindCSS и `@astrojs/starlight`.
+  - [x] Дизайн-система Obsidian Cyberpunk (`#0D0F12`, Cyber Cyan `#00F0FF`, Neon Purple `#A855F7`, Alert Red `#EF4444`).
+  - [x] Официальный векторный логотип `logo.svg` и фавиконка `favicon.svg` из оригинальных ассетов Shellit.
+  - [x] Внедрение 4 уровней защиты от зависаний системы (`--max-old-space-size=768`, `maxParallelFileOps: 2`, `usePolling: false`, запуск с приоритетом `/low`).
+- [x] Промо-компоненты и лендинг (`src/pages/index.astro`):
+  - [x] `Hero.astro`: автоопределение платформы (Windows / Linux / Android APK, строго без macOS), терминальный виджет CLI-установки (`winget`, `scoop`, `curl`) и интерактивное превью.
+  - [x] `Scrollytelling.astro`: 4-шаговый интерактивный тур с фиксацией на экране и скроллом колесом мыши (матричный сплит 2x2, Prod Guard, RTT-пинг, SFTP).
+  - [x] `ComparisonTable.astro`: честная таблица сравнения Shellit vs Termius vs PuTTY с реальными тарифами и статусом `🟡 В разработке (Скоро, бесплатно)` для автозапуска сниппетов.
+  - [x] `SyncServerSection.astro`: промо-блок легковесного Zero-Knowledge E2EE сервера синхронизации (<20 МБ RAM) с готовым `docker-compose.yml`.
+  - [x] `McpAiSection.astro`: интеграция Gemini Chat (BYOK) и нативный сервер Model Context Protocol (MCP).
+  - [x] `PluginShowcase.astro`: витрина расширений `.shellit` и ссылки на Desktop Plugin SDK.
+  - [x] `CTABanner.astro`, `Navbar.astro`, `Footer.astro`.
+- [x] Дорожная карта и Вики:
+  - [x] Интерактивная страница `roadmap.astro` со статусами *Готово*, *В активной разработке*, *Запланировано*.
+  - [x] 10 структурированных статей базы знаний Starlight в `src/content/docs/` с автогенерацией сайдбара и поисковым индексом Pagefind.
+- [x] Верификация и сборка:
+  - [x] 100% успешная сборка продакшен-бандла (`dist/` — 13 страниц, 0 ошибок) за 6.41 секунды.
+- [x] Интеграция 9 аутентичных скриншотов приложения в сайт и базу знаний:
+  - [x] `01_hero_dashboard.png`: главное превью в `Hero.astro`, 3-й шаг `Scrollytelling.astro` (телеметрия RTT) и `quick-start.md`.
+  - [x] `02_keychain_vault.png`: витрина связки ключей в `SyncServerSection.astro` и статья `vault-encryption.md`.
+  - [x] `03_port_forwarding.png`: 4-й шаг `Scrollytelling.astro` (туннели портов) и руководство `quick-start.md`.
+  - [x] `04_snippets_library.png`: руководство по библиотеке сниппетов в `gemini-snippets.md`.
+  - [x] `05_gemini_ai_chat.png`: карточка AI-ассистента в `McpAiSection.astro` и статья `gemini-snippets.md`.
+  - [x] `06_plugins_manager.png`: менеджер расширений в `PluginShowcase.astro` и статья `creating-plugins.md`.
+  - [x] `07_settings_security.png`: 2-й шаг `Scrollytelling.astro` (политика аудита PROD) и статья `prod-guard.md`.
+  - [x] `08_matrix_tiling_2x2.png`: 1-й шаг `Scrollytelling.astro` (матричные сплиты 2x2) и статья `quick-start.md`.
+  - [x] `09_mcp_server_gateway.png`: карточка MCP-сервера в `McpAiSection.astro` и статья `mcp-server.md`.
+  - [x] 100% чистая сборка портала за 6.55 секунды без нагрузки на процессор и память.
+- [x] Эргономика и пользовательский опыт лендинга:
+  - [x] Редизайн `Scrollytelling.astro` по принципу Termius: интерактивный вертикальный стек фичей с бирюзовым маркером слева и бесшовное окно предпросмотра справа.
+  - [x] Устранение паразитного прыжка страницы вверх при клике на пункты Scrollytelling (`BUG-031`).
+  - [x] Всплывающая киберпанк-кнопка «Наверх» (`ScrollToTop.astro`) с плавным возвратом к началу страницы.
+  - [x] Scroll Spy в шапке сайта (`Navbar.astro`): динамическая подсветка активного раздела при скролле и маршрутизации.
+- [x] Полный пакет поисковой оптимизации (SEO & Social Sharing):
+  - [x] Мета-теги Open Graph и Twitter Cards (`summary_large_image`) с графикой `og-image.png`.
+  - [x] Файл директив поисковых роботов `robots.txt` и XML-карта сайта `sitemap-index.xml`.
+  - [x] Семантическая микроразметка Schema.org `SoftwareApplication` (JSON-LD).
+- [x] Полноценная двуязычность портала (Internationalization & i18n):
+  - [x] Единый типизированный словарь переводов `src/i18n/translations.ts` (en/ru) для всех промо-блоков и страниц.
+  - [x] Основная версия сайта на английском языке по умолчанию (`/` и `/roadmap`).
+  - [x] Выделенная русскоязычная версия (`/ru/` и `/ru/roadmap`).
+  - [x] Мгновенное клиентское автоопределение локали пользователя (Zero-Flicker Script в `<head>`): автоматический переход на `/ru/` для русскоязычных браузеров.
+- [x] Автономный бэкенд и панель управления на PocketBase (`servers/portal_backend`):
+  - [x] Легковесный бинарник PocketBase v0.25 (SQLite, встроенная веб-админка `/_/`, REST API `/api/`).
+  - [x] Автоматические миграции коллекций: `roadmap_items`, `plugins`, `feedback_reports`.
+  - [x] Автоматический сидинг начальных 16 задач дорожной карты со статусами и приоритетами.
+  - [x] Интерактивное голосование за фичи на карточках Roadmap с атомарным обновлением через REST API и защитой от спама.
+  - [x] Готовый `docker-compose.yml` и скрипты быстрого запуска (`start.ps1`, `start.cmd`) для переноса на любой VPS за 30 секунд.
+- [x] Единый источник правды (Single Source of Truth) и репозиторная автоматизация:
+  - [x] Клиент GitHub Releases API (`src/lib/github-releases.ts`) с 10-минутным кэшем для автоматического отображения актуальной версии и ссылок на скачивание.
+  - [x] Центральный JSON-манифест дорожной карты `docs/roadmap.data.json` для бесшовной синхронизации сайта с репозиторием без ручного ввода данных.
+  - [x] Модуль `roadmap-loader.ts` с каскадным источником (PocketBase $\rightarrow$ локальный манифест `roadmap.data.json`).
+- [x] Полноценная двуязычная документация и Вики (Starlight i18n):
+  - [x] Конфигурация локалей в `astro.config.mjs`: `defaultLocale: 'root'` (en) и `ru` (Русский).
+  - [x] 20 полноразмерных технических статей (10 на английском в `src/content/docs/`, 10 на русском в `src/content/docs/ru/`).
+  - [x] Двуязычный сайдбар с переводом категорий (Getting Started, Security & Vault, Self-Hosted Sync, AI & MCP Gateway, Plugin Ecosystem).
+  - [x] Встроенный поисковый индекс Pagefind с поддержкой 2 языков (en/ru).
+  - [x] Интеграция 9 аутентичных скриншотов приложения во все релевантные разделы документации.
+  - [x] Локализованная маршрутизация из шапки и подвала (`/getting-started/quick-start` для en, `/ru/getting-started/quick-start` для ru).
+- [x] Непрерывная интеграция и доставка (CI/CD):
+  - [x] GitHub Actions workflow `.github/workflows/deploy-website.yml`: автоматическая сборка, валидация всех 26 страниц и деплой на GitHub Pages при пуше в репозиторий.
+- [x] Командный центр администратора и приватная аналитика (`/admin`):
+  - [x] Защищенный киберпанк-дашборд `/admin` с авторизацией суперадминистратора PocketBase (`admin@shellit.dev`).
+  - [x] Интерактивные графики Chart.js: динамика Pageviews vs Unique Visitors, скачивания по версиям и ОС, топ-5 страниц, распределение устройств и источников.
+  - [x] Фильтрация временных диапазонов: Сегодня / 7 дней / 30 дней / Всё время (с адаптивными 3-часовыми интервалами для «Сегодня»).
+  - [x] Экспорт аналитических логов и отчетов в CSV.
+  - [x] Приватный zero-cookie трекер (`Tracker.astro`) на базе `fetch` с `keepalive: true` и анонимными суточными хэшами без сбора IP.
+  - [x] Плавающая форма обратной связи и баг-репортов (`FeedbackModal.astro`) с отправкой в `feedback_reports` и управлением статусами в панели.
+  - [x] Синхронизация статистики скачиваний GitHub Releases в реальном времени с поддержкой `.exe`, `.zip`, `.apk`, `.tar.gz`, `.deb`, `.AppImage`.
+  - [x] Боевое развертывание портала на домене `https://shellit.top` (Сервер Senko):
+  - [x] Редизайн шапки в стиле Stripe/Supabase (выпадающее меню «Продукт», живой счетчик звезд GitHub, фирменный лайм).
+  - [x] Оверрайды Starlight (строгий Obsidian Dark без светлой темы, неоновый логотип 32px, стильный тумблер `EN | RU`).
+  - [x] Универсальное модальное окно скачивания (`DownloadModal.astro`) с автоопределением ОС (Windows, Linux, Android, CLI).
+  - [x] Диагностика и изоляция сервера Senko: обход занятых портов 80/443 (системный HAProxy) и 8090 (Vibestack).
+  - [x] Развертывание Docker-стека в `/opt/shellit`: Nginx Alpine (`shellit_frontend`), PocketBase (`shellit_pocketbase` на внутреннем порту `8095`), Cloudflare Tunnel (`shellit_cloudflared`).
+  - [x] Архитектура Same-Origin: бесшовное проксирование `/api/` и `/_/` через Nginx на одном домене `https://shellit.top` без CORS-проблем.
+  - [x] Подробная инструкция и архитектурный манифест веб-агента в `docs/agents/AGENT_5_WEBSITE.md`.
 
 

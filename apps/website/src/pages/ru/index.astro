@@ -1,0 +1,26 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Hero from '../../components/promo/Hero.astro';
+import Scrollytelling from '../../components/promo/Scrollytelling.astro';
+import ComparisonTable from '../../components/promo/ComparisonTable.astro';
+import SyncServerSection from '../../components/promo/SyncServerSection.astro';
+import McpAiSection from '../../components/promo/McpAiSection.astro';
+import PluginShowcase from '../../components/promo/PluginShowcase.astro';
+import CTABanner from '../../components/promo/CTABanner.astro';
+
+const lang = 'ru';
+---
+
+<Layout 
+  lang={lang}
+  title="Shellit — Современный SSH & SFTP клиент нового поколения"
+  description="Shellit — современный, безопасный и расширяемый SSH & SFTP клиент с матричными сплитами 2x2, Prod Guard и честным Zero-Knowledge шифрованием."
+>
+  <Hero lang={lang} />
+  <Scrollytelling lang={lang} />
+  <ComparisonTable lang={lang} />
+  <SyncServerSection lang={lang} />
+  <McpAiSection lang={lang} />
+  <PluginShowcase lang={lang} />
+  <CTABanner lang={lang} />
+</Layout>

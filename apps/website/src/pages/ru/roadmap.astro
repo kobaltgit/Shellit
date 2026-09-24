@@ -1,0 +1,217 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { ArrowLeft, PlusCircle, ThumbsUp } from 'lucide-astro';
+import { useTranslations } from '../../i18n/translations';
+import { getRoadmapColumns } from '../../lib/roadmap-loader';
+
+const lang = 'ru';
+const t = useTranslations(lang);
+const roadmapData = getRoadmapColumns(lang);
+---
+
+<Layout 
+  lang={lang}
+  title={`${t.roadmapPage.title} — Shellit`} 
+  description={t.roadmapPage.subtitle}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    
+    <!-- Breadcrumb & Header -->
+    <div class="space-y-4 mb-10">
+      <a href="/ru/" class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyber-cyan transition-colors">
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>{t.roadmapPage.backHome}</span>
+      </a>
+
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            {t.roadmapPage.title}
+          </h1>
+          <p class="mt-2 text-sm text-slate-400 max-w-2xl">
+            {t.roadmapPage.subtitle}
+          </p>
+        </div>
+
+        <a
+          href="https://github.com/kobaltgit/Shellit/issues/new"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-200 text-xs font-mono font-medium transition-colors self-start md:self-auto"
+        >
+          <PlusCircle class="w-4 h-4 text-cyber-cyan" />
+          <span>{t.roadmapPage.suggestFeature}</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Kanban Grid (3 columns) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {roadmapData.map((col) => (
+        <div class="rounded-2xl bg-obsidian-card/70 border border-obsidian-border p-5 flex flex-col">
+          <!-- Column Header -->
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-obsidian-border">
+            <div class="flex items-center gap-2">
+              <span
+                class="w-2.5 h-2.5 rounded-full"
+                class:list={[
+                  col.badgeColor === 'green' && 'bg-cyber-green shadow-sm shadow-cyber-green/50',
+                  col.badgeColor === 'yellow' && 'bg-cyber-amber animate-pulse',
+                  col.badgeColor === 'blue' && 'bg-cyber-blue',
+                ]}
+              ></span>
+              <h2 class="font-bold text-sm text-white">{col.statusTitle}</h2>
+            </div>
+            <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-obsidian-surface text-slate-400 border border-obsidian-border">
+              {col.items.length}
+            </span>
+          </div>
+
+          <!-- Column Cards List -->
+          <div class="space-y-3 flex-grow">
+            {col.items.map((item) => (
+              <div class="p-4 rounded-xl bg-obsidian-bg border border-obsidian-border hover:border-slate-600 transition-colors space-y-2.5" data-item-id={item.id}>
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="font-semibold text-xs text-slate-200 leading-snug">
+                    {item.title}
+                  </h3>
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-obsidian-surface text-slate-400 border border-obsidian-border flex-shrink-0">
+                    {item.tag}
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                  {item.desc}
+                </p>
+
+                <!-- Interactive Vote Counter / Button -->
+                <div class="flex items-center justify-between pt-1 border-t border-obsidian-border/50 text-[10px] font-mono text-slate-500">
+                  <span class="text-[9px] text-slate-500 font-mono">#{item.id}</span>
+                  <button
+                    type="button"
+                    class="upvote-btn flex items-center gap-1.5 px-2.5 py-1 rounded bg-obsidian-surface hover:bg-obsidian-card border border-obsidian-border hover:border-cyber-cyan/50 text-slate-300 hover:text-cyber-cyan transition-all cursor-pointer"
+                    data-item-id={item.id}
+                    title="Проголосовать за эту фичу"
+                  >
+                    <ThumbsUp class="w-3 h-3 text-cyber-cyan" />
+                    <span class="vote-count font-bold text-xs">{item.votes}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </div>
+
+  <script is:inline>
+  const PB_URL = window.__PUBLIC_POCKETBASE_URL__ || 'https://api.shellit.top';
+  const STORAGE_KEY = 'shellit_voted_features';
+  const TOKEN_KEY = 'shellit_voter_token';
+
+  function getVoterToken() {
+    try {
+      let token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        token = 'vtr_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem(TOKEN_KEY, token);
+      }
+      return token;
+    } catch {
+      return 'vtr_fallback';
+    }
+  }
+
+  function getVotedFeatures() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function markVoted(featureId) {
+    const list = getVotedFeatures();
+    if (!list.includes(featureId)) {
+      list.push(featureId);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+  }
+
+  function applyVotedStyles() {
+    const votedList = getVotedFeatures();
+    document.querySelectorAll('.upvote-btn').forEach((btn) => {
+      const id = btn.getAttribute('data-item-id');
+      if (id && votedList.includes(id)) {
+        btn.classList.add('text-cyber-cyan', 'border-cyber-cyan/50', 'bg-cyber-cyan/10');
+        btn.setAttribute('data-voted', 'true');
+      }
+    });
+  }
+
+  async function syncFromBackend() {
+    try {
+      const res = await fetch(`${PB_URL}/api/collections/roadmap_items/records?perPage=50`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.items) return;
+
+      data.items.forEach((item) => {
+        const btn = document.querySelector(`.upvote-btn[data-item-id="${item.feature_id}"]`);
+        if (btn) {
+          const countEl = btn.querySelector('.vote-count');
+          if (countEl) {
+            countEl.textContent = String(item.votes || 0);
+          }
+        }
+      });
+    } catch {
+      // Offline fallback: keep static values
+    }
+  }
+
+  document.querySelectorAll('.upvote-btn').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const featureId = btn.getAttribute('data-item-id');
+      const countEl = btn.querySelector('.vote-count');
+      if (!featureId || !countEl) return;
+
+      const votedList = getVotedFeatures();
+      if (votedList.includes(featureId)) {
+        return; // Already voted locally
+      }
+
+      markVoted(featureId);
+      btn.classList.add('text-cyber-cyan', 'border-cyber-cyan/50', 'bg-cyber-cyan/10');
+      btn.setAttribute('data-voted', 'true');
+
+      const currentCount = parseInt(countEl.textContent || '0', 10);
+      countEl.textContent = String(currentCount + 1);
+
+      try {
+        const voteRes = await fetch(`${PB_URL}/api/roadmap/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            feature_id: featureId,
+            voter_token: getVoterToken()
+          })
+        });
+
+        const resData = await voteRes.json();
+        if (resData && resData.votes !== undefined) {
+          countEl.textContent = String(resData.votes);
+        }
+      } catch (err) {
+        console.warn('PocketBase vote submission error:', err);
+      }
+    });
+  });
+
+  applyVotedStyles();
+  syncFromBackend();
+</script>
+</Layout>
+

@@ -1,0 +1,272 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-09-24",
+  "columns": [
+    {
+      "status": "shipped",
+      "badgeColor": "green",
+      "title": {
+        "en": "Shipped & Ready",
+        "ru": "Готово к работе"
+      }
+    },
+    {
+      "status": "in-progress",
+      "badgeColor": "yellow",
+      "title": {
+        "en": "In Active Development",
+        "ru": "В активной разработке"
+      }
+    },
+    {
+      "status": "planned",
+      "badgeColor": "blue",
+      "title": {
+        "en": "Planned in Backlog",
+        "ru": "Запланировано в бэклоге"
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "feat-matrix-splits",
+      "status": "shipped",
+      "tag": "Terminal",
+      "order": 1,
+      "votes": 128,
+      "title": {
+        "en": "2x2 Matrix Splits & Broadcast",
+        "ru": "Матричный сплит 2x2 & Broadcast"
+      },
+      "desc": {
+        "en": "Split window into 4 independent panes with concurrent command execution.",
+        "ru": "Разделение окна на 4 независимые панели с одновременным вводом команд."
+      }
+    },
+    {
+      "id": "feat-prod-guard",
+      "status": "shipped",
+      "tag": "Security",
+      "order": 2,
+      "votes": 95,
+      "title": {
+        "en": "Prod Guard & Contextual Security",
+        "ru": "Prod Guard & Контекстная безопасность"
+      },
+      "desc": {
+        "en": "Environment color coding and interception of destructive commands (rm -rf, DROP).",
+        "ru": "Цветовая маркировка сред и перехват деструктивных команд (rm -rf, DROP)."
+      }
+    },
+    {
+      "id": "feat-sync-server",
+      "status": "shipped",
+      "tag": "Sync",
+      "order": 3,
+      "votes": 142,
+      "title": {
+        "en": "Self-Hosted E2EE Sync Server",
+        "ru": "Self-Hosted E2EE Sync Server"
+      },
+      "desc": {
+        "en": "Autonomous sync server built with Dart/SQLite with <20 MB RAM footprint.",
+        "ru": "Автономный сервер синхронизации на Dart/SQLite с потреблением <20 МБ RAM."
+      }
+    },
+    {
+      "id": "feat-zk-vault",
+      "status": "shipped",
+      "tag": "Security",
+      "order": 4,
+      "votes": 88,
+      "title": {
+        "en": "Zero-Knowledge Vault (Argon2id)",
+        "ru": "Zero-Knowledge Vault (Argon2id)"
+      },
+      "desc": {
+        "en": "Client-side encryption of passwords, keys, and settings with in-memory zeroization.",
+        "ru": "Локальное шифрование паролей, ключей и настроек с защитой в памяти."
+      }
+    },
+    {
+      "id": "feat-mcp-server",
+      "status": "shipped",
+      "tag": "AI & MCP",
+      "order": 5,
+      "votes": 176,
+      "title": {
+        "en": "Native Model Context Protocol (MCP)",
+        "ru": "Нативный Model Context Protocol (MCP)"
+      },
+      "desc": {
+        "en": "Embedded tool server for Claude Desktop, Cursor, and Antigravity.",
+        "ru": "Встроенный сервер инструментов для Claude Desktop, Cursor и Antigravity."
+      }
+    },
+    {
+      "id": "feat-gemini-byok",
+      "status": "shipped",
+      "tag": "AI & MCP",
+      "order": 6,
+      "votes": 110,
+      "title": {
+        "en": "Gemini AI Snippets Chat (BYOK)",
+        "ru": "Gemini AI Snippets Chat (BYOK)"
+      },
+      "desc": {
+        "en": "Shell command generator using Bring Your Own Key via Google AI Studio.",
+        "ru": "Генератор shell-команд по модели Bring Your Own Key через Google AI Studio."
+      }
+    },
+    {
+      "id": "feat-rtt-ping",
+      "status": "shipped",
+      "tag": "Terminal",
+      "order": 7,
+      "votes": 64,
+      "title": {
+        "en": "Live Host RTT Ping",
+        "ru": "Живой RTT-пинг хостов"
+      },
+      "desc": {
+        "en": "Continuous latency polling with real-time status indicators on cards.",
+        "ru": "Непрерывный замер задержки серверов с отображением статуса на карточках."
+      }
+    },
+    {
+      "id": "feat-sftp-tunnels",
+      "status": "shipped",
+      "tag": "SFTP",
+      "order": 8,
+      "votes": 83,
+      "title": {
+        "en": "Dual-Pane SFTP & Port Forwarding",
+        "ru": "Двухпанельный SFTP & Port Forwarding"
+      },
+      "desc": {
+        "en": "Remote file management and visual SSH tunnel configuration.",
+        "ru": "Управление удаленными файлами и визуальная настройка SSH-туннелей."
+      }
+    },
+    {
+      "id": "feat-startup-snippets",
+      "status": "in-progress",
+      "tag": "Terminal",
+      "order": 9,
+      "votes": 135,
+      "title": {
+        "en": "Startup Snippets (Auto-Run)",
+        "ru": "Startup-сниппеты (автовыполнение)"
+      },
+      "desc": {
+        "en": "Automatic execution of scripts and aliases immediately upon server connection.",
+        "ru": "Автоматический запуск набора скриптов и алиасов сразу после подключения к серверу."
+      }
+    },
+    {
+      "id": "feat-winget-scoop",
+      "status": "in-progress",
+      "tag": "Deploy",
+      "order": 10,
+      "votes": 92,
+      "title": {
+        "en": "Winget & Scoop Package Publishing",
+        "ru": "Публикация в Winget & Scoop"
+      },
+      "desc": {
+        "en": "Official manifests for one-command installation in Windows terminals.",
+        "ru": "Официальные манифесты для установки одной строчкой в консоли Windows."
+      }
+    },
+    {
+      "id": "feat-history-sync",
+      "status": "in-progress",
+      "tag": "Sync",
+      "order": 11,
+      "votes": 78,
+      "title": {
+        "en": "Terminal History Sync",
+        "ru": "Синхронизация истории терминала"
+      },
+      "desc": {
+        "en": "Optional encrypted synchronization of executed command history across devices.",
+        "ru": "Опциональная зашифрованная синхронизация истории введенных команд между ПК и ноутбуком."
+      }
+    },
+    {
+      "id": "feat-color-themes",
+      "status": "in-progress",
+      "tag": "UI",
+      "order": 12,
+      "votes": 114,
+      "title": {
+        "en": "Custom Color Themes",
+        "ru": "Кастомные цветовые темы"
+      },
+      "desc": {
+        "en": "Support for custom UI styling themes via CSS/JSON configurations.",
+        "ru": "Поддержка пользовательских тем оформления через CSS/JSON конфиги."
+      }
+    },
+    {
+      "id": "feat-jump-hosts",
+      "status": "planned",
+      "tag": "Network",
+      "order": 13,
+      "votes": 160,
+      "title": {
+        "en": "Jump Hosts & ProxyJump Graph",
+        "ru": "Jump Hosts & ProxyJump граф"
+      },
+      "desc": {
+        "en": "Visual bastion host chain builder with interactive node graph.",
+        "ru": "Визуальный конструктор цепочек бастион-серверов с отображением узлов на интерактивной карте."
+      }
+    },
+    {
+      "id": "feat-prometheus",
+      "status": "planned",
+      "tag": "DevOps",
+      "order": 14,
+      "votes": 55,
+      "title": {
+        "en": "Prometheus Metrics Exporter",
+        "ru": "Экспорт метрик в Prometheus"
+      },
+      "desc": {
+        "en": "Background export of host uptime and RTT telemetry to monitoring systems.",
+        "ru": "Фоновый экспорт статуса доступности и RTT ваших серверов в систему мониторинга."
+      }
+    },
+    {
+      "id": "feat-mosh",
+      "status": "planned",
+      "tag": "Terminal",
+      "order": 15,
+      "votes": 89,
+      "title": {
+        "en": "Mosh Protocol Support",
+        "ru": "Поддержка сессий Mosh"
+      },
+      "desc": {
+        "en": "Drop-tolerant mobile connectivity for high-latency or unstable networks.",
+        "ru": "Устойчивое к обрывам связи мобильное подключение для нестабильных сетей."
+      }
+    },
+    {
+      "id": "feat-web-client",
+      "status": "planned",
+      "tag": "Web",
+      "order": 16,
+      "votes": 122,
+      "title": {
+        "en": "Web Client (Self-Hosted)",
+        "ru": "Web-версия клиента (Self-Hosted)"
+      },
+      "desc": {
+        "en": "Connect to your servers via a secure browser-based interface.",
+        "ru": "Возможность подключиться к своим серверам через защищенный браузерный интерфейс."
+      }
+    }
+  ]
+}

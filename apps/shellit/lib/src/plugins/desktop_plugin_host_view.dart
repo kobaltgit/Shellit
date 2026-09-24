@@ -13,6 +13,7 @@ import 'package:webview_windows/webview_windows.dart';
 
 import '../di/app_providers.dart';
 import '../localization/localization_providers.dart';
+import '../mcp/mcp_icon.dart';
 import '../mcp/mcp_provider.dart';
 
 /// Desktop host container that renders a `.shellit` plugin in an isolated WebView2 sandbox
@@ -429,11 +430,21 @@ class _DesktopPluginHostViewState extends ConsumerState<DesktopPluginHostView> {
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Icon(
-                          Icons.developer_board_outlined,
-                          color: ShellitColors.accentCyan,
-                          size: 14,
-                        ),
+                        child:
+                            widget.plugin.manifest.id ==
+                                'com.shellit.mcp-server'
+                            ? const McpVectorIcon(
+                                size: 14,
+                                useOriginalColors: true,
+                              )
+                            : widget.plugin.manifest.id ==
+                                  'com.shellit.docker-monitor'
+                            ? const Text('🐳', style: TextStyle(fontSize: 11))
+                            : const Icon(
+                                Icons.developer_board_outlined,
+                                color: ShellitColors.accentCyan,
+                                size: 14,
+                              ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(

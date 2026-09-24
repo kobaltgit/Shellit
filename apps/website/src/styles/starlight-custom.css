@@ -1,0 +1,54 @@
+/* Custom Starlight Cyberpunk Theme overrides - Strictly Dark Mode Only */
+:root,
+:root[data-theme='light'],
+:root[data-theme='dark'] {
+  color-scheme: dark !important;
+  --sl-color-bg: #090D16 !important;
+  --sl-color-bg-nav: #0D121F !important;
+  --sl-color-bg-sidebar: #090D16 !important;
+  --sl-color-border: #1E293B !important;
+  --sl-color-hairline: #1E293B !important;
+  --sl-color-accent-low: #152E00 !important;
+  --sl-color-accent: #7BE113 !important;
+  --sl-color-accent-high: #B8F768 !important;
+  --sl-color-white: #F8FAFC !important;
+  --sl-color-gray-1: #E2E8F0 !important;
+  --sl-color-gray-2: #94A3B8 !important;
+  --sl-color-gray-3: #64748B !important;
+  --sl-color-gray-4: #334155 !important;
+  --sl-color-gray-5: #1E293B !important;
+  --sl-color-gray-6: #0F172A !important;
+  --sl-color-black: #090D16 !important;
+}
+
+header.header {
+  border-bottom: 1px solid #1E293B !important;
+  backdrop-filter: blur(16px) !important;
+  background-color: rgba(13, 18, 31, 0.92) !important;
+  height: 4rem !important;
+}
+
+.sidebar-content {
+  border-right: 1px solid #1E293B !important;
+  background-color: #090D16 !important;
+}
+
+/* Hide theme select if rendered anywhere */
+starlight-theme-select {
+  display: none !important;
+}
+
+/* Ensure no dangling separator if theme select is gone */
+.social-icons::after {
+  content: '' !important;
+  height: 1.25rem !important;
+  border-inline-end: 1px solid #1E293B !important;
+  margin-inline-end: 0.5rem !important;
+}
+
+/* Right group alignment */
+.right-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}

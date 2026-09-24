@@ -28,6 +28,7 @@ Shellit/
 │       ├── AGENT_2_NETWORK.md      # Network & SSH Team (dartssh2, PTY streams, SFTP)
 │       ├── AGENT_3_TERMINAL_UI.md  # UI & Terminal Cross-Platform Team (xterm.dart, UI Shell)
 │       ├── AGENT_4_PLUGINS.md      # Desktop Plugin Ecosystem Team (manifest, IPC bridge)
+│       ├── AGENT_5_WEBSITE.md      # Web Ecosystem & Docs Team (Astro, Starlight, Scrollytelling)
 │       └── AGENT_CHRONICLE_WRITER.md # Chronicle & Devlog Writer Agent
 ├── packages/
 │   ├── core_foundation/            # Pure domain entities, contracts/interfaces, Result/Failure, logger
@@ -36,7 +37,8 @@ Shellit/
 │   ├── terminal_ui/                # Terminal emulator widget, tabs, tiling splits, mobile accessory bar
 │   └── desktop_plugin_sdk/         # Plugin loader, manifest validator, WebView IPC (desktop only)
 └── apps/
-    └── shellit/                    # Main Flutter application (DI, routing, native runners)
+    ├── shellit/                    # Main Flutter application (DI, routing, native runners)
+    └── website/                    # Official Web Portal (Astro, Starlight, Scrollytelling, PocketBase)
 ```
 
 ---

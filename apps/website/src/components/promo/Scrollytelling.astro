@@ -1,0 +1,312 @@
+---
+import { 
+  LayoutGrid, 
+  Activity, 
+  Command, 
+  Lock, 
+  Zap, 
+  Maximize2, 
+  ShieldAlert, 
+  Video, 
+  ShieldCheck, 
+  ArrowLeftRight, 
+  FolderGit2 
+} from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+
+const steps = [
+  {
+    id: 1,
+    title: t.scrolly.step1.title,
+    description: t.scrolly.step1.desc,
+    tags: t.scrolly.step1.tags,
+    image: "/screenshots/01_hero_dashboard.png",
+    alt: t.scrolly.step1.title,
+  },
+  {
+    id: 2,
+    title: t.scrolly.step2.title,
+    description: t.scrolly.step2.desc,
+    tags: t.scrolly.step2.tags,
+    image: "/screenshots/08_matrix_tiling_2x2.png",
+    alt: t.scrolly.step2.title,
+  },
+  {
+    id: 3,
+    title: t.scrolly.step3.title,
+    description: t.scrolly.step3.desc,
+    tags: t.scrolly.step3.tags,
+    image: "/screenshots/07_settings_security.png",
+    alt: t.scrolly.step3.title,
+  },
+  {
+    id: 4,
+    title: t.scrolly.step4.title,
+    description: t.scrolly.step4.desc,
+    tags: t.scrolly.step4.tags,
+    image: "/screenshots/03_port_forwarding.png",
+    alt: t.scrolly.step4.title,
+  },
+];
+---
+
+<section id="features" class="relative">
+  <!-- Outer Pinning Container: 400vh tall (100vh per step) -->
+  <div id="scrolly-container" class="relative h-[400vh]">
+    <!-- Sticky Content Frame: locked at viewport center while user scrolls -->
+    <div class="sticky top-0 h-screen flex items-center justify-center overflow-hidden py-10 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        
+        <!-- Left Column: Fixed Title & Vertical Feature Stack (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col justify-center space-y-6">
+          
+          <!-- Persistent Section Header (Termius Style) -->
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-cyber-cyan">
+              <LayoutGrid class="w-3.5 h-3.5" />
+              <span>{t.scrolly.sectionBadge}</span>
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              {t.scrolly.sectionTitle}
+            </h2>
+          </div>
+
+          <!-- Vertical Interactive Feature Stack -->
+          <div class="space-y-4 pt-2">
+            {steps.map((step, index) => (
+              <div
+                class={`scrolly-item group cursor-pointer transition-all duration-300 rounded-xl ${
+                  index === 0
+                    ? 'border-l-2 border-cyber-cyan pl-4 bg-obsidian-card/40 py-3 pr-4'
+                    : 'border-l-2 border-transparent pl-4 hover:border-slate-600 py-2'
+                }`}
+                data-step-index={index}
+              >
+                <div class="flex items-center gap-2.5">
+                  <span class={`step-num font-mono text-xs font-bold transition-colors ${
+                    index === 0 ? 'text-cyber-cyan' : 'text-slate-400 group-hover:text-slate-300'
+                  }`}>
+                    0{index + 1}
+                  </span>
+                  <h3 class={`step-title font-bold text-base sm:text-lg transition-colors ${
+                    index === 0 ? 'text-white' : 'text-slate-300 group-hover:text-slate-200'
+                  }`}>
+                    {step.title}
+                  </h3>
+                </div>
+
+                <div class={`step-desc-wrapper overflow-hidden transition-all duration-300 ${
+                  index === 0 ? 'max-h-60 opacity-100 mt-2.5' : 'max-h-0 opacity-0 mt-0'
+                }`}>
+                  <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                    {step.description}
+                  </p>
+                  
+                  <!-- Feature Tags Pill Row -->
+                  <div class="flex flex-wrap gap-2 pt-3">
+                    {step.tags.map((tag) => (
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-obsidian-surface border border-obsidian-border text-[11px] font-mono text-slate-300">
+                        {tag.icon === 'activity' && <Activity class="w-3 h-3 text-cyber-green" />}
+                        {tag.icon === 'command' && <Command class="w-3 h-3 text-cyber-cyan" />}
+                        {tag.icon === 'lock' && <Lock class="w-3 h-3 text-cyber-purple" />}
+                        {tag.icon === 'grid' && <LayoutGrid class="w-3 h-3 text-cyber-cyan" />}
+                        {tag.icon === 'zap' && <Zap class="w-3 h-3 text-cyber-amber" />}
+                        {tag.icon === 'maximize' && <Maximize2 class="w-3 h-3 text-cyber-blue" />}
+                        {tag.icon === 'shield' && <ShieldAlert class="w-3 h-3 text-cyber-red" />}
+                        {tag.icon === 'video' && <Video class="w-3 h-3 text-cyber-purple" />}
+                        {tag.icon === 'shield-check' && <ShieldCheck class="w-3 h-3 text-cyber-green" />}
+                        {tag.icon === 'arrows' && <ArrowLeftRight class="w-3 h-3 text-cyber-cyan" />}
+                        {tag.icon === 'folder' && <FolderGit2 class="w-3 h-3 text-cyber-amber" />}
+                        <span>{tag.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <!-- Bottom hint -->
+          <div class="pt-2 text-xs font-mono text-slate-400 flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyber-cyan animate-pulse"></span>
+            <span>{t.scrolly.wheelHint}</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive App Stage (7 cols) -->
+        <div class="lg:col-span-7 relative flex items-center justify-center">
+          <div class="w-full relative rounded-2xl bg-obsidian-card/80 border border-obsidian-border/90 shadow-2xl p-2 sm:p-3 overflow-hidden backdrop-blur-sm group">
+            
+            <!-- Window Top Bar (Traffic Lights + Address Pill) -->
+            <div class="flex items-center justify-between px-3 py-2 bg-obsidian-surface/80 rounded-t-xl border-b border-obsidian-border mb-2 text-xs font-mono text-slate-400">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+                <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+                <span class="ml-2 text-slate-400 text-[11px] hidden sm:inline">Shellit Desktop v0.1.0</span>
+              </div>
+              <div class="flex items-center gap-2 bg-obsidian-bg px-3 py-1 rounded-md border border-obsidian-border text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-cyber-green"></span>
+                <span id="stage-badge-text" class="text-slate-300 font-mono">01_hero_dashboard.png</span>
+              </div>
+            </div>
+
+            <!-- Frameless Stage Image Viewport with Cross-Fade Transitions -->
+            <div class="relative w-full aspect-[16/10] sm:aspect-[16/10.2] rounded-lg overflow-hidden bg-obsidian-bg">
+              {steps.map((step, index) => (
+                <div
+                  class={`stage-slide absolute inset-0 transition-all duration-500 ease-out flex items-center justify-center ${
+                    index === 0
+                      ? 'opacity-100 scale-100 z-10 pointer-events-auto'
+                      : 'opacity-0 scale-[0.98] z-0 pointer-events-none'
+                  }`}
+                  data-slide-index={index}
+                >
+                  <img
+                    src={step.image}
+                    alt={step.alt}
+                    class="w-full h-full object-cover object-top select-none"
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <!-- Subtle Neon Corner Glow -->
+            <div class="absolute -bottom-10 -right-10 w-48 h-48 bg-cyber-cyan/15 blur-3xl rounded-full pointer-events-none"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll Sync and Click Interaction Script -->
+<script>
+  const container = document.getElementById('scrolly-container');
+  const items = document.querySelectorAll('.scrolly-item');
+  const slides = document.querySelectorAll('.stage-slide');
+  const badgeText = document.getElementById('stage-badge-text');
+
+  const fileNames = [
+    '01_hero_dashboard.png',
+    '08_matrix_tiling_2x2.png',
+    '07_settings_security.png',
+    '03_port_forwarding.png'
+  ];
+
+  let currentActiveIndex = 0;
+  let isProgrammaticScroll = false;
+
+  function updateActiveStep(newIndex: number) {
+    if (newIndex === currentActiveIndex) return;
+    currentActiveIndex = newIndex;
+
+    // Update left feature stack styles
+    items.forEach((item, idx) => {
+      const num = item.querySelector('.step-num');
+      const title = item.querySelector('.step-title');
+      const descWrapper = item.querySelector('.step-desc-wrapper');
+
+      if (idx === newIndex) {
+        item.classList.remove('border-transparent', 'hover:border-slate-600', 'py-2');
+        item.classList.add('border-cyber-cyan', 'pl-4', 'bg-obsidian-card/40', 'py-3', 'pr-4');
+        
+        num?.classList.remove('text-slate-400', 'group-hover:text-slate-300');
+        num?.classList.add('text-cyber-cyan');
+
+        title?.classList.remove('text-slate-300', 'group-hover:text-slate-200');
+        title?.classList.add('text-white');
+
+        descWrapper?.classList.remove('max-h-0', 'opacity-0', 'mt-0');
+        descWrapper?.classList.add('max-h-60', 'opacity-100', 'mt-2.5');
+      } else {
+        item.classList.remove('border-cyber-cyan', 'bg-obsidian-card/40', 'py-3', 'pr-4');
+        item.classList.add('border-transparent', 'pl-4', 'hover:border-slate-600', 'py-2');
+
+        num?.classList.remove('text-cyber-cyan');
+        num?.classList.add('text-slate-400');
+
+        title?.classList.remove('text-white');
+        title?.classList.add('text-slate-300');
+
+        descWrapper?.classList.remove('max-h-60', 'opacity-100', 'mt-2.5');
+        descWrapper?.classList.add('max-h-0', 'opacity-0', 'mt-0');
+      }
+    });
+
+    // Update right image slides
+    slides.forEach((slide, idx) => {
+      if (idx === newIndex) {
+        slide.classList.remove('opacity-0', 'scale-[0.98]', 'z-0', 'pointer-events-none');
+        slide.classList.add('opacity-100', 'scale-100', 'z-10', 'pointer-events-auto');
+      } else {
+        slide.classList.remove('opacity-100', 'scale-100', 'z-10', 'pointer-events-auto');
+        slide.classList.add('opacity-0', 'scale-[0.98]', 'z-0', 'pointer-events-none');
+      }
+    });
+
+    // Update window pill badge
+    if (badgeText && fileNames[newIndex]) {
+      badgeText.textContent = fileNames[newIndex];
+    }
+  }
+
+  // Click on item to smoothly navigate to that section
+  items.forEach((item) => {
+    item.addEventListener('click', () => {
+      const targetIndex = parseInt(item.getAttribute('data-step-index') || '0', 10);
+      if (container) {
+        isProgrammaticScroll = true;
+        const containerTop = container.getBoundingClientRect().top + window.scrollY;
+        const totalHeight = container.offsetHeight - window.innerHeight;
+        const targetScroll = containerTop + (totalHeight * (targetIndex / 3));
+
+        window.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+
+        updateActiveStep(targetIndex);
+
+        setTimeout(() => {
+          isProgrammaticScroll = false;
+        }, 600);
+      }
+    });
+  });
+
+  // Scroll listener tracking position within scrolly-container
+  function handleScroll() {
+    if (!container || isProgrammaticScroll) return;
+
+    const rect = container.getBoundingClientRect();
+    const containerHeight = container.offsetHeight - window.innerHeight;
+    const progress = Math.max(0, Math.min(1, -rect.top / containerHeight));
+
+    // Divide progress into 4 intervals [0, 0.33, 0.66, 1.0]
+    let stepIndex = 0;
+    if (progress >= 0.75) {
+      stepIndex = 3;
+    } else if (progress >= 0.45) {
+      stepIndex = 2;
+    } else if (progress >= 0.18) {
+      stepIndex = 1;
+    } else {
+      stepIndex = 0;
+    }
+
+    updateActiveStep(stepIndex);
+  }
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+</script>

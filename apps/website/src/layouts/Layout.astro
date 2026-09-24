@@ -1,0 +1,191 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+import ScrollToTop from '../components/common/ScrollToTop.astro';
+import Tracker from '../components/analytics/Tracker.astro';
+import FeedbackModal from '../components/common/FeedbackModal.astro';
+import DownloadModal from '../components/common/DownloadModal.astro';
+import type { Locale } from '../i18n/translations';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  lang?: Locale;
+}
+
+const {
+  lang = 'en',
+  title = lang === 'ru' 
+    ? 'Shellit — современный SSH & SFTP клиент нового поколения'
+    : 'Shellit — Modern Cross-Platform SSH & SFTP Client',
+  description = lang === 'ru'
+    ? 'Shellit — современный, безопасный и расширяемый SSH & SFTP клиент с матричными сплитами 2x2, Prod Guard и честным Zero-Knowledge шифрованием.'
+    : 'Shellit — modern, secure, cross-platform SSH & SFTP client with 2x2 matrix splits, Prod Guard environment defense, and true zero-knowledge vault.',
+  image = "/og-image.png",
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://shellit.top');
+const socialImageURL = new URL(image, Astro.site || 'https://shellit.top');
+
+// Determine alternate links
+const pathname = Astro.url.pathname;
+const isRu = pathname.startsWith('/ru');
+const enPath = isRu ? (pathname.replace(/^\/ru(\/|$)/, '/') || '/') : pathname;
+const ruPath = isRu ? pathname : ('/ru' + (pathname === '/' ? '' : pathname));
+
+const enURL = new URL(enPath, Astro.site || 'https://shellit.top');
+const ruURL = new URL(ruPath, Astro.site || 'https://shellit.top');
+const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
+---
+
+<!doctype html>
+<html lang={lang} class="dark scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Canonical & Alternate Hreflang URLs -->
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" hreflang="en" href={enURL} />
+    <link rel="alternate" hreflang="ru" href={ruURL} />
+    <!-- Global App Configuration -->
+    <script is:inline define:vars={{ pbDefaultUrl }}>
+      window.__PUBLIC_POCKETBASE_URL__ = pbDefaultUrl;
+    </script>
+
+    <!-- Instant Client-Side Locale Auto-Detection (Runs before paint to prevent flicker) -->
+    <script is:inline>
+      (function() {
+        try {
+          var saved = localStorage.getItem('shellit_lang');
+          var path = window.location.pathname;
+          var isRuPath = path.startsWith('/ru/') || path === '/ru';
+
+          if (saved === 'ru' && !isRuPath) {
+            var target = '/ru' + (path === '/' ? '' : path) + window.location.search + window.location.hash;
+            window.location.replace(target);
+          } else if (saved === 'en' && isRuPath) {
+            var enTarget = (path.replace(/^\/ru(\/|$)/, '/') || '/') + window.location.search + window.location.hash;
+            window.location.replace(enTarget);
+          } else if (!saved && !isRuPath) {
+            var langs = navigator.languages || [navigator.language || ''];
+            var prefersRu = false;
+            for (var i = 0; i < langs.length; i++) {
+              if (langs[i] && langs[i].toLowerCase().indexOf('ru') === 0) {
+                prefersRu = true;
+                break;
+              }
+            }
+            if (prefersRu) {
+              var targetRu = '/ru' + (path === '/' ? '' : path) + window.location.search + window.location.hash;
+              window.location.replace(targetRu);
+            }
+          }
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+    <meta
+      name="keywords"
+      content={lang === 'ru'
+        ? "SSH клиент, SFTP клиент, терминал, Termius альтернатива, PuTTY, Port Forwarding, Prod Guard, Model Context Protocol, MCP, Gemini AI, Zero-Knowledge, Dart, Flutter, Windows, Linux, Android"
+        : "SSH client, SFTP client, terminal, Termius alternative, PuTTY, Port Forwarding, Prod Guard, Model Context Protocol, MCP, Gemini AI, Zero-Knowledge, Dart, Flutter, Windows, Linux, Android"}
+    />
+    <meta name="author" content="Shellit Team" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Theme & Mobile App Bar -->
+    <meta name="theme-color" content="#0D0F12" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Shellit" />
+
+    <!-- Open Graph / Facebook / Telegram / Discord -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="675" />
+    <meta property="og:image:alt" content={lang === 'ru' ? "Shellit — современный SSH & SFTP клиент" : "Shellit — Modern SSH & SFTP Client"} />
+    <meta property="og:site_name" content="Shellit" />
+    <meta property="og:locale" content={lang === 'ru' ? "ru_RU" : "en_US"} />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageURL} />
+    <meta name="twitter:image:alt" content={lang === 'ru' ? "Shellit — современный SSH & SFTP клиент" : "Shellit — Modern SSH & SFTP Client"} />
+
+    <!-- Structured Data (JSON-LD Schema.org) -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Shellit",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows, Linux, Android",
+      "description": description,
+      "url": "https://shellit.dev",
+      "image": socialImageURL.toString(),
+      "softwareVersion": "0.8.3",
+      "inLanguage": lang,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Shellit"
+      },
+      "featureList": lang === 'ru' ? [
+        "Матричные сплиты 2x2 и Broadcast Input",
+        "Контекстная защита боевых серверов Prod Guard",
+        "Живой RTT-пинг доступности серверов прямо на плитках",
+        "Связка ключей Zero-Knowledge (Argon2id + AES-256)",
+        "Нативный шлюз протокола Model Context Protocol (MCP)",
+        "Генерация shell-сниппетов на базе Google Gemini (BYOK)",
+        "Двухпанельный менеджер файлов SFTP и туннелирование портов"
+      ] : [
+        "2x2 Matrix Splits & Broadcast Input",
+        "Prod Guard Destructive Command Interception",
+        "Live RTT Ping Telemetry on Host Cards",
+        "Zero-Knowledge Keychain Vault (Argon2id + AES-256)",
+        "Native Model Context Protocol (MCP) Server",
+        "Gemini AI Snippet Generator (BYOK)",
+        "Dual-Pane SFTP File Manager & SSH Port Forwarding"
+      ]
+    })} />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-obsidian-bg text-slate-100 min-h-screen flex flex-col font-sans selection:bg-cyber-cyan/20 selection:text-cyber-cyan overflow-x-hidden">
+    <Navbar lang={lang} />
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <ScrollToTop />
+    <FeedbackModal lang={lang} />
+    <DownloadModal lang={lang} />
+    <Tracker />
+  </body>
+</html>

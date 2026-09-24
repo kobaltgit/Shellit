@@ -18,7 +18,8 @@ class _FakeVaultRepository implements IVaultRepository {
 
   @override
   Future<Result<void, VaultFailure>> updateSettings(
-      VaultSettingsEntity newSettings) async {
+    VaultSettingsEntity newSettings,
+  ) async {
     settings = newSettings;
     return const Result.success(null);
   }
@@ -33,12 +34,14 @@ class _FakeVaultRepository implements IVaultRepository {
   Future<bool> isVaultInitialized() async => true;
 
   @override
-  Future<Result<void, VaultFailure>> initializeVault(String masterPassword) async =>
-      const Result.success(null);
+  Future<Result<void, VaultFailure>> initializeVault(
+    String masterPassword,
+  ) async => const Result.success(null);
 
   @override
-  Future<Result<void, VaultFailure>> unlockWithPassword(String masterPassword) async =>
-      const Result.success(null);
+  Future<Result<void, VaultFailure>> unlockWithPassword(
+    String masterPassword,
+  ) async => const Result.success(null);
 
   @override
   Future<Result<void, VaultFailure>> unlockWithBiometrics() async =>
@@ -55,14 +58,12 @@ class _FakeVaultRepository implements IVaultRepository {
   Future<Result<void, VaultFailure>> changeMasterPassword({
     required String currentPassword,
     required String newPassword,
-  }) async =>
-      const Result.success(null);
+  }) async => const Result.success(null);
 
   @override
   Future<Result<void, VaultFailure>> disableMasterPassword({
     required String currentPassword,
-  }) async =>
-      const Result.success(null);
+  }) async => const Result.success(null);
 
   @override
   Future<void> ensureOpenSession() async {}
@@ -80,20 +81,17 @@ class _FakeVaultRepository implements IVaultRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('TerminalSettingsCard loads settings and toggles switches',
-      (tester) async {
+  testWidgets('TerminalSettingsCard loads settings and toggles switches', (
+    tester,
+  ) async {
     final fakeRepo = _FakeVaultRepository();
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          appVaultRepositoryProvider.overrideWithValue(fakeRepo),
-        ],
+        overrides: [appVaultRepositoryProvider.overrideWithValue(fakeRepo)],
         child: MaterialApp(
           theme: ShellitTheme.obsidianDarkTheme,
-          home: const Scaffold(
-            body: TerminalSettingsCard(),
-          ),
+          home: const Scaffold(body: TerminalSettingsCard()),
         ),
       ),
     );
