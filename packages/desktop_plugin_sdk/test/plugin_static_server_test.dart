@@ -92,5 +92,20 @@ void main() {
       expect(jsResp['xContentTypeOptions'], 'nosniff');
       expect(jsResp['xFrameOptions'], 'DENY');
     });
+
+    test('serves strict security headers on 404 not found responses', () async {
+      final port = await server.start(tempDir.path);
+      expect(port, greaterThan(0));
+
+      const expectedCsp =
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-ancestors 'none';";
+
+      final notFound =
+          await fetch('http://127.0.0.1:$port/does-not-exist.html');
+      expect(notFound['statusCode'], 404);
+      expect(notFound['csp'], expectedCsp);
+      expect(notFound['xContentTypeOptions'], 'nosniff');
+      expect(notFound['xFrameOptions'], 'DENY');
+    });
   });
 }

@@ -2,6 +2,7 @@
 import { Check, X, Shield, Sparkles, Server, Zap, Lock, Cpu } from 'lucide-astro';
 import type { Locale } from '../../i18n/translations';
 import { useTranslations } from '../../i18n/translations';
+import { getLatestRelease } from '../../lib/github-releases';
 
 interface Props {
   lang?: Locale;
@@ -9,6 +10,7 @@ interface Props {
 
 const { lang = 'en' } = Astro.props;
 const t = useTranslations(lang);
+const latestRelease = await getLatestRelease();
 const rows = t.compare.rows;
 ---
 
@@ -123,7 +125,7 @@ const rows = t.compare.rows;
     <div class="mt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono gap-4 border-t border-obsidian-border pt-4">
       <div class="flex items-center gap-2">
         <span class="w-1.5 h-1.5 rounded-full bg-cyber-green"></span>
-        <span>{lang === 'ru' ? 'Данные актуальны для Shellit v0.1.0 и Termius 2026' : 'Data verified for Shellit v0.1.0 and Termius 2026'}</span>
+        <span>{lang === 'ru' ? `Данные актуальны для Shellit ${latestRelease.version} (Alpha) и Termius 2026` : `Data verified for Shellit ${latestRelease.version} (Alpha) and Termius 2026`}</span>
       </div>
       <a
         href={lang === 'ru' ? '/ru/roadmap' : '/roadmap'}

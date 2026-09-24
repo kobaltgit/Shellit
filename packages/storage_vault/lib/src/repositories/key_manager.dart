@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:drift/drift.dart';
@@ -221,6 +222,81 @@ class KeyManager implements IKeyManager {
     }
   }
 
+  /// Safely returns decrypted passphrase bytes as [Uint8List] instead of immutable String.
+  /// Caller is responsible for zeroizing the returned buffer using [VaultCryptoService.zeroize].
+  Future<Result<Uint8List?, VaultFailure>> getDecryptedPassphraseBytes(
+      String keyId) async {
+    if (!_securityContext.isUnlocked ||
+        _securityContext.activeMasterKey == null) {
+      return Result.error(VaultFailure.locked());
+    }
+
+    final key = await getKeyById(keyId);
+    if (key == null) {
+      return Result.error(
+        VaultFailure(
+          'SSH key with ID "$keyId" not found.',
+          type: VaultFailureType.notFound,
+        ),
+      );
+    }
+
+    if (key.encryptedPassphrase == null || key.encryptedPassphrase!.isEmpty) {
+      return const Result.success(null);
+    }
+
+    try {
+      final decryptedBytes = await _cryptoService.decryptBytes(
+        encryptedData: key.encryptedPassphrase!,
+        secretKey: _securityContext.activeMasterKey!,
+      );
+      return Result.success(decryptedBytes);
+    } catch (e) {
+      return Result.error(
+          VaultFailure.corrupted('Failed to decrypt passphrase: $e'));
+    }
+  }
+
+  /// Safely executes [action] with decrypted passphrase bytes and guarantees
+  /// the buffer is explicitly zeroized immediately upon completion or error.
+  Future<Result<T, VaultFailure>> withDecryptedPassphraseBytes<T>(
+    String keyId,
+    FutureOr<T> Function(Uint8List? passphraseBytes) action,
+  ) async {
+    final res = await getDecryptedPassphraseBytes(keyId);
+    if (res.isError) {
+      return Result.error(res.failureOrNull!);
+    }
+    final bytes = res.valueOrNull;
+    try {
+      final result = await action(bytes);
+      return Result.success(result);
+    } finally {
+      if (bytes != null) {
+        VaultCryptoService.zeroize(bytes);
+      }
+    }
+  }
+
+  /// Safely executes [action] with decrypted private key bytes and guarantees
+  /// the buffer is explicitly zeroized immediately upon completion or error.
+  Future<Result<T, VaultFailure>> withDecryptedPrivateKey<T>(
+    String keyId,
+    FutureOr<T> Function(Uint8List privateKeyBytes) action,
+  ) async {
+    final res = await getDecryptedPrivateKey(keyId);
+    if (res.isError) {
+      return Result.error(res.failureOrNull!);
+    }
+    final bytes = res.valueOrNull as Uint8List;
+    try {
+      final result = await action(bytes);
+      return Result.success(result);
+    } finally {
+      VaultCryptoService.zeroize(bytes);
+    }
+  }
+
   @override
   Future<Result<void, VaultFailure>> savePasswordCredential({
     required String id,
@@ -236,5 +312,47 @@ class KeyManager implements IKeyManager {
       rawPassphrase: password,
     );
     return res.map((_) => null);
+  }
+
+  /// Saves a password credential from raw [Uint8List] bytes without creating immutable [String] instances.
+  /// If [zeroizePasswordBytes] is true, [passwordBytes] will be zeroized after encryption.
+  Future<Result<void, VaultFailure>> savePasswordCredentialBytes({
+    required String id,
+    required String label,
+    required Uint8List passwordBytes,
+    bool zeroizePasswordBytes = false,
+  }) async {
+    if (!_securityContext.isUnlocked ||
+        _securityContext.activeMasterKey == null) {
+      return Result.error(VaultFailure.locked());
+    }
+
+    try {
+      final masterKey = _securityContext.activeMasterKey!;
+      final encryptedPassphrase = await _cryptoService.encryptBytes(
+        clearText: passwordBytes,
+        secretKey: masterKey,
+      );
+
+      final now = DateTime.now();
+      final entity = KeyEntity(
+        id: id,
+        label: label,
+        keyType: KeyType.ed25519,
+        encryptedPrivateKey: Uint8List(0),
+        publicKey: '',
+        encryptedPassphrase: encryptedPassphrase,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      return await saveKey(entity);
+    } catch (e) {
+      return Result.error(VaultFailure.corrupted(e));
+    } finally {
+      if (zeroizePasswordBytes) {
+        VaultCryptoService.zeroize(passwordBytes);
+      }
+    }
   }
 }

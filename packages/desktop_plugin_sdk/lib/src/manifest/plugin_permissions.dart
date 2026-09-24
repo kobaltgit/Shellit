@@ -18,10 +18,22 @@ abstract class PluginPermissions {
   /// Allows the plugin to write to the system clipboard.
   static const String clipboardWrite = 'clipboard:write';
 
+  /// Allows the plugin to write data/keystrokes directly to the terminal PTY.
+  static const String terminalWrite = 'terminal:write';
+
+  /// Allows the plugin to inspect/read the terminal buffer.
+  static const String terminalRead = 'terminal:read';
+
+  /// Allows the plugin to read sanitized server/host lists.
+  static const String hostsRead = 'hosts:read';
+
   /// Set of all predefined standard permissions.
   static const Set<String> standardPermissions = {
     terminalExecute,
+    terminalWrite,
+    terminalRead,
     vaultReadHosts,
+    hostsRead,
     notificationsShow,
     storageLocal,
     clipboardRead,

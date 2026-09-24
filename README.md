@@ -19,10 +19,14 @@
 <p align="center">
   <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.12%2B-02569B?logo=flutter&logoColor=white" alt="Flutter"></a>
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.12%2B-0175C2?logo=dart&logoColor=white" alt="Dart"></a>
-  <a href="docs/AGENTS_MASTER_GUIDE.md"><img src="https://img.shields.io/badge/Security-AES--256%20%7C%20Argon2id-critical" alt="Security"></a>
+  <a href="docs/AGENTS_MASTER_GUIDE.md"><img src="https://img.shields.io/badge/Status-Alpha%20%2F%20Developer%20Preview%20(Experimental)-orange" alt="Status: Alpha / Developer Preview (Experimental)"></a>
+  <a href="#-security-status--transparency"><img src="https://img.shields.io/badge/Security-Experimental%20Zero--Trust-critical" alt="Security"></a>
   <a href="system-context.md"><img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux%20%7C%20Android%20%7C%20iOS-informational" alt="Platform"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
 </p>
+
+> ⚠️ **Status: Alpha / Developer Preview (Experimental)**  
+> Shellit is currently in active alpha testing. It features an **Experimental Zero-Trust Architecture under active development & security auditing**. While cryptographic primitives (AES-256-GCM, Argon2id, TOFU host validation) are strictly implemented, features and APIs are evolving rapidly. We welcome community testing, feedback, and independent security auditing.
 
 ---
 
@@ -36,7 +40,7 @@ Unlike traditional terminal emulators, Shellit delivers live server telemetry be
 
 ## ⚡ Development Velocity: From Zero to Release in 24 Hours
 
-Shellit was designed, engineered, and tested from scratch in **under 24 hours** (~19 hours of active vibe-coding with autonomous AI agents): from an empty folder to a production-grade cross-platform application with self-hosted E2EE sync, an MCP AI Gateway, and a Gemini assistant.
+Shellit was designed, engineered, and tested from scratch in **under 24 hours** (~19 hours of active vibe-coding with autonomous AI agents): from an empty folder to a full-featured cross-platform application with self-hosted E2EE sync, an MCP AI Gateway, and a Gemini assistant.
 
 <details>
 <summary><strong>⏱️ View Development Timeline & Milestone Breakdown</strong></summary>
@@ -267,11 +271,21 @@ All development processes, technical specifications, and tasks are cataloged in 
 
 ---
 
-## 🔒 Security
+## 🛡️ Security Status & Transparency
 
-- **Zero Hardcoded Secrets**: Never store credentials or private keys in the codebase.
-- **Master Vault**: Passwords and private keys are encrypted locally with SQLCipher. Without the master password, decrypting the database is mathematically impossible.
-- **Memory Hygiene**: Sensitive decrypted credentials are wiped from memory (`zeroize`) immediately after use.
+Shellit implements an **Experimental Zero-Trust Architecture under active development & security auditing**. While the application adheres to robust cryptographic principles (client-side AES-256-GCM, Argon2id key derivation, memory zeroization, strict TOFU host validation, and sandboxed plugins), users and contributors should be mindful of the following:
+
+- **Active Alpha / Developer Preview:** Shellit is in active alpha development and has not yet undergone a formal third-party cryptographic or security penetration audit. It is currently intended for developer evaluation, testing, and community feedback.
+- **Independent Security Reviews Welcome:** We transparently invite security researchers, cryptographers, and penetration testers to inspect our architecture, audit the code, and review cryptographic workflows.
+- **Responsible Disclosure:** If you discover a vulnerability or potential security flaw, please report it responsibly via GitHub Security Advisories or by contacting the project maintainers directly.
+
+### Core Security Controls & Practices
+
+- **Zero Hardcoded Secrets**: Credentials, API tokens, and private keys are never stored in plain text or committed to the codebase.
+- **Encrypted Master Vault**: Passwords and private keys are encrypted locally using SQLCipher (AES-256). Without the master password, decrypting the database is mathematically infeasible.
+- **Memory Hygiene (Zeroization)**: Decrypted private keys and credentials are automatically wiped from memory (`zeroize`) immediately after use to prevent memory dumping.
+- **Strict Host Verification (TOFU)**: SSH host keys are verified on first use and tracked against stored fingerprints with visual Drunken Bishop (Randomart) recognition.
+- **Sandboxed Desktop Plugins**: Third-party plugins execute within isolated webview environments with strict Content Security Policies (CSP) and permission boundaries.
 
 ---
 

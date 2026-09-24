@@ -59,6 +59,13 @@ class JsonRpcError {
     );
   }
 
+  factory JsonRpcError.invalidParams([String? details]) {
+    return JsonRpcError(
+      code: JsonRpcErrorCodes.invalidParams,
+      message: 'Invalid params${details != null ? ': $details' : ''}',
+    );
+  }
+
   factory JsonRpcError.internal(String error) {
     return JsonRpcError(
       code: JsonRpcErrorCodes.internalError,
@@ -95,15 +102,28 @@ class JsonRpcRequest {
 
   factory JsonRpcRequest.fromJson(Map<String, dynamic> json) {
     final method = json['method'];
-    if (method == null || method is! String) {
+    if (method == null || method is! String || method.trim().isEmpty) {
       throw const FormatException(
-          "JSON-RPC request must contain a string 'method'");
+          "JSON-RPC request must contain a non-empty string 'method'");
     }
+
+    final id = json['id'];
+    if (id != null && id is! String && id is! num) {
+      throw const FormatException(
+          "JSON-RPC request 'id' must be a String, Number, or null");
+    }
+
+    final params = json['params'];
+    if (params != null && params is! Map && params is! List) {
+      throw const FormatException(
+          "JSON-RPC request 'params' must be a structured Map or List if provided");
+    }
+
     return JsonRpcRequest(
       jsonrpc: json['jsonrpc'] as String? ?? '2.0',
-      id: json['id'],
-      method: method,
-      params: json['params'],
+      id: id,
+      method: method.trim(),
+      params: params,
     );
   }
 

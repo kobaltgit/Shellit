@@ -17,7 +17,7 @@ void main() {
     test('ShellitTheme obsidianDarkTheme properties', () {
       final theme = ShellitTheme.obsidianDarkTheme;
       expect(theme.scaffoldBackgroundColor, ShellitColors.obsidianBackground);
-      expect(theme.colorScheme.primary, ShellitColors.accentBlue);
+      expect(theme.colorScheme.primary, ShellitColors.accentLime);
       expect(theme.cardTheme.color, ShellitColors.obsidianCard);
     });
 

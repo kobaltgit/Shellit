@@ -172,6 +172,9 @@ class VaultRepository implements IVaultRepository {
             (t) => t.metaKey.equals('open_session_key'));
       });
 
+      VaultCryptoService.zeroize(salt);
+      VaultCryptoService.zeroize(verificationBlob);
+
       _securityContext.unlock(masterKey);
       await _resetIdleTimer();
 
@@ -221,7 +224,11 @@ class VaultRepository implements IVaultRepository {
         key: derivedKey,
       );
 
+      VaultCryptoService.zeroize(salt);
+      VaultCryptoService.zeroize(verificationBlob);
+
       if (!isValid) {
+        VaultCryptoService.destroySecretKey(derivedKey);
         return Result.error(VaultFailure.invalidMasterPassword());
       }
 
@@ -329,7 +336,12 @@ class VaultRepository implements IVaultRepository {
         key: pinKey,
       );
 
+      VaultCryptoService.zeroize(pinSalt);
+      VaultCryptoService.zeroize(pinVerificationBlob);
+
       if (!isValid) {
+        VaultCryptoService.destroySecretKey(pinKey);
+        VaultCryptoService.zeroize(encryptedMasterKey);
         return Result.error(VaultFailure.invalidMasterPassword());
       }
 
@@ -337,8 +349,13 @@ class VaultRepository implements IVaultRepository {
         encryptedData: encryptedMasterKey,
         secretKey: pinKey,
       );
+      VaultCryptoService.destroySecretKey(pinKey);
+      VaultCryptoService.zeroize(encryptedMasterKey);
 
-      final masterKey = SecretKey(masterKeyBytes);
+      final masterKey = SecretKeyData(
+        Uint8List.fromList(masterKeyBytes),
+        overwriteWhenDestroyed: true,
+      );
       VaultCryptoService.zeroize(masterKeyBytes);
 
       _securityContext.unlock(masterKey);
@@ -371,6 +388,7 @@ class VaultRepository implements IVaultRepository {
         secretKey: pinKey,
       );
       VaultCryptoService.zeroize(masterKeyBytes);
+      VaultCryptoService.destroySecretKey(pinKey);
 
       await _db.batch((batch) {
         batch.insert(
@@ -398,6 +416,10 @@ class VaultRepository implements IVaultRepository {
           mode: InsertMode.insertOrReplace,
         );
       });
+
+      VaultCryptoService.zeroize(pinSalt);
+      VaultCryptoService.zeroize(pinVerificationBlob);
+      VaultCryptoService.zeroize(encryptedMasterKey);
 
       final currentSettings = await getSettings();
       await updateSettings(currentSettings.copyWith(isPinEnabled: true));
@@ -508,7 +530,11 @@ class VaultRepository implements IVaultRepository {
       key: currentDerivedKey,
     );
 
+    VaultCryptoService.zeroize(currentSalt);
+    VaultCryptoService.zeroize(currentVerificationBlob);
+
     if (!isValid) {
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
       return Result.error(VaultFailure.invalidMasterPassword());
     }
 
@@ -619,6 +645,10 @@ class VaultRepository implements IVaultRepository {
         );
       });
 
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
+      VaultCryptoService.zeroize(newSalt);
+      VaultCryptoService.zeroize(newVerificationBlob);
+
       // 6. If biometric is enabled, update stored biometric secret
       final settings = await getSettings();
       if (settings.isBiometricsEnabled && _biometricStorage != null) {
@@ -638,6 +668,7 @@ class VaultRepository implements IVaultRepository {
 
       return const Result.success(null);
     } catch (e) {
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
       return Result.error(VaultFailure.corrupted(e));
     }
   }
@@ -673,7 +704,11 @@ class VaultRepository implements IVaultRepository {
       key: currentDerivedKey,
     );
 
+    VaultCryptoService.zeroize(currentSalt);
+    VaultCryptoService.zeroize(currentVerificationBlob);
+
     if (!isValid) {
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
       return Result.error(VaultFailure.invalidMasterPassword());
     }
 
@@ -763,8 +798,12 @@ class VaultRepository implements IVaultRepository {
       _idleTimer = null;
       _securityContext.unlock(openKey);
 
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
+      VaultCryptoService.zeroize(openKeyBytes);
+
       return const Result.success(null);
     } catch (e) {
+      VaultCryptoService.destroySecretKey(currentDerivedKey);
       return Result.error(VaultFailure.corrupted(e));
     }
   }

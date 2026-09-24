@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export interface ReleaseAsset {
   name: string;
   downloadUrl: string;
@@ -24,22 +28,45 @@ export interface ReleaseInfo {
   };
 }
 
-const FALLBACK_RELEASE: ReleaseInfo = {
-  version: 'v0.8.3',
-  tagName: 'v0.8.3',
-  name: 'Shellit v0.8.3 Release',
-  publishedAt: '2026-09-22T03:17:02Z',
-  htmlUrl: 'https://github.com/kobaltgit/Shellit/releases',
-  notes: 'Production release with 2x2 matrix tiling, Prod Guard, AI Gemini assistant, and Zero-Knowledge Vault.',
-  assets: [],
-  downloads: {
-    windowsInstaller: 'https://github.com/kobaltgit/Shellit/releases/download/v0.8.3/Shellit-Setup-x64-v0.8.3.exe',
-    windowsPortable: 'https://github.com/kobaltgit/Shellit/releases/download/v0.8.3/Shellit-Windows-x64-v0.8.3.zip',
-    linuxDeb: 'https://github.com/kobaltgit/Shellit/releases',
-    linuxAppImage: 'https://github.com/kobaltgit/Shellit/releases/download/v0.8.3/Shellit-Linux-x64-v0.8.3.tar.gz',
-    androidApk: 'https://github.com/kobaltgit/Shellit/releases/download/v0.8.3/Shellit-Android-v0.8.3.apk',
-  },
-};
+export function resolveLocalAppVersion(): string {
+  try {
+    const candidates = [
+      fileURLToPath(new URL('../../../shellit/pubspec.yaml', import.meta.url)),
+      path.resolve(process.cwd(), '../shellit/pubspec.yaml'),
+      path.resolve(process.cwd(), '../../apps/shellit/pubspec.yaml'),
+    ];
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        const content = fs.readFileSync(p, 'utf-8');
+        const m = content.match(/^version:\s*([0-9]+\.[0-9]+\.[0-9]+)/m);
+        if (m) return `v${m[1]}`;
+      }
+    }
+  } catch {}
+  return 'v0.8.5';
+}
+
+export function createFallbackRelease(tag: string = resolveLocalAppVersion()): ReleaseInfo {
+  const versionTag = tag.startsWith('v') ? tag : `v${tag}`;
+  return {
+    version: versionTag,
+    tagName: versionTag,
+    name: `Shellit ${versionTag} Alpha Preview`,
+    publishedAt: new Date().toISOString(),
+    htmlUrl: 'https://github.com/kobaltgit/Shellit/releases',
+    notes: `Alpha / Developer Preview with hardened Zero-Trust architecture, Fail-Closed SSH TOFU, byte-level memory zeroization, and sandboxed Plugin SDK.`,
+    assets: [],
+    downloads: {
+      windowsInstaller: `https://github.com/kobaltgit/Shellit/releases/download/${versionTag}/Shellit-Setup-x64-${versionTag}.exe`,
+      windowsPortable: `https://github.com/kobaltgit/Shellit/releases/download/${versionTag}/Shellit-Windows-x64-${versionTag}.zip`,
+      linuxDeb: `https://github.com/kobaltgit/Shellit/releases`,
+      linuxAppImage: `https://github.com/kobaltgit/Shellit/releases/download/${versionTag}/Shellit-Linux-x64-${versionTag}.tar.gz`,
+      androidApk: `https://github.com/kobaltgit/Shellit/releases/download/${versionTag}/Shellit-Android-${versionTag}.apk`,
+    },
+  };
+}
+
+const FALLBACK_RELEASE: ReleaseInfo = createFallbackRelease();
 
 function formatBytes(bytes: number, decimals = 1): string {
   if (bytes === 0) return '0 B';
@@ -117,8 +144,8 @@ export async function getLatestRelease(): Promise<ReleaseInfo> {
     };
 
     cachedRelease = {
-      version: data.tag_name || 'v0.8.3',
-      tagName: data.tag_name || 'v0.8.3',
+      version: data.tag_name || resolveLocalAppVersion(),
+      tagName: data.tag_name || resolveLocalAppVersion(),
       name: data.name || data.tag_name || 'Shellit Release',
       publishedAt: data.published_at || new Date().toISOString(),
       htmlUrl: data.html_url || 'https://github.com/kobaltgit/Shellit/releases',

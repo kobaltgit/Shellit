@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:ssh_network_core/ssh_network_core.dart';
 import 'package:test/test.dart';
 
@@ -90,6 +92,41 @@ void main() {
       const base64Padded = 'odNASZ9R9wgUvflXXvW3mAknOsv+LO0eV0l6NskeNDw=';
       final art2 = Randomart.fromFingerprint(base64Padded);
       expect(art2, equals(art1));
+    });
+
+    test(
+        'Randomart.fromString correctly parses canonical SHA256:<base64> format',
+        () {
+      final rawBytes = List<int>.generate(32, (i) => (i * 17 + 5) % 256);
+      final base64Hash = base64.encode(rawBytes).replaceAll('=', '');
+      final canonicalFp = 'SHA256:$base64Hash';
+
+      final artFromBytes = Randomart.fromBytes(
+        rawBytes,
+        title: 'ED25519 256',
+        hashAlgorithm: 'SHA256',
+      );
+      final artFromString = Randomart.fromString(
+        canonicalFp,
+        title: 'ED25519 256',
+      );
+
+      expect(artFromString, equals(artFromBytes));
+      expect(artFromString, contains('+----[SHA256]-----+'));
+      expect(artFromString, contains('+--[ED25519 256]--+'));
+    });
+
+    test(
+        'Randomart.fromString handles both padded and unpadded SHA256:<base64>',
+        () {
+      const unpadded = 'SHA256:odNASZ9R9wgUvflXXvW3mAknOsv+LO0eV0l6NskeNDw';
+      const padded = 'SHA256:odNASZ9R9wgUvflXXvW3mAknOsv+LO0eV0l6NskeNDw=';
+
+      final art1 = Randomart.fromString(unpadded, title: 'ED25519 256');
+      final art2 = Randomart.fromString(padded, title: 'ED25519 256');
+
+      expect(art1, equals(art2));
+      expect(art1, contains('+----[SHA256]-----+'));
     });
 
     test('handles empty bytes gracefully with start and end at center', () {

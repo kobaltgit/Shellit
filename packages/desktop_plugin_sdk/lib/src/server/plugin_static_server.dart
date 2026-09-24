@@ -26,6 +26,7 @@ class PluginStaticServer {
     _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     _server!.listen((HttpRequest request) async {
       try {
+        _applySecurityHeaders(request.response);
         var reqPath = request.uri.path;
         if (reqPath == '/' || reqPath.isEmpty) {
           reqPath = '/index.html';
@@ -56,19 +57,6 @@ class PluginStaticServer {
           final ext = p.extension(file.path).toLowerCase();
           final mime = _mimeFor(ext);
           request.response.headers.set(HttpHeaders.contentTypeHeader, mime);
-          request.response.headers.set('Access-Control-Allow-Origin', '*');
-          request.response.headers.set(
-            'Content-Security-Policy',
-            contentSecurityPolicyHeader,
-          );
-          request.response.headers.set(
-            'X-Content-Type-Options',
-            xContentTypeOptionsHeader,
-          );
-          request.response.headers.set(
-            'X-Frame-Options',
-            xFrameOptionsHeader,
-          );
           await request.response.addStream(file.openRead());
         } else {
           request.response.statusCode = HttpStatus.notFound;
@@ -83,6 +71,23 @@ class PluginStaticServer {
     });
 
     return _server!.port;
+  }
+
+  /// Applies strict Content Security Policy (CSP) and hardening headers to [response].
+  static void _applySecurityHeaders(HttpResponse response) {
+    response.headers.set(
+      'Content-Security-Policy',
+      contentSecurityPolicyHeader,
+    );
+    response.headers.set(
+      'X-Content-Type-Options',
+      xContentTypeOptionsHeader,
+    );
+    response.headers.set(
+      'X-Frame-Options',
+      xFrameOptionsHeader,
+    );
+    response.headers.set('Access-Control-Allow-Origin', '*');
   }
 
   /// Stops and closes the server.

@@ -1,12 +1,14 @@
 ---
 import { MessageSquare, X, Send, Bug, Sparkles, CheckCircle2 } from 'lucide-astro';
 import type { Locale } from '../../i18n/translations';
+import { getLatestRelease } from '../../lib/github-releases';
 
 interface Props {
   lang?: Locale;
 }
 
 const { lang = 'en' } = Astro.props;
+const latestRelease = await getLatestRelease();
 
 const t = {
   en: {
@@ -68,6 +70,7 @@ const t = {
 <!-- Modal Backdrop -->
 <div
   id="feedback-modal"
+  data-app-version={`Web Portal ${latestRelease.version}`}
   class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian-bg/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300"
   role="dialog"
   aria-modal="true"
@@ -236,7 +239,7 @@ const t = {
           message: messageEl ? messageEl.value : '',
           email: emailEl ? emailEl.value : '',
           os_info: navigator.userAgent || 'Unknown OS',
-          app_version: 'Web Portal v0.8.3',
+          app_version: modal ? (modal.getAttribute('data-app-version') || 'Web Portal') : 'Web Portal',
           status: 'new'
         };
 

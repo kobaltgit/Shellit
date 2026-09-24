@@ -14,6 +14,7 @@ import {
 } from 'lucide-astro';
 import type { Locale } from '../../i18n/translations';
 import { useTranslations } from '../../i18n/translations';
+import { getLatestRelease } from '../../lib/github-releases';
 
 interface Props {
   lang?: Locale;
@@ -21,6 +22,7 @@ interface Props {
 
 const { lang = 'en' } = Astro.props;
 const t = useTranslations(lang);
+const latestRelease = await getLatestRelease();
 
 const steps = [
   {
@@ -151,7 +153,7 @@ const steps = [
                 <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
                 <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
                 <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
-                <span class="ml-2 text-slate-400 text-[11px] hidden sm:inline">Shellit Desktop v0.1.0</span>
+                <span class="ml-2 text-slate-400 text-[11px] hidden sm:inline">Shellit Desktop {latestRelease.version}</span>
               </div>
               <div class="flex items-center gap-2 bg-obsidian-bg px-3 py-1 rounded-md border border-obsidian-border text-[11px]">
                 <span class="w-2 h-2 rounded-full bg-cyber-green"></span>

@@ -714,7 +714,7 @@
         const ctx = document.getElementById('releasesChart').getContext('2d');
         // Show releases with downloads or active latest versions, sorted chronologically
         const activeReleases = allReleases
-          .filter((r) => (r.total_downloads || 0) > 0 || r.tag_name === 'v0.8.3' || r.tag_name === 'v0.8.2')
+          .filter((r, idx) => (r.total_downloads || 0) > 0 || idx === 0)
           .slice(0, 10);
 
         activeReleases.sort((a, b) => a.tag_name.localeCompare(b.tag_name, undefined, { numeric: true }));

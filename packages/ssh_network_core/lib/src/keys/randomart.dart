@@ -129,6 +129,16 @@ class Randomart {
   }) =>
       fromBytes(bytes, title: title, hashAlgorithm: hashAlgorithm);
 
+  /// Generates randomart from a fingerprint string.
+  ///
+  /// Alias for [fromFingerprint].
+  static String fromString(
+    String fingerprint, {
+    String? title,
+    String? hashAlgorithm,
+  }) =>
+      fromFingerprint(fingerprint, title: title, hashAlgorithm: hashAlgorithm);
+
   static Uint8List _decodeFingerprintBytes(String raw) {
     // 1. Colon or space separated hex: 'fc:94:b0:...' or 'fc 94 b0...'
     if (raw.contains(':') || raw.contains(' ')) {

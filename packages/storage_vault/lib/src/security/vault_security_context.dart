@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import '../crypto/vault_crypto_service.dart';
 
@@ -20,20 +21,66 @@ class VaultSecurityContext {
 
   /// Activates the security context with derived [masterKey].
   void unlock(SecretKey masterKey) {
+    if (_activeMasterKey != null && !identical(_activeMasterKey, masterKey)) {
+      VaultCryptoService.destroySecretKey(_activeMasterKey);
+    }
     _activeMasterKey = masterKey;
     _lockStateController.add(true);
   }
 
-  /// Locks the vault and zeroizes any references.
+  /// Activates the security context directly from raw master key bytes.
+  ///
+  /// The key is stored as a [SecretKeyData] with `overwriteWhenDestroyed: true`.
+  /// If [zeroizeSource] is true, [keyBytes] will be explicitly zeroized immediately.
+  void unlockWithKeyBytes(Uint8List keyBytes, {bool zeroizeSource = false}) {
+    final copy = Uint8List.fromList(keyBytes);
+    final key = SecretKeyData(copy, overwriteWhenDestroyed: true);
+    unlock(key);
+    if (zeroizeSource) {
+      VaultCryptoService.zeroize(keyBytes);
+    }
+  }
+
+  /// Safely executes [action] with the extracted master key bytes, guaranteeing
+  /// that the extracted key bytes buffer is zeroized with [fillRange] immediately afterwards.
+  Future<T?> withMasterKeyBytes<T>(
+      FutureOr<T> Function(Uint8List keyBytes) action) async {
+    if (_activeMasterKey == null) return null;
+    final extracted = await _activeMasterKey!.extractBytes();
+    final keyBuffer = Uint8List.fromList(extracted);
+    try {
+      return await action(keyBuffer);
+    } finally {
+      VaultCryptoService.zeroize(keyBuffer);
+      VaultCryptoService.zeroize(extracted);
+    }
+  }
+
+  /// Safely executes [action] with the active [SecretKey] if unlocked.
+  FutureOr<T?> withMasterKey<T>(
+      FutureOr<T> Function(SecretKey masterKey) action) {
+    if (_activeMasterKey == null) return null;
+    return action(_activeMasterKey!);
+  }
+
+  /// Locks the vault and explicitly calls [SecretKey.destroy()] on the active key
+  /// to ensure raw key material is immediately purged and zeroized from RAM.
   void lock() {
-    VaultCryptoService.destroySecretKey(_activeMasterKey);
+    final keyToDestroy = _activeMasterKey;
     _activeMasterKey = null;
+    if (keyToDestroy != null) {
+      try {
+        keyToDestroy.destroy();
+      } catch (_) {}
+      VaultCryptoService.destroySecretKey(keyToDestroy);
+    }
     _lockStateController.add(false);
   }
 
-  /// Closes the status stream controller.
+  /// Closes the status stream controller and locks the vault.
   Future<void> dispose() async {
     lock();
     await _lockStateController.close();
   }
 }
+

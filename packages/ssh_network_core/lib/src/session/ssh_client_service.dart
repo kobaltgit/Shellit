@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:core_foundation/core_foundation.dart';
 import 'package:dartssh2/dartssh2.dart';
+import 'package:meta/meta.dart';
 
 import '../keys/key_parser_service.dart';
 import '../sftp/sftp_session.dart';
@@ -65,24 +66,12 @@ class SshClientService implements ISshClientService {
         keepAliveInterval: host.keepAliveIntervalSeconds > 0
             ? Duration(seconds: host.keepAliveIntervalSeconds)
             : null,
-        onVerifyHostKey: (String type, Uint8List fingerprint) async {
-          final fingerprintStr = utf8.decode(fingerprint);
-          if (onVerifyHostKey != null) {
-            final accepted = await onVerifyHostKey(
-              hostname: host.hostname,
-              port: host.port,
-              keyType: type,
-              fingerprintSha256: fingerprintStr,
-            );
-            if (!accepted) return false;
-            return true;
-          }
-          AppLogger.w(
-            'Host key verification bypassed (no callback provided) for ${host.connectionTarget} [$type: $fingerprintStr]',
-            tag: 'SshClientService',
-          );
-          return true;
-        },
+        onVerifyHostKey: (String type, Uint8List fingerprint) => verifyHostKey(
+          host: host,
+          type: type,
+          fingerprint: fingerprint,
+          onVerifyHostKey: onVerifyHostKey,
+        ),
       );
 
       onProgress?.call('Authenticating as ${host.username}...');
@@ -216,24 +205,12 @@ class SshClientService implements ISshClientService {
         keepAliveInterval: host.keepAliveIntervalSeconds > 0
             ? Duration(seconds: host.keepAliveIntervalSeconds)
             : null,
-        onVerifyHostKey: (String type, Uint8List fingerprint) async {
-          final fingerprintStr = utf8.decode(fingerprint);
-          if (onVerifyHostKey != null) {
-            final accepted = await onVerifyHostKey(
-              hostname: host.hostname,
-              port: host.port,
-              keyType: type,
-              fingerprintSha256: fingerprintStr,
-            );
-            if (!accepted) return false;
-            return true;
-          }
-          AppLogger.w(
-            'Host key verification bypassed (no callback provided) for ${host.connectionTarget} [$type: $fingerprintStr]',
-            tag: 'SshClientService',
-          );
-          return true;
-        },
+        onVerifyHostKey: (String type, Uint8List fingerprint) => verifyHostKey(
+          host: host,
+          type: type,
+          fingerprint: fingerprint,
+          onVerifyHostKey: onVerifyHostKey,
+        ),
       );
 
       onProgress?.call('Authenticating as ${host.username}...');
@@ -317,6 +294,49 @@ class SshClientService implements ISshClientService {
           stackTrace: stack,
         ),
       );
+    }
+  }
+
+  /// Verifies the SSH host key using OpenSSH canonical SHA-256 fingerprint format.
+  ///
+  /// Enforces strict Fail-Closed policy: if [onVerifyHostKey] is null, returns false
+  /// (and logs a security alert). If [onVerifyHostKey] throws or returns false,
+  /// returns false.
+  @visibleForTesting
+  Future<bool> verifyHostKey({
+    required HostEntity host,
+    required String type,
+    required Uint8List fingerprint,
+    required HostKeyVerifyCallback? onVerifyHostKey,
+  }) async {
+    final base64Hash = base64.encode(fingerprint).replaceAll('=', '');
+    final fingerprintStr = 'SHA256:$base64Hash';
+
+    if (onVerifyHostKey == null) {
+      AppLogger.e(
+        'Security Alert: Host key verification callback is null for ${host.connectionTarget}. Aborting connection (Fail-Closed).',
+        tag: 'SshClientService',
+      );
+      return false;
+    }
+
+    try {
+      final accepted = await onVerifyHostKey(
+        hostname: host.hostname,
+        port: host.port,
+        keyType: type,
+        fingerprintSha256: fingerprintStr,
+      );
+      if (!accepted) return false;
+      return true;
+    } catch (e, stack) {
+      AppLogger.e(
+        'Error during host key verification for ${host.connectionTarget}: $e',
+        tag: 'SshClientService',
+        error: e,
+        stackTrace: stack,
+      );
+      return false;
     }
   }
 }

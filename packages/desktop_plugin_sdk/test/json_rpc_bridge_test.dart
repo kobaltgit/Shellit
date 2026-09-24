@@ -522,4 +522,391 @@ void main() {
       expect(bridge.getPluginStorage(pluginB), {'k1': 'b_v1'});
     });
   });
+
+  group('DesktopPluginBridge - JSON-RPC Protocol & Schema Validation', () {
+    late DesktopPluginBridge bridge;
+    const testPluginId = 'com.shellit.schema-tester';
+
+    setUp(() {
+      bridge = DesktopPluginBridge();
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: testPluginId,
+          name: 'Schema Tester',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: [
+            'terminal:execute',
+            'terminal:write',
+            'terminal:read',
+            'storage:local',
+            'vault:read_hosts',
+            'hosts:read',
+          ],
+        ),
+      );
+    });
+
+    tearDown(() => bridge.dispose());
+
+    test(
+        'rejects request with invalid id type (e.g. Map) with -32600 and id null',
+        () async {
+      final outFuture = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': {'invalid': 'id_type'},
+        'method': 'storage.get',
+      });
+
+      final res = await outFuture;
+      expect(res['jsonrpc'], '2.0');
+      expect(res['id'], isNull);
+      expect(res['error'], isNotNull);
+      expect(res['error']['code'], JsonRpcErrorCodes.invalidRequest);
+      expect(res['error']['message'],
+          contains("'id' must be a String, Number, or null"));
+    });
+
+    test('rejects request with missing or empty method string with -32600',
+        () async {
+      final out1 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'empty-method',
+        'method': '   ',
+      });
+      final res1 = await out1;
+      expect(res1['error']['code'], JsonRpcErrorCodes.invalidRequest);
+
+      final out2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'null-method',
+        'params': <String, dynamic>{},
+      });
+      final res2 = await out2;
+      expect(res2['error']['code'], JsonRpcErrorCodes.invalidRequest);
+    });
+
+    test('rejects request with primitive params (non-structured) with -32600',
+        () async {
+      final outFuture = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'primitive-params',
+        'method': 'storage.get',
+        'params': 'string_is_not_allowed_as_raw_params',
+      });
+      final res = await outFuture;
+      expect(res['error']['code'], JsonRpcErrorCodes.invalidRequest);
+      expect(res['error']['message'],
+          contains("must be a structured Map or List"));
+    });
+  });
+
+  group('DesktopPluginBridge - Method Whitelist Enforcement', () {
+    late DesktopPluginBridge bridge;
+    const testPluginId = 'com.shellit.whitelist-tester';
+
+    setUp(() {
+      bridge = DesktopPluginBridge();
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: testPluginId,
+          name: 'Whitelist Tester',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: ['terminal:execute', 'storage:local'],
+        ),
+      );
+    });
+
+    tearDown(() => bridge.dispose());
+
+    test('rejects non-whitelisted dangerous or arbitrary methods with -32601',
+        () async {
+      const forbiddenMethods = [
+        'system.exec',
+        'fs.writeFile',
+        'process.spawn',
+        'eval',
+        'shell.openExternal',
+        'window.danger',
+      ];
+
+      for (final badMethod in forbiddenMethods) {
+        final outFuture = bridge.outgoingMessagesStream(testPluginId).first;
+        await bridge.handleIncomingMessage(testPluginId, {
+          'jsonrpc': '2.0',
+          'id': 'bad-$badMethod',
+          'method': badMethod,
+          'params': {'cmd': 'whoami'},
+        });
+
+        final res = await outFuture;
+        expect(res['error']['code'], JsonRpcErrorCodes.methodNotFound,
+            reason: 'Method $badMethod should be rejected as methodNotFound');
+      }
+    });
+
+    test('allows dynamically whitelisted methods via allowMethod', () async {
+      bridge.allowMethod('custom.safeOperation');
+      bridge.registerHandler('custom.safeOperation', (pluginId, params) async {
+        return {'status': 'allowed'};
+      });
+
+      final outFuture = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'allow-1',
+        'method': 'custom.safeOperation',
+      });
+
+      final res = await outFuture;
+      expect(res['result'], {'status': 'allowed'});
+
+      // Disallow and verify it is rejected
+      bridge.disallowMethod('custom.safeOperation');
+      final outFuture2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'allow-2',
+        'method': 'custom.safeOperation',
+      });
+
+      final res2 = await outFuture2;
+      expect(res2['error']['code'], JsonRpcErrorCodes.methodNotFound);
+    });
+  });
+
+  group('DesktopPluginBridge - Argument Type & Injection Validation', () {
+    late DesktopPluginBridge bridge;
+    const testPluginId = 'com.shellit.args-tester';
+
+    setUp(() {
+      bridge = DesktopPluginBridge();
+      bridge.registerPlugin(
+        const PluginManifest(
+          id: testPluginId,
+          name: 'Args Tester',
+          version: '1.0.0',
+          author: 'Dev',
+          description: '',
+          entryPoint: 'index.html',
+          target: PluginTarget.sidebar,
+          permissions: [
+            'terminal:execute',
+            'terminal:write',
+            'terminal:read',
+            'storage:local',
+            'vault:read_hosts',
+            'hosts:read',
+          ],
+        ),
+      );
+    });
+
+    tearDown(() => bridge.dispose());
+
+    test('terminal.write validates params and rejects non-string text',
+        () async {
+      // 1. Non-map params
+      final out1 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'tw-1',
+        'method': 'terminal.write',
+        'params': ['not a map'],
+      });
+      final res1 = await out1;
+      expect(res1['error']['code'], JsonRpcErrorCodes.invalidParams);
+
+      // 2. Missing text
+      final out2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'tw-2',
+        'method': 'terminal.write',
+        'params': <String, dynamic>{},
+      });
+      final res2 = await out2;
+      expect(res2['error']['code'], JsonRpcErrorCodes.invalidParams);
+
+      // 3. Non-string text (integer)
+      final out3 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'tw-3',
+        'method': 'terminal.write',
+        'params': {'text': 12345},
+      });
+      final res3 = await out3;
+      expect(res3['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res3['error']['message'],
+          contains("Parameter 'text' must be a String"));
+
+      // 4. Null byte injection in text
+      final out4 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'tw-4',
+        'method': 'terminal.write',
+        'params': {'text': 'echo test\x00malicious'},
+      });
+      final res4 = await out4;
+      expect(res4['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res4['error']['message'], contains('cannot contain null bytes'));
+
+      // 5. Valid text succeeds
+      final out5 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'tw-5',
+        'method': 'terminal.write',
+        'params': {'text': 'ls -la\n'},
+      });
+      final res5 = await out5;
+      expect(res5['result']['success'], isTrue);
+      expect(res5['result']['bytesWritten'], 7);
+    });
+
+    test('storage operations reject path traversal (..) and invalid keys',
+        () async {
+      // 1. Path traversal in storage.set key
+      final out1 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'st-1',
+        'method': 'storage.set',
+        'params': {'key': '../../etc/passwd', 'value': 'evil'},
+      });
+      final res1 = await out1;
+      expect(res1['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res1['error']['message'],
+          contains("path traversal sequence '..' is not allowed"));
+
+      // 2. Non-string key in storage.set
+      final out2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'st-2',
+        'method': 'storage.set',
+        'params': {'key': 999, 'value': 'val'},
+      });
+      final res2 = await out2;
+      expect(res2['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res2['error']['message'], contains('must be a String'));
+
+      // 3. Null byte in storage.set key
+      final out3 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'st-3',
+        'method': 'storage.set',
+        'params': {'key': 'key\x00poison', 'value': 'val'},
+      });
+      final res3 = await out3;
+      expect(res3['error']['code'], JsonRpcErrorCodes.invalidParams);
+
+      // 4. Path traversal in storage.get key
+      final out4 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'st-4',
+        'method': 'storage.get',
+        'params': {'key': '..\\..\\windows\\system32'},
+      });
+      final res4 = await out4;
+      expect(res4['error']['code'], JsonRpcErrorCodes.invalidParams);
+
+      // 5. Path traversal in storage.delete key
+      final out5 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'st-5',
+        'method': 'storage.delete',
+        'params': {'key': '../other_plugin/key'},
+      });
+      final res5 = await out5;
+      expect(res5['error']['code'], JsonRpcErrorCodes.invalidParams);
+    });
+
+    test('terminal execution blocks command containing null byte injection',
+        () async {
+      final out = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'cmd-null',
+        'method': 'terminal.runCommand',
+        'params': {'command': 'cat file.txt\x00; rm -rf /'},
+      });
+      final res = await out;
+      expect(res['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res['error']['message'], contains('cannot contain null bytes'));
+    });
+
+    test('terminal.getBuffer validates linesCount parameter', () async {
+      // Negative linesCount
+      final out1 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'gb-1',
+        'method': 'terminal.getBuffer',
+        'params': {'linesCount': -10},
+      });
+      final res1 = await out1;
+      expect(res1['error']['code'], JsonRpcErrorCodes.invalidParams);
+      expect(res1['error']['message'], contains('positive integer'));
+
+      // Non-integer linesCount
+      final out2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'gb-2',
+        'method': 'terminal.getBuffer',
+        'params': {'linesCount': 'all'},
+      });
+      final res2 = await out2;
+      expect(res2['error']['code'], JsonRpcErrorCodes.invalidParams);
+
+      // Valid call succeeds
+      final out3 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'gb-3',
+        'method': 'terminal.getBuffer',
+        'params': {'linesCount': 100},
+      });
+      final res3 = await out3;
+      expect(res3['result']['lines'], isA<List<dynamic>>());
+    });
+
+    test('server.list and vault.readHosts return host catalog when authorized',
+        () async {
+      final out1 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'srv-1',
+        'method': 'server.list',
+      });
+      final res1 = await out1;
+      expect(res1['result']['servers'], isA<List<dynamic>>());
+
+      final out2 = bridge.outgoingMessagesStream(testPluginId).first;
+      await bridge.handleIncomingMessage(testPluginId, {
+        'jsonrpc': '2.0',
+        'id': 'vault-1',
+        'method': 'vault.readHosts',
+      });
+      final res2 = await out2;
+      expect(res2['result']['hosts'], isA<List<dynamic>>());
+    });
+  });
 }

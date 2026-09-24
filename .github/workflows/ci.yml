@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-analyze:
+    name: Lint & Static Analysis (Fatal Infos)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies across monorepo
+        run: |
+          for dir in packages/* apps/shellit servers/sync_server; do
+            if [ -f "$dir/pubspec.yaml" ]; then
+              echo "==> flutter pub get in $dir"
+              (cd "$dir" && flutter pub get)
+            fi
+          done
+
+      - name: Check Formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Run Dart Static Analysis (--fatal-infos)
+        run: dart analyze --fatal-infos
+
+  test:
+    name: Unit & Widget Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-analyze]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies across monorepo
+        run: |
+          for dir in packages/* apps/shellit servers/sync_server; do
+            if [ -f "$dir/pubspec.yaml" ]; then
+              echo "==> flutter pub get in $dir"
+              (cd "$dir" && flutter pub get)
+            fi
+          done
+
+      - name: Run Unit Tests (Packages)
+        run: |
+          for dir in packages/*; do
+            if [ -d "$dir/test" ]; then
+              echo "==> Running tests in $dir"
+              (cd "$dir" && flutter test)
+            fi
+          done
+
+      - name: Run Tests (Main Application)
+        run: |
+          cd apps/shellit
+          flutter test

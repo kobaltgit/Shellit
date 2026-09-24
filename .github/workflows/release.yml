@@ -21,8 +21,34 @@ permissions:
   contents: write
 
 jobs:
+  lint-and-analyze:
+    name: Lint & Static Analysis (Fatal Infos)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Monorepo Dependencies
+        run: |
+          for dir in packages/* apps/shellit servers/sync_server; do
+            if [ -f "$dir/pubspec.yaml" ]; then
+              echo "==> flutter pub get in $dir"
+              (cd "$dir" && flutter pub get)
+            fi
+          done
+
+      - name: Run Dart Static Analysis (--fatal-infos)
+        run: dart analyze --fatal-infos
+
   build-windows:
     name: Build Windows (Setup.exe & Portable Zip)
+    needs: [lint-and-analyze]
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -73,6 +99,7 @@ jobs:
 
   build-linux:
     name: Build Linux (Tar.gz Archive)
+    needs: [lint-and-analyze]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -112,6 +139,7 @@ jobs:
 
   build-android:
     name: Build Android (APK)
+    needs: [lint-and-analyze]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

@@ -264,6 +264,39 @@ void main() {
       expect(key.isDestroyed, isTrue);
     });
 
+    test('VaultSecurityContext.unlockWithKeyBytes zeroizes source when requested', () {
+      final context = VaultSecurityContext();
+      final sourceBytes = Uint8List.fromList([10, 20, 30, 40, 50]);
+
+      context.unlockWithKeyBytes(sourceBytes, zeroizeSource: true);
+      expect(context.isUnlocked, isTrue);
+      // Source buffer should have been zeroized immediately
+      expect(sourceBytes, equals([0, 0, 0, 0, 0]));
+
+      context.lock();
+      expect(context.isUnlocked, isFalse);
+    });
+
+    test('VaultSecurityContext.withMasterKeyBytes zeroizes extracted buffer', () async {
+      final context = VaultSecurityContext();
+      final key = SecretKeyData(Uint8List.fromList([1, 2, 3, 4]));
+      context.unlock(key);
+
+      Uint8List? capturedBuffer;
+      final result = await context.withMasterKeyBytes((bytes) {
+        capturedBuffer = bytes;
+        expect(bytes, equals([1, 2, 3, 4]));
+        return 'executed';
+      });
+
+      expect(result, equals('executed'));
+      expect(capturedBuffer, isNotNull);
+      // The buffer passed to callback should now be zeroized
+      expect(capturedBuffer!, equals([0, 0, 0, 0]));
+
+      context.lock();
+    });
+
     test('zeroize safely handles lists and fills with zeros', () {
       final buffer = Uint8List.fromList([0xAA, 0xBB, 0xCC, 0xDD]);
       VaultCryptoService.zeroize(buffer);
@@ -271,6 +304,98 @@ void main() {
 
       final empty = Uint8List(0);
       expect(() => VaultCryptoService.zeroize(empty), returnsNormally);
+    });
+
+    test('deriveMasterKey zeroizes raw passwordBytes and salt when requested', () async {
+      final cryptoService = VaultCryptoService(
+        argon2Memory: 1024,
+        argon2Iterations: 2,
+        argon2Parallelism: 1,
+        argon2HashLength: 32,
+      );
+
+      final passwordBytes = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8]);
+      final salt = Uint8List.fromList([9, 10, 11, 12, 13, 14, 15, 16]);
+
+      final key = await cryptoService.deriveMasterKey(
+        passwordBytes: passwordBytes,
+        salt: salt,
+        zeroizePassword: true,
+        zeroizeSalt: true,
+      );
+
+      expect(key.isDestroyed, isFalse);
+      // Input buffers should be explicitly zeroized with .fillRange(0, length, 0)
+      expect(passwordBytes, everyElement(equals(0)));
+      expect(salt, everyElement(equals(0)));
+
+      VaultCryptoService.destroySecretKey(key);
+      expect(key.isDestroyed, isTrue);
+    });
+
+    test('deriveMasterKeyFromBytes works and zeroizes buffers when requested', () async {
+      final cryptoService = VaultCryptoService(
+        argon2Memory: 1024,
+        argon2Iterations: 2,
+        argon2Parallelism: 1,
+        argon2HashLength: 32,
+      );
+
+      final passwordBytes = Uint8List.fromList([0xDE, 0xAD, 0xBE, 0xEF]);
+      final salt = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+      final key = await cryptoService.deriveMasterKeyFromBytes(
+        passwordBytes: passwordBytes,
+        salt: salt,
+        zeroizePassword: true,
+        zeroizeSalt: true,
+      );
+
+      expect(key.isDestroyed, isFalse);
+      expect(passwordBytes, everyElement(equals(0)));
+      expect(salt, everyElement(equals(0)));
+
+      VaultCryptoService.destroySecretKey(key);
+    });
+
+    test('withDecryptedBytes zeroizes cleartext even if action throws', () async {
+      final cryptoService = VaultCryptoService(
+        argon2Memory: 1024,
+        argon2Iterations: 2,
+        argon2Parallelism: 1,
+        argon2HashLength: 32,
+      );
+
+      final salt = cryptoService.generateRandomBytes(16);
+      final key = await cryptoService.deriveMasterKey(
+        password: 'TestPassword',
+        salt: salt,
+      );
+
+      final clearText = Uint8List.fromList([42, 43, 44, 45]);
+      final encrypted = await cryptoService.encryptBytes(
+        clearText: clearText,
+        secretKey: key,
+      );
+
+      Uint8List? capturedBuffer;
+      try {
+        await cryptoService.withDecryptedBytes(
+          encryptedData: encrypted,
+          secretKey: key,
+          action: (decrypted) async {
+            capturedBuffer = decrypted;
+            expect(decrypted, equals([42, 43, 44, 45]));
+            throw Exception('Intentional failure');
+          },
+        );
+      } catch (_) {}
+
+      expect(capturedBuffer, isNotNull);
+      // Captured buffer must be zeroized despite the thrown exception
+      expect(capturedBuffer!, equals([0, 0, 0, 0]));
+
+      VaultCryptoService.destroySecretKey(key);
     });
   });
 }

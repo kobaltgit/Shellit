@@ -50,7 +50,7 @@ export const translations = {
       star: "Star",
     },
     hero: {
-      badge: "Shellit v0.1.0 Release • Open Source & Zero-Knowledge",
+      badge: "Shellit Alpha Preview • Open Source & Zero-Trust",
       title1: "Complete Server Control.",
       title2: "No subscriptions, no stranger clouds.",
       subtitle: "Modern cross-platform SSH & SFTP client with 2x2 matrix tiling, Prod Guard environment defense, native MCP server, and self-hosted E2EE sync.",
@@ -140,7 +140,7 @@ export const translations = {
         {
           feature: "Privacy & Zero-Knowledge",
           desc: "Who has access to your SSH keys and host credentials",
-          shellit: { text: "100% Zero-Knowledge (Argon2id + AES-256 GCM)", badge: "green", icon: true },
+          shellit: { text: "100% Zero-Knowledge (Argon2id + AES-256 GCM + Fail-Closed TOFU)", badge: "green", icon: true },
           termius: { text: "Termius Cloud + product telemetry", badge: "yellow", icon: false },
           putty: { text: "Plain Windows registry without encryption", badge: "red", icon: false },
         },
@@ -431,7 +431,7 @@ export const translations = {
       star: "Star",
     },
     hero: {
-      badge: "Shellit v0.1.0 Релиз • Open Source & Zero-Knowledge",
+      badge: "Shellit Alpha Preview • Open Source & Zero-Trust",
       title1: "Контроль над серверами.",
       title2: "Без подписок и чужих облаков.",
       subtitle: "Современный кроссплатформенный SSH & SFTP клиент с матричным мультиплексором 2x2, защитой продакшена Prod Guard, нативным сервером MCP и своим сервером синхронизации.",
@@ -521,7 +521,7 @@ export const translations = {
         {
           feature: "Приватность и Zero-Knowledge",
           desc: "Кто имеет доступ к вашим SSH-ключам и учетным записям",
-          shellit: { text: "100% Zero-Knowledge (Argon2id + AES-256 GCM)", badge: "green", icon: true },
+          shellit: { text: "100% Zero-Knowledge (Argon2id + AES-256 GCM + строгий Fail-Closed TOFU)", badge: "green", icon: true },
           termius: { text: "Облако Termius + продуктовая телеметрия", badge: "yellow", icon: false },
           putty: { text: "Открытый реестр Windows без шифрования", badge: "red", icon: false },
         },

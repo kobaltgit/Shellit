@@ -118,11 +118,11 @@ class SessionConnectController {
 
     final context = _ref.read(rootNavigatorKeyProvider).currentContext;
     if (context == null || !context.mounted) {
-      AppLogger.w(
-        'Host key verification requested without mounted UI context for $hostname:$port',
+      AppLogger.e(
+        'Host key verification failed: UI context is not mounted to confirm trust for $hostname:$port. Aborting connection (Fail-Closed).',
         tag: 'SessionConnectController',
       );
-      return !hasMismatch;
+      return false;
     }
 
     final accepted = await HostKeyDialog.show(

@@ -177,5 +177,117 @@ void main() {
       final unlockedSave = await repositoryWithAuth.saveKnownHost(testHost1);
       expect(unlockedSave.isSuccess, isTrue);
     });
+
+    group('Canonical Fingerprint Handling', () {
+      test('canonicalizeFingerprint handles various formats properly', () {
+        const raw = '+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0';
+        const expected = 'SHA256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0';
+
+        // Canonical format remains unchanged
+        expect(KnownHostRepository.canonicalizeFingerprint(expected),
+            equals(expected));
+
+        // Lowercase prefix is normalized to uppercase SHA256:
+        expect(
+            KnownHostRepository.canonicalizeFingerprint('sha256:$raw'),
+            equals(expected));
+
+        // Raw base64 gets SHA256: prepended
+        expect(
+            KnownHostRepository.canonicalizeFingerprint(raw), equals(expected));
+
+        // Trailing padding '=' is stripped as per OpenSSH canonical format
+        expect(KnownHostRepository.canonicalizeFingerprint('$expected='),
+            equals(expected));
+        expect(KnownHostRepository.canonicalizeFingerprint('$raw='),
+            equals(expected));
+
+        // Whitespace is trimmed
+        expect(
+            KnownHostRepository.canonicalizeFingerprint('   $expected   '),
+            equals(expected));
+      });
+
+      test('saveKnownHost normalizes fingerprint to canonical SHA256 format in database',
+          () async {
+        final hostWithRaw = testHost1.copyWith(
+          id: 'kh-raw',
+          host: 'raw-host.internal',
+          fingerprintSha256: 'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
+        );
+
+        await repositoryOpen.saveKnownHost(hostWithRaw);
+
+        final found =
+            await repositoryOpen.findKnownHost('raw-host.internal', 22);
+        expect(found, isNotNull);
+        expect(
+          found!.fingerprintSha256,
+          equals('SHA256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0'),
+        );
+      });
+
+      test('findKnownHostByFingerprint looks up host by canonical or raw fingerprint',
+          () async {
+        await repositoryOpen.saveKnownHost(testHost1);
+
+        // Lookup using canonical format
+        final byCanonical = await repositoryOpen.findKnownHostByFingerprint(
+            'SHA256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0');
+        expect(byCanonical, isNotNull);
+        expect(byCanonical!.host, equals('github.com'));
+
+        // Lookup using lowercase prefix
+        final byLower = await repositoryOpen.findKnownHostByFingerprint(
+            'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0');
+        expect(byLower, isNotNull);
+        expect(byLower!.host, equals('github.com'));
+
+        // Lookup using raw base64 without prefix
+        final byRaw = await repositoryOpen.findKnownHostByFingerprint(
+            '+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0');
+        expect(byRaw, isNotNull);
+        expect(byRaw!.host, equals('github.com'));
+
+        // Lookup using padded base64
+        final byPadded = await repositoryOpen.findKnownHostByFingerprint(
+            'SHA256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=');
+        expect(byPadded, isNotNull);
+        expect(byPadded!.host, equals('github.com'));
+      });
+
+      test('matchesFingerprint accurately compares fingerprints across formats',
+          () async {
+        await repositoryOpen.saveKnownHost(testHost1);
+
+        expect(
+          await repositoryOpen.matchesFingerprint(
+            host: 'github.com',
+            port: 22,
+            fingerprint:
+                'sha256:+DiY3wvvV6TuKe7v5s20dab0q6guWOATPwp199vgKt0=',
+          ),
+          isTrue,
+        );
+
+        expect(
+          await repositoryOpen.matchesFingerprint(
+            host: 'github.com',
+            port: 22,
+            fingerprint: 'SHA256:DifferentFingerprintValue',
+          ),
+          isFalse,
+        );
+
+        expect(
+          await repositoryOpen.matchesFingerprint(
+            host: 'nonexistent.com',
+            port: 22,
+            fingerprint: testHost1.fingerprintSha256,
+          ),
+          isFalse,
+        );
+      });
+    });
   });
 }
