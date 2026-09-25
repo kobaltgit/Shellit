@@ -17,7 +17,10 @@
   --sl-color-gray-3: #64748B !important;
   --sl-color-gray-4: #334155 !important;
   --sl-color-gray-5: #1E293B !important;
+  --sl-color-gray-6: #0F172A !important;
+  --sl-color-gray-7: #090D16 !important;
   --sl-color-black: #090D16 !important;
+  --sl-color-bg-inline-code: rgba(255, 255, 255, 0.08) !important;
 
   /* High contrast colors for Asides/Callouts */
   --sl-color-purple-low: #1a102e !important;
@@ -159,4 +162,50 @@ starlight-theme-select {
 }
 .starlight-aside--danger .starlight-aside__title {
   color: #fca5a5 !important;
+}
+
+/* ==========================================================================
+   Universal Inline Code & Keyboard Badges across ENTIRE Documentation (EN & RU)
+   Eliminates solid white boxes, ensures crisp Obsidian Dark pill styling
+   ========================================================================== */
+:not(pre) > code,
+.sl-markdown-content :not(pre) > code,
+.starlight-aside :not(pre) > code,
+main :not(pre) > code,
+article :not(pre) > code,
+h1 > code, h2 > code, h3 > code, h4 > code, h5 > code, h6 > code,
+li > code, p > code, td > code, th > code, a > code, span > code {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #7BE113 !important; /* Brand Neon Lime for instant high-contrast legibility */
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 0.375rem !important;
+  padding: 0.15rem 0.45rem !important;
+  font-family: var(--sl-font-system-mono, ui-monospace, SFMono-Regular, monospace) !important;
+  font-size: 0.875em !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Links containing code */
+a > code,
+a:hover > code {
+  color: #9BF03B !important;
+  border-color: rgba(123, 225, 19, 0.4) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+}
+
+.sl-markdown-content kbd,
+main kbd,
+kbd {
+  background-color: #141A26 !important;
+  color: #F1F5F9 !important;
+  border: 1px solid #2A3649 !important;
+  border-bottom: 2px solid #1E293B !important;
+  border-radius: 0.375rem !important;
+  padding: 0.15rem 0.45rem !important;
+  font-family: var(--sl-font-system-mono, ui-monospace, SFMono-Regular, monospace) !important;
+  font-size: 0.8em !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
 }
