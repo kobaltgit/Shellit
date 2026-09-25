@@ -82,8 +82,8 @@ class KeyGeneratorService {
     );
 
     final pair = keyGen.generateKeyPair();
-    final pub = pair.publicKey as pc.RSAPublicKey;
-    final priv = pair.privateKey as pc.RSAPrivateKey;
+    final pub = pair.publicKey;
+    final priv = pair.privateKey;
 
     final p = priv.p!;
     final q = priv.q!;
