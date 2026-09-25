@@ -136,7 +136,7 @@ class FakeSftpClient implements SftpClient {
   }
 
   @override
-  void close() {
+  Future<void> close() async {
     isClosed = true;
   }
 
