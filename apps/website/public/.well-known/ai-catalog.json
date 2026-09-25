@@ -1,5 +1,4 @@
 {
-  "$schema": "https://agenticresourcediscovery.org/schemas/v1.0/manifest.json",
   "specVersion": "1.0",
   "host": {
     "displayName": "Shellit",
@@ -19,14 +18,14 @@
       ]
     },
     {
-      "identifier": "urn:air:shellit.top:doc:chronicle",
-      "displayName": "Shellit Engineering Chronicle",
-      "type": "text/html",
-      "url": "https://shellit.top/chronicle/",
+      "identifier": "urn:air:shellit.top:skill:remote-mgmt",
+      "displayName": "Shellit Remote Management Skill",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://shellit.top/.well-known/agent-skills/shellit-mcp/SKILL.md",
       "representativeQueries": [
-        "shellit architecture and fail closed security devlog",
         "ssh host key verification fail closed",
-        "flutter argon2id and sqlcipher implementation"
+        "safely execute remote linux diagnostics",
+        "manage remote server terminal sessions"
       ]
     }
   ]
