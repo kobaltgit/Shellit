@@ -17,8 +17,28 @@
   --sl-color-gray-3: #64748B !important;
   --sl-color-gray-4: #334155 !important;
   --sl-color-gray-5: #1E293B !important;
-  --sl-color-gray-6: #0F172A !important;
   --sl-color-black: #090D16 !important;
+
+  /* High contrast colors for Asides/Callouts */
+  --sl-color-purple-low: #1a102e !important;
+  --sl-color-purple: #a855f7 !important;
+  --sl-color-purple-high: #e9d5ff !important;
+
+  --sl-color-blue-low: #0c1e38 !important;
+  --sl-color-blue: #3b82f6 !important;
+  --sl-color-blue-high: #bfdbfe !important;
+
+  --sl-color-orange-low: #2a180a !important;
+  --sl-color-orange: #f59e0b !important;
+  --sl-color-orange-high: #fef3c7 !important;
+
+  --sl-color-red-low: #2b0f14 !important;
+  --sl-color-red: #ef4444 !important;
+  --sl-color-red-high: #fee2e2 !important;
+
+  --sl-color-green-low: #102d08 !important;
+  --sl-color-green: #7be113 !important;
+  --sl-color-green-high: #d9f99d !important;
 }
 
 header.header {
@@ -51,4 +71,92 @@ starlight-theme-select {
   display: flex !important;
   align-items: center !important;
   gap: 0.75rem !important;
+}
+
+/* ==========================================================================
+   Starlight Asides & Callouts (Note, Tip, Caution, Danger)
+   Obsidian Dark High-Contrast Style for Perfect Readability in EN & RU
+   ========================================================================== */
+.starlight-aside {
+  border-radius: 0.75rem !important;
+  border: 1px solid var(--sl-color-asides-border, #334155) !important;
+  border-inline-start-width: 4px !important;
+  padding: 1.1rem 1.25rem !important;
+  margin: 1.5rem 0 !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+
+.starlight-aside .starlight-aside__title {
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  letter-spacing: -0.01em !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-bottom: 0.6rem !important;
+}
+
+.starlight-aside .starlight-aside__content {
+  color: #E2E8F0 !important;
+  font-size: 0.935rem !important;
+  line-height: 1.65 !important;
+}
+
+.starlight-aside .starlight-aside__content p {
+  color: #CBD5E1 !important;
+  margin: 0.4rem 0 !important;
+}
+
+.starlight-aside .starlight-aside__content strong {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+.starlight-aside .starlight-aside__content code {
+  color: #F8FAFC !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  padding: 0.15rem 0.35rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875em !important;
+}
+
+/* Note Variant (Blue) */
+.starlight-aside--note {
+  background-color: rgba(30, 58, 138, 0.22) !important;
+  border-color: #3b82f6 !important;
+  --sl-color-asides-border: #3b82f6 !important;
+}
+.starlight-aside--note .starlight-aside__title {
+  color: #93c5fd !important;
+}
+
+/* Tip Variant (Purple / Brand Accent) */
+.starlight-aside--tip {
+  background-color: rgba(88, 28, 135, 0.22) !important;
+  border-color: #a855f7 !important;
+  --sl-color-asides-border: #a855f7 !important;
+}
+.starlight-aside--tip .starlight-aside__title {
+  color: #d8b4fe !important;
+}
+
+/* Caution Variant (Amber) */
+.starlight-aside--caution {
+  background-color: rgba(120, 53, 15, 0.22) !important;
+  border-color: #f59e0b !important;
+  --sl-color-asides-border: #f59e0b !important;
+}
+.starlight-aside--caution .starlight-aside__title {
+  color: #fcd34d !important;
+}
+
+/* Danger Variant (Red) */
+.starlight-aside--danger {
+  background-color: rgba(127, 29, 29, 0.22) !important;
+  border-color: #ef4444 !important;
+  --sl-color-asides-border: #ef4444 !important;
+}
+.starlight-aside--danger .starlight-aside__title {
+  color: #fca5a5 !important;
 }
