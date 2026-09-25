@@ -1,0 +1,45 @@
+# Shellit — Modern SSH & SFTP Client
+
+> Shellit is a modern, secure, cross-platform SSH client, SFTP manager, and server management tool built with Flutter & Dart. It features 2x2 matrix terminal splits, broadcast input, Prod Guard command interception, Zero-Knowledge Argon2id encrypted vault, and a native Model Context Protocol (MCP) server for AI coding agents.
+
+## Core Features & Documentation
+
+- [Quick Start Guide](https://shellit.top/getting-started/quick-start/): Installation, master password setup, and initial server connection.
+- [Installation Guide](https://shellit.top/getting-started/installation/): Detailed binaries and packages for Windows, Linux, and Android.
+- [Prod Guard Security](https://shellit.top/security/prod-guard/): Interception of destructive commands (`rm -rf`, `DROP DATABASE`, `mkfs`) on production environments.
+- [Zero-Knowledge Vault](https://shellit.top/security/vault-encryption/): Local SQLite encryption using Argon2id key derivation and AES-256-GCM.
+- [E2EE Sync Server](https://shellit.top/sync/how-to-setup-e2ee-ssh-key-sync/): Self-hosted end-to-end encrypted synchronization without third-party clouds.
+- [Docker Deployment](https://shellit.top/sync/docker-deployment/): One-command deployment of the Shellit sync relay with Docker Compose.
+- [Protect Server from rm -rf](https://shellit.top/security/how-to-protect-server-from-rm-rf/): Comprehensive guide on server protection and safety policies.
+
+## AI & Model Context Protocol (MCP)
+
+- [MCP Server Specification](https://shellit.top/ai/mcp-server/): Native Model Context Protocol (MCP) tool server allowing AI agents (Claude, Cursor, Antigravity) to execute safe remote diagnostics.
+- [MCP Setup for Cursor & Claude](https://shellit.top/ai/how-to-setup-mcp-for-cursor-and-claude/): Step-by-step configuration for Claude Desktop and Cursor IDE.
+- [Gemini AI Snippets](https://shellit.top/ai/gemini-snippets/): AI-assisted bash snippet generation with Bring-Your-Own-Key (BYOK) privacy.
+
+## Plugin Ecosystem & Extensibility
+
+- [Desktop Plugin SDK Reference](https://shellit.top/plugins/sdk-reference/): API reference for developing sandboxed `.shellit` desktop plugins via JSON-RPC 2.0.
+- [Creating Custom Plugins](https://shellit.top/plugins/creating-plugins/): Tutorial on packaging Web-based extensions for Shellit.
+
+## Chronicle & Engineering Devlog
+
+- [Shellit Chronicle (EN)](https://shellit.top/chronicle/): 8 thematic acts detailing the architecture, hardware debugging, security audits, and release engineering.
+- [Act I: Foundations](https://shellit.top/chronicle/act-1-foundation/): Architecture manifesto and 5 isolated packages.
+- [Act II: Hardware & Console](https://shellit.top/chronicle/act-2-hardware-and-console/): xterm.dart, ConPTY, and Safe Build Protocol.
+- [Act III: SFTP & Splits](https://shellit.top/chronicle/act-3-sftp-and-splits/): 2x2 matrix terminal multiplexer and broadcast input.
+- [Act IV: Zero-Knowledge](https://shellit.top/chronicle/act-4-zero-knowledge/): Self-hosted relay and Android touch accessory bar.
+- [Act V: AI & ConPTY](https://shellit.top/chronicle/act-5-ai-and-conpty/): Native MCP server and Gemini BYOK integration.
+- [Act VI: Web & Cloud](https://shellit.top/chronicle/act-6-web-and-cloud/): Astro portal, PocketBase backend, and Cloudflare Tunnel.
+- [Act VII: Battle of the Titans](https://shellit.top/chronicle/act-7-battle-of-titans/): Independent security audit by Qwen and strict Fail-Closed defense.
+- [Act VIII: Meta-Chronicle](https://shellit.top/chronicle/act-8-meta-chronicle/): Public chronicle birth, Knuth-Plass typography, and interactive simulator.
+
+## Russian Documentation & Guides (Русская версия)
+
+- [Быстрый старт](https://shellit.top/ru/getting-started/quick-start/): Руководство по установке и первому подключению.
+- [Защита Prod Guard](https://shellit.top/ru/security/prod-guard/): Перехват опасных команд на боевых серверах.
+- [Шифрование Vault](https://shellit.top/ru/security/vault-encryption/): Архитектура Zero-Knowledge на базе Argon2id.
+- [E2EE Синхронизация](https://shellit.top/ru/sync/how-to-setup-e2ee-ssh-key-sync/): Развертывание собственного сервера синхронизации.
+- [MCP для Cursor и Claude](https://shellit.top/ru/ai/how-to-setup-mcp-for-cursor-and-claude/): Подключение ИИ-ассистентов к терминалу.
+- [Летопись Shellit (RU)](https://shellit.top/ru/chronicle/): Полная инженерная хроника создания проекта на русском языке.

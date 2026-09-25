@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Shellit",
+  "version": "0.8.5",
+  "description": "Cross-platform SSH & SFTP client with matrix splits, Prod Guard, and native Model Context Protocol (MCP) server.",
+  "homepage": "https://shellit.top",
+  "documentation": "https://shellit.top/getting-started/quick-start/",
+  "repository": "https://github.com/kobaltgit/Shellit",
+  "license": "GPL-3.0",
+  "llms_txt": "https://shellit.top/llms.txt",
+  "ai_readiness": {
+    "status": "ready",
+    "protocol": "Model Context Protocol (MCP)",
+    "context_window_optimized": true
+  },
+  "capabilities": {
+    "terminal": ["xterm-256color", "ConPTY", "PTY multiplexer"],
+    "protocols": ["SSHv2", "SFTPv3", "Model Context Protocol", "E2EE Sync"],
+    "security": ["Argon2id", "AES-256-GCM", "SQLCipher", "Fail-Closed", "Zero-Knowledge"]
+  },
+  "mcp_servers": [
+    {
+      "name": "shellit",
+      "description": "Model Context Protocol server for executing commands and managing remote sessions via Shellit.",
+      "tools": [
+        {
+          "name": "shellit_list_servers",
+          "description": "List all configured servers with environment tags and connection status."
+        },
+        {
+          "name": "shellit_exec_command",
+          "description": "Execute a remote command on a designated server with Prod Guard policy enforcement."
+        },
+        {
+          "name": "shellit_read_remote_file",
+          "description": "Read file contents from remote server via SFTP channel."
+        },
+        {
+          "name": "shellit_get_terminal_buffer",
+          "description": "Get current output buffer of an active terminal session."
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "title": "Shellit Chronicle",
+      "type": "devlog",
+      "url": "https://shellit.top/chronicle/",
+      "language": "en"
+    },
+    {
+      "title": "Летопись Shellit",
+      "type": "devlog",
+      "url": "https://shellit.top/ru/chronicle/",
+      "language": "ru"
+    },
+    {
+      "title": "Interactive Roadmap",
+      "type": "roadmap",
+      "url": "https://shellit.top/roadmap/"
+    },
+    {
+      "title": "MCP Server Guide",
+      "type": "guide",
+      "url": "https://shellit.top/ai/mcp-server/"
+    }
+  ]
+}
