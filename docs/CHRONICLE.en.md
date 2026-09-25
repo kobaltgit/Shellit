@@ -1881,6 +1881,53 @@ Rather than just pointing out flaws, Qwen provided a structured 5-point remediat
 ### 4. Takeaway
 This experiment validated my core conviction: **the future of AI-assisted engineering lies in cross-model verification**. One model designs and builds, another acts as the adversarial Red Team auditor, and the human architect steers the system, evaluates trade-offs, and ensures genuine software integrity. Onward.
 
+---
+
+## Entry 44. Cross-Audit Triumph: Resolving All Vulnerabilities, Qwen's Verdict, and Release v0.8.5
+
+*Timestamp: September 25, 2026, 03:10 — 03:30 (~20 minutes)*
+
+### 1. From Theory to Practice: Systemic Security Remediation
+Following the wake-up call from Qwen’s initial audit, we didn't offer excuses or delay fixes. We took the actionable 5-step plan and methodically refactored the codebase using Antigravity subagents:
+
+1. **Eliminating the MitM Vulnerability (Fail-Closed):**
+   In `packages/ssh_network_core`, we completely overhauled `onVerifyHostKey`. The raw 32-byte SHA-256 binary digest from `dartssh2` is now converted into canonical OpenSSH Base64 notation (`SHA256:...`), eliminating the flawed `utf8.decode`. Any missing verification callback, network error, or unhandled exception now strictly aborts the connection (`return false`) following the Fail-Closed principle. The UI-layer bypass in `SessionConnectController` was also sealed.
+2. **Dart Memory Hygiene (Zeroization):**
+   In `packages/storage_vault`, we replaced immutable `String` instances with mutable `Uint8List` byte buffers for passphrases, salts, and private keys. Buffers are forcefully wiped (`.fillRange(0, length, 0)`) in `finally` blocks, and `SecretKey.destroy()` is called on vault lock to minimize sensitive remnants in the Dart garbage collector heap.
+3. **Hardened Desktop Plugin Sandbox:**
+   Plugin IPC messages are validated against a strict JSON-RPC 2.0 schema with an allowed method whitelist and defense against null-byte (`\x00`) and directory traversal (`..`) injections in isolated storage.
+4. **Honest Positioning & CI Quality Gates:**
+   Project claims in `README.md` and the web portal were adjusted to *«Alpha / Developer Preview (Experimental Zero-Trust)»*. A strict `dart analyze --fatal-infos` check was integrated into the GitHub Actions CI workflow.
+5. **Dynamic Version Automation on the Website:**
+   All hardcoded versions and download links were eliminated. The Astro website now dynamically resolves the version from `pubspec.yaml` and GitHub Releases API.
+
+All remediations were committed in `543a3e9`, and the version was bumped to **v0.8.5**.
+
+---
+
+### 2. Qwen's Follow-up Audit Verdict: "Excellent Work"
+Immediately after releasing v0.8.5, I submitted the updated codebase back to Qwen for an independent verification audit. The re-assessment was overwhelmingly positive:
+
+> **Excerpt from Qwen's Follow-Up Audit Report:**  
+> *"The review result is remarkable: all critical vulnerabilities identified in my previous analysis have been promptly and correctly remediated. The developer (or controlling AI agent) carefully studied the findings and implemented solid security patterns.*  
+>  
+> *✅ MitM Critical Vulnerability: RESOLVED. The `onVerifyHostKey` logic is now executed cleanly from a security standpoint: canonical OpenSSH fingerprint encoding, strict Fail-Closed principle, and safe exception handling.*  
+> *✅ Memory Hygiene & Plugins: RESOLVED (Uint8List zeroization + SecretKey.destroy(), JSON-RPC 2.0 sandbox, honest Alpha positioning, CI with --fatal-infos).*  
+>  
+> *⚖️ Updated Verdict: The project demonstrated outstanding response speed and engineering quality. The technical implementation of base SSH connection security now adheres to modern standards.*  
+>  
+> *💡 Recommendation: Excellent work. You transformed a vulnerable prototype into an architecturally sound foundation. As a next step, I strongly recommend adding an end-to-end 'MitM Simulation Test' scenario where a mock server deliberately changes its host key to assert that the client reliably severs the connection."*
+
+---
+
+### 3. Engineering Takeaway
+This marks a pivotal milestone.
+
+When engineering without memorizing syntax line-by-line, an architect's primary leverage is systemic control, architectural rigor, and adversarial multi-agent auditing. By pitting two independent cutting-edge language models against each other (Red Team vs Blue Team), we turned vulnerable code into a hardened, verified system with 411 passing tests in a matter of hours.
+
+We have queued Qwen's recommendation for an automated MitM simulation test into our near-term backlog. Shellit v0.8.5 is officially published!
+
+
 
 
 
