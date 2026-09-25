@@ -30,3 +30,168 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #2E3747;
 }
+
+/* ============================================================
+   Chronicle Typography & Editorial Styling Engine
+   ============================================================ */
+.chronicle-article {
+  font-size: 1.0625rem; /* 17px */
+  line-height: 1.85;
+  color: #CBD5E1; /* slate-300 */
+}
+
+/* Headings: H2 (Entries) */
+.chronicle-article h2 {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 800;
+  line-height: 1.3;
+  color: #FFFFFF;
+  letter-spacing: -0.025em;
+  margin-top: 4.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid rgba(123, 225, 19, 0.3);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chronicle-article h2::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 1.5rem;
+  background: #7BE113;
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgba(123, 225, 19, 0.6);
+}
+
+/* Subheadings: H3 (Sections like Context, Challenges, Logic) */
+.chronicle-article h3 {
+  font-size: 1.35rem; /* 21.6px */
+  font-weight: 700;
+  line-height: 1.4;
+  color: #F8FAFC;
+  letter-spacing: -0.015em;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Paragraphs with Justif and hyphens support */
+.chronicle-article p {
+  margin-bottom: 1.5rem;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.chronicle-article p strong {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.chronicle-article p em {
+  color: #94A3B8;
+  font-style: italic;
+}
+
+/* Lists */
+.chronicle-article ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.chronicle-article ul > li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 0.875rem;
+  line-height: 1.75;
+  color: #CBD5E1;
+}
+
+.chronicle-article ul > li::before {
+  content: "•";
+  position: absolute;
+  left: 0.625rem;
+  color: #7BE113;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.chronicle-article ol {
+  list-style-type: decimal;
+  padding-left: 1.75rem;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.chronicle-article ol > li {
+  padding-left: 0.5rem;
+  margin-bottom: 0.875rem;
+  line-height: 1.75;
+  color: #CBD5E1;
+}
+
+.chronicle-article ol > li::marker {
+  color: #7BE113;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: bold;
+}
+
+/* Blockquotes / Callout Cards */
+.chronicle-article blockquote {
+  background: rgba(20, 23, 30, 0.9);
+  border-left: 4px solid #7BE113;
+  border-radius: 0 1rem 1rem 0;
+  padding: 1.25rem 1.75rem;
+  margin: 2.25rem 0;
+  border-top: 1px solid rgba(30, 36, 48, 0.7);
+  border-right: 1px solid rgba(30, 36, 48, 0.7);
+  border-bottom: 1px solid rgba(30, 36, 48, 0.7);
+  box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.6);
+}
+
+.chronicle-article blockquote p {
+  color: #E2E8F0;
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+.chronicle-article blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Horizontal Dividers */
+.chronicle-article hr {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(123, 225, 19, 0.4), rgba(30, 36, 48, 0.8), transparent);
+  margin: 4.5rem 0;
+}
+
+/* Code & Pre */
+.chronicle-article code:not(pre code) {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875em;
+  background: rgba(13, 15, 18, 0.95);
+  color: #8AEB1A;
+  border: 1px solid rgba(123, 225, 19, 0.25);
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.375rem;
+}
+
+.chronicle-article pre {
+  background: #0A0C0F !important;
+  border: 1px solid #1E2430;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}

@@ -16,7 +16,8 @@
 * `packages/desktop_plugin_sdk/` — **Зона Агента 4**. Загрузчик плагинов (`.shellit`), IPC WebView мост (JSON-RPC), манифесты.
 * `apps/shellit/` — **Главное приложение**. Сборка dependency injection, маршрутизация, нативные платформенные раннеры (Windows, macOS, Linux, Android, iOS).
 * `apps/website/` — **Зона Агента 5**. Официальный веб-портал Shellit (Промо-страница со Scrollytelling-блоком фич, Вики/Документация на Starlight, Роадмап, Витрина плагинов, клиент PocketBase).
-* `chronicle_writer` — **Агент-Летописец**. Ведение хроники проекта и разбора багфиксов в `docs/CHRONICLE.md` в авторском стиле (`author-devlog-writer`).
+* `chronicle_writer` — **Агент-Летописец**. Ведение непрерывной хроники проекта и разбора багфиксов в `docs/CHRONICLE.md` и `CHRONICLE.en.md` в авторском стиле (`author-devlog-writer`).
+* `chronicle_publisher` — **Зона Агента 6 (Веб-издатель Хроники)**. Публикация глав-лонгридов в `apps/website/src/content/chronicle/` и визуального таймлайна с интерактивными виджетами на `shellit.top`.
 
 ---
 

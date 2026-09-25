@@ -1,0 +1,119 @@
+---
+import { ArrowRight, BookOpen, Bug, Calendar, Clock, Sparkles } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface ActItem {
+  id: string;
+  data: {
+    title: string;
+    description: string;
+    actNumber: number;
+    period: string;
+    pubDate: Date;
+    readingTime: string;
+    stage: string;
+    relatedBugs: string[];
+    tags: string[];
+    lang: 'en' | 'ru';
+  };
+}
+
+interface Props {
+  acts: ActItem[];
+  lang: Locale;
+}
+
+const { acts, lang } = Astro.props;
+const isRu = lang === 'ru';
+const basePath = isRu ? '/ru' : '';
+
+// Sort acts by actNumber ascending
+const sortedActs = [...acts].sort((a, b) => a.data.actNumber - b.data.actNumber);
+---
+
+<div class="relative max-w-4xl mx-auto py-8">
+  <!-- Glowing Vertical Line -->
+  <div class="absolute left-4 sm:left-1/2 top-4 bottom-4 w-0.5 -translate-x-1/2 bg-gradient-to-b from-cyber-lime via-cyber-lime/40 to-obsidian-border pointer-events-none"></div>
+
+  <!-- Acts Loop -->
+  <div class="space-y-12">
+    {sortedActs.map((act, index) => {
+      const isEven = index % 2 === 0;
+      const slug = act.id.replace(/^(en|ru)\//, '').replace(/\.md$/, '');
+      const chapterUrl = `${basePath}/chronicle/${slug}`;
+
+      return (
+        <div class="relative flex flex-col sm:flex-row items-start group">
+          <!-- Central Node Circle -->
+          <div class="absolute left-4 sm:left-1/2 -translate-x-1/2 top-1.5 z-10 w-7 h-7 rounded-full bg-obsidian-bg border-2 border-cyber-lime flex items-center justify-center shadow-lg shadow-cyber-lime/30 group-hover:scale-125 transition-transform duration-300">
+            <span class="text-[11px] font-mono font-bold text-cyber-lime">
+              {act.data.actNumber}
+            </span>
+          </div>
+
+          <!-- Card Content (Alternate sides on desktop, stacked on mobile) -->
+          <div 
+            class={`w-full sm:w-[calc(50%-2rem)] pl-12 sm:pl-0 ${
+              isEven ? 'sm:mr-auto sm:pr-8 sm:text-right' : 'sm:ml-auto sm:pl-8 sm:text-left'
+            }`}
+          >
+            <div class="p-6 rounded-2xl bg-obsidian-card/90 border border-obsidian-border/90 hover:border-cyber-lime/50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-cyber-lime/10 group-hover:-translate-y-1">
+              <!-- Meta Badges -->
+              <div class={`flex items-center gap-2 flex-wrap text-xs font-mono mb-3 ${isEven ? 'sm:justify-end' : 'sm:justify-start'}`}>
+                <span class="px-2.5 py-0.5 rounded-full bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 font-bold">
+                  {act.data.stage}
+                </span>
+                <span class="flex items-center gap-1 text-slate-400">
+                  <Clock class="w-3 h-3 text-slate-500" />
+                  <span>{act.data.readingTime}</span>
+                </span>
+                <span class="text-slate-400">
+                  {act.data.period}
+                </span>
+              </div>
+
+              <!-- Title -->
+              <h3 class="text-lg sm:text-xl font-extrabold text-white group-hover:text-cyber-lime transition-colors leading-snug tracking-tight mb-2">
+                <a href={chapterUrl} class="focus:outline-none">
+                  {act.data.title}
+                </a>
+              </h3>
+
+              <!-- Description -->
+              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+                {act.data.description}
+              </p>
+
+              <!-- Tags and Bugs -->
+              <div class={`flex items-center gap-1.5 flex-wrap mb-5 ${isEven ? 'sm:justify-end' : 'sm:justify-start'}`}>
+                {act.data.relatedBugs?.map((bug) => (
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                    <Bug class="w-2.5 h-2.5" />
+                    <span>{bug}</span>
+                  </span>
+                ))}
+                {act.data.tags?.slice(0, 3).map((tag) => (
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-obsidian-bg text-slate-400 border border-obsidian-border">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <!-- Action Link -->
+              <div class={`flex items-center ${isEven ? 'sm:justify-end' : 'sm:justify-start'}`}>
+                <a
+                  href={chapterUrl}
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-bg hover:bg-cyber-lime/15 text-slate-200 hover:text-cyber-lime border border-obsidian-border hover:border-cyber-lime/40 text-xs font-mono font-medium transition-all group/btn"
+                >
+                  <BookOpen class="w-3.5 h-3.5 text-cyber-lime" />
+                  <span>{isRu ? 'Читать главу' : 'Read Chapter'}</span>
+                  <ArrowRight class="w-3 h-3 text-slate-400 group-hover/btn:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>

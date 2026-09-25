@@ -9,11 +9,29 @@ import DownloadModal from '../components/common/DownloadModal.astro';
 import type { Locale } from '../i18n/translations';
 import { getLatestRelease } from '../lib/github-releases';
 
+export interface ArticleMeta {
+  publishedTime: Date;
+  modifiedTime?: Date;
+  author?: string;
+  section?: string;
+  tags?: string[];
+  readingTime?: string;
+  stage?: string;
+  actNumber?: number;
+}
+
+export interface BreadcrumbItem {
+  name: string;
+  url: string;
+}
+
 interface Props {
   title?: string;
   description?: string;
   image?: string;
   lang?: Locale;
+  articleMeta?: ArticleMeta;
+  breadcrumbList?: BreadcrumbItem[];
 }
 
 const {
@@ -25,6 +43,8 @@ const {
     ? 'Shellit — быстрый и безопасный SSH/SFTP клиент: матричные сплиты 2x2, защита Prod Guard, MCP сервер для ИИ и E2EE шифрование. Скачать бесплатно для Windows, Linux и Android.'
     : 'Shellit — modern, fast, secure SSH & SFTP client with 2x2 matrix splits, Prod Guard, AI MCP gateway, and zero-knowledge encryption. Free download for Windows, Linux, Android.',
   image = "/og-image.png",
+  articleMeta,
+  breadcrumbList,
 } = Astro.props;
 
 const latestRelease = await getLatestRelease();
@@ -111,8 +131,12 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Shellit" />
 
+    <!-- RSS Feeds -->
+    <link rel="alternate" type="application/rss+xml" title="Shellit Chronicle (EN)" href="/chronicle/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Летопись Shellit (RU)" href="/ru/chronicle/rss.xml" />
+
     <!-- Open Graph / Facebook / Telegram / Discord -->
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={articleMeta ? "article" : "website"} />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -122,6 +146,19 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <meta property="og:image:alt" content={lang === 'ru' ? "Shellit — современный SSH & SFTP клиент" : "Shellit — Modern SSH & SFTP Client"} />
     <meta property="og:site_name" content="Shellit" />
     <meta property="og:locale" content={lang === 'ru' ? "ru_RU" : "en_US"} />
+    {articleMeta && (
+      <>
+        <meta property="article:published_time" content={articleMeta.publishedTime.toISOString()} />
+        {articleMeta.modifiedTime && (
+          <meta property="article:modified_time" content={articleMeta.modifiedTime.toISOString()} />
+        )}
+        <meta property="article:author" content={articleMeta.author || "Kobalt"} />
+        <meta property="article:section" content={articleMeta.section || (lang === 'ru' ? "Летопись разработки" : "Engineering Devlog")} />
+        {articleMeta.tags?.map((tag: string) => (
+          <meta property="article:tag" content={tag} />
+        ))}
+      </>
+    )}
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -130,48 +167,117 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImageURL} />
     <meta name="twitter:image:alt" content={lang === 'ru' ? "Shellit — современный SSH & SFTP клиент" : "Shellit — Modern SSH & SFTP Client"} />
+    {articleMeta?.readingTime && (
+      <>
+        <meta name="twitter:label1" content={lang === 'ru' ? "Время чтения" : "Reading time"} />
+        <meta name="twitter:data1" content={articleMeta.readingTime} />
+      </>
+    )}
+    {articleMeta?.stage && (
+      <>
+        <meta name="twitter:label2" content={lang === 'ru' ? "Этап" : "Stage"} />
+        <meta name="twitter:data2" content={articleMeta.stage} />
+      </>
+    )}
 
     <!-- Structured Data (JSON-LD Schema.org) -->
-    <script type="application/ld+json" set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Shellit",
-      "applicationCategory": "DeveloperApplication",
-      "applicationSubCategory": "SSH and SFTP Terminal Emulator",
-      "operatingSystem": "Windows, Linux, Android",
-      "description": description,
-      "url": "https://shellit.top",
-      "downloadUrl": "https://shellit.top/#download",
-      "image": socialImageURL.toString(),
-      "softwareVersion": latestRelease.version.replace(/^v/, ''),
-      "inLanguage": lang,
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "Shellit"
-      },
-      "featureList": lang === 'ru' ? [
-        "Матричные сплиты 2x2 и Broadcast Input",
-        "Контекстная защита боевых серверов Prod Guard",
-        "Живой RTT-пинг доступности серверов прямо на плитках",
-        "Связка ключей Zero-Knowledge (Argon2id + AES-256)",
-        "Нативный шлюз протокола Model Context Protocol (MCP)",
-        "Генерация shell-сниппетов на базе Google Gemini (BYOK)",
-        "Двухпанельный менеджер файлов SFTP и туннелирование портов"
-      ] : [
-        "2x2 Matrix Splits & Broadcast Input",
-        "Prod Guard Destructive Command Interception",
-        "Live RTT Ping Telemetry on Host Cards",
-        "Zero-Knowledge Keychain Vault (Argon2id + AES-256)",
-        "Native Model Context Protocol (MCP) Server",
-        "Gemini AI Snippet Generator (BYOK)",
-        "Dual-Pane SFTP File Manager & SSH Port Forwarding"
-      ]
-    })} />
+    {articleMeta ? (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": title,
+        "description": description,
+        "inLanguage": lang,
+        "datePublished": articleMeta.publishedTime.toISOString(),
+        "dateModified": (articleMeta.modifiedTime || articleMeta.publishedTime).toISOString(),
+        "image": socialImageURL.toString(),
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonicalURL.toString()
+        },
+        "author": {
+          "@type": "Person",
+          "name": articleMeta.author || "Kobalt",
+          "url": "https://github.com/kobaltgit"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Shellit",
+          "url": "https://shellit.top",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://shellit.top/logo.svg"
+          }
+        },
+        "keywords": articleMeta.tags?.join(', '),
+        "articleSection": articleMeta.section || (lang === 'ru' ? "Летопись разработки" : "Engineering Devlog"),
+        "isPartOf": {
+          "@type": "Blog",
+          "name": lang === 'ru' ? "Летопись Shellit" : "Shellit Chronicle",
+          "url": lang === 'ru' ? "https://shellit.top/ru/chronicle/" : "https://shellit.top/chronicle/"
+        },
+        "about": {
+          "@type": "SoftwareApplication",
+          "name": "Shellit",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Windows, Linux, Android"
+        }
+      })} />
+    ) : (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Shellit",
+        "applicationCategory": "DeveloperApplication",
+        "applicationSubCategory": "SSH and SFTP Terminal Emulator",
+        "operatingSystem": "Windows, Linux, Android",
+        "description": description,
+        "url": "https://shellit.top",
+        "downloadUrl": "https://shellit.top/#download",
+        "image": socialImageURL.toString(),
+        "softwareVersion": latestRelease.version.replace(/^v/, ''),
+        "inLanguage": lang,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "Shellit"
+        },
+        "featureList": lang === 'ru' ? [
+          "Матричные сплиты 2x2 и Broadcast Input",
+          "Контекстная защита боевых серверов Prod Guard",
+          "Живой RTT-пинг доступности серверов прямо на плитках",
+          "Связка ключей Zero-Knowledge (Argon2id + AES-256)",
+          "Нативный шлюз протокола Model Context Protocol (MCP)",
+          "Генерация shell-сниппетов на базе Google Gemini (BYOK)",
+          "Двухпанельный менеджер файлов SFTP и туннелирование портов"
+        ] : [
+          "2x2 Matrix Splits & Broadcast Input",
+          "Prod Guard Destructive Command Interception",
+          "Live RTT Ping Telemetry on Host Cards",
+          "Zero-Knowledge Keychain Vault (Argon2id + AES-256)",
+          "Native Model Context Protocol (MCP) Server",
+          "Gemini AI Snippet Generator (BYOK)",
+          "Dual-Pane SFTP File Manager & SSH Port Forwarding"
+        ]
+      })} />
+    )}
+
+    {breadcrumbList && breadcrumbList.length > 0 && (
+      <script type="application/ld+json" set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": breadcrumbList.map((item, index) => ({
+          "@type": "ListItem",
+          "position": index + 1,
+          "name": item.name,
+          "item": item.url
+        }))
+      })} />
+    )}
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

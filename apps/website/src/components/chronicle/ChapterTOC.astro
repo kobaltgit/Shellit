@@ -1,0 +1,142 @@
+---
+import { BookOpen, ChevronRight } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: Heading[];
+  lang: Locale;
+}
+
+const { headings, lang } = Astro.props;
+const isRu = lang === 'ru';
+const h2List = (headings || []).filter((h) => h.depth === 2);
+const title = isRu ? 'В этой главе' : 'In this chapter';
+---
+
+{h2List.length > 0 && (
+  <div>
+    <!-- Inline TOC (Shown under header initially on all devices) -->
+    <div id="inline-toc" class="p-5 rounded-2xl bg-obsidian-card/70 border border-obsidian-border mb-8 not-prose transition-opacity duration-300">
+      <div class="text-xs font-mono font-bold text-white uppercase tracking-wider mb-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <BookOpen class="w-3.5 h-3.5 text-cyber-lime" />
+          <span>{title}</span>
+        </div>
+        <span class="text-[10px] font-mono text-slate-500">
+          {isRu ? 'Нажмите для перехода' : 'Click to jump'}
+        </span>
+      </div>
+      <ul class="space-y-1.5 text-xs sm:text-sm">
+        {h2List.map((h) => (
+          <li>
+            <a 
+              href={`#${h.slug}`} 
+              class="text-slate-300 hover:text-cyber-lime transition-colors block py-0.5"
+            >
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Floating Desktop TOC: Slides in from the right when user scrolls down (Desktop only) -->
+    <aside 
+      id="floating-desktop-toc" 
+      class="hidden lg:block fixed top-24 right-4 xl:right-8 2xl:right-16 w-60 xl:w-64 max-h-[calc(100vh-8rem)] overflow-y-auto z-40 p-4 rounded-2xl bg-obsidian-card/95 backdrop-blur-2xl border border-obsidian-border/90 shadow-2xl shadow-black/80 transition-all duration-300 translate-x-full opacity-0 pointer-events-none not-prose"
+      aria-label="Table of contents"
+    >
+      <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-obsidian-border/70 text-xs font-mono font-bold text-white">
+        <div class="flex items-center gap-2">
+          <BookOpen class="w-3.5 h-3.5 text-cyber-lime" />
+          <span class="uppercase tracking-wider">{title}</span>
+        </div>
+        <span class="text-[10px] text-cyber-lime font-mono px-2 py-0.5 rounded-full bg-cyber-lime/10 border border-cyber-lime/25 font-bold">
+          {h2List.length}
+        </span>
+      </div>
+
+      <nav class="space-y-1 text-xs">
+        {h2List.map((h) => (
+          <a 
+            href={`#${h.slug}`}
+            data-toc-slug={h.slug}
+            class="floating-toc-link block py-1.5 px-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all truncate border-l-2 border-transparent leading-snug"
+            title={h.text}
+          >
+            {h.text}
+          </a>
+        ))}
+      </nav>
+    </aside>
+
+    <script is:inline>
+      (function() {
+        function setupSlidingTOC() {
+          const inlineToc = document.getElementById('inline-toc');
+          const floatingToc = document.getElementById('floating-desktop-toc');
+          if (!inlineToc || !floatingToc) return;
+
+          const links = floatingToc.querySelectorAll('.floating-toc-link');
+          const headings = Array.from(document.querySelectorAll('article h2[id], h2[id]'));
+
+          function onScroll() {
+            // Only active on desktop (>= 1024px)
+            if (window.innerWidth < 1024) {
+              floatingToc.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+              floatingToc.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+              return;
+            }
+
+            const rect = inlineToc.getBoundingClientRect();
+            // When inline TOC has scrolled past the top of the viewport
+            if (rect.bottom < 80) {
+              floatingToc.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+              floatingToc.classList.add('translate-x-0', 'opacity-100', 'pointer-events-auto');
+            } else {
+              floatingToc.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+              floatingToc.classList.remove('translate-x-0', 'opacity-100', 'pointer-events-auto');
+            }
+
+            // Highlight active heading
+            const scrollY = window.scrollY + 140;
+            let currentSlug = '';
+            for (let i = 0; i < headings.length; i++) {
+              const h = headings[i];
+              if (h.offsetTop <= scrollY) {
+                currentSlug = h.id;
+              }
+            }
+
+            links.forEach(function(link) {
+              const slug = link.getAttribute('data-toc-slug');
+              if (slug && slug === currentSlug) {
+                link.classList.add('text-cyber-lime', 'bg-cyber-lime/10', 'border-cyber-lime', 'font-semibold');
+                link.classList.remove('text-slate-400', 'border-transparent');
+              } else {
+                link.classList.remove('text-cyber-lime', 'bg-cyber-lime/10', 'border-cyber-lime', 'font-semibold');
+                link.classList.add('text-slate-400', 'border-transparent');
+              }
+            });
+          }
+
+          window.addEventListener('scroll', onScroll, { passive: true });
+          window.addEventListener('resize', onScroll, { passive: true });
+          onScroll();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', setupSlidingTOC);
+        } else {
+          setupSlidingTOC();
+        }
+      })();
+    </script>
+  </div>
+)}

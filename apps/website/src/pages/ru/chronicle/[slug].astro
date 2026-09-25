@@ -1,0 +1,358 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import RandomartVisualizer from '../../../components/chronicle/RandomartVisualizer.astro';
+import CodeDiffViewer from '../../../components/chronicle/CodeDiffViewer.astro';
+import DialogueSnippet from '../../../components/chronicle/DialogueSnippet.astro';
+import ChapterTOC from '../../../components/chronicle/ChapterTOC.astro';
+import { ArrowLeft, ArrowRight, BookOpen, Bug, Calendar, Clock, Layers, Sparkles } from 'lucide-astro';
+import { useTranslations } from '../../../i18n/translations';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const acts = await getCollection('chronicle', ({ data }) => data.lang === 'ru');
+  return acts.map((act) => {
+    const slug = act.id.replace(/^ru\//, '').replace(/\.md$/, '');
+    return {
+      params: { slug },
+      props: { act },
+    };
+  });
+}
+
+const { act } = Astro.props;
+const lang = 'ru';
+const t = useTranslations(lang);
+const { Content, headings } = await render(act);
+
+// Navigation: previous and next chapters
+const allActs = await getCollection('chronicle', ({ data }) => data.lang === 'ru');
+const sorted = allActs.sort((a, b) => a.data.actNumber - b.data.actNumber);
+const currentIndex = sorted.findIndex((a) => a.id === act.id);
+const prevAct = currentIndex > 0 ? sorted[currentIndex - 1] : null;
+const nextAct = currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null;
+
+const prevSlug = prevAct ? prevAct.id.replace(/^ru\//, '').replace(/\.md$/, '') : null;
+const nextSlug = nextAct ? nextAct.id.replace(/^ru\//, '').replace(/\.md$/, '') : null;
+---
+
+<Layout
+  lang={lang}
+  title={`${act.data.title} — Летопись Shellit`}
+  description={act.data.description}
+  articleMeta={{
+    publishedTime: new Date(act.data.pubDate),
+    author: "Kobalt",
+    section: "Летопись разработки",
+    tags: act.data.tags,
+    readingTime: act.data.readingTime,
+    stage: act.data.stage,
+    actNumber: act.data.actNumber,
+  }}
+  breadcrumbList={[
+    { name: "Главная", url: "https://shellit.top/ru/" },
+    { name: "Хроника", url: "https://shellit.top/ru/chronicle/" },
+    { name: act.data.title, url: `https://shellit.top/ru/chronicle/${act.id.replace(/^ru\//, '').replace(/\.md$/, '')}/` },
+  ]}
+>
+  <div class="max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+      <a 
+        href="/ru/chronicle" 
+        class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyber-lime transition-colors"
+      >
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>{t.chroniclePage.backToTimeline}</span>
+      </a>
+    </div>
+
+    <!-- Chapter Header -->
+    <header class="pb-8 mb-8 border-b border-obsidian-border/70 space-y-4">
+      <div class="flex items-center gap-2 flex-wrap text-xs font-mono">
+        <span class="px-2.5 py-0.5 rounded-full bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 font-bold">
+          {act.data.stage}
+        </span>
+        <span class="flex items-center gap-1 text-slate-400">
+          <Clock class="w-3.5 h-3.5 text-slate-500" />
+          <span>{act.data.readingTime}</span>
+        </span>
+        <span class="text-slate-400">
+          {act.data.period}
+        </span>
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+        {act.data.title}
+      </h1>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        {act.data.description}
+      </p>
+
+      <!-- Bug Badges and Tags -->
+      <div class="flex items-center gap-2 flex-wrap pt-2">
+        {act.data.relatedBugs?.map((bug: string) => (
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <Bug class="w-3 h-3" />
+            <span>{bug}</span>
+          </span>
+        ))}
+        {act.data.tags?.map((tag: string) => (
+          <span class="px-2.5 py-1 rounded text-xs font-mono bg-obsidian-card text-slate-400 border border-obsidian-border">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    </header>
+
+    <!-- Table of Contents (Inline at top, smoothly slides right upon scroll on desktop) -->
+    <ChapterTOC headings={headings} lang={lang} />
+
+    <!-- Dynamic Interactive Widgets for Act 1 (Foundations & Dialogues) -->
+    {act.data.actNumber === 1 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма интервью /grill-me: Старт параллельного роя"
+          timestamp="18 сентября 2026, 08:28"
+          messages={[
+            {
+              speaker: 'architect',
+              text: '/grill-me'
+            },
+            {
+              speaker: 'agent',
+              text: 'Провожу опрос по архитектуре. Предлагаю разбить проект на 5 изолированных пакетов (core_foundation, storage_vault, ssh_network_core, terminal_ui, desktop_plugin_sdk). Никаких монолитных связей. Готовы?'
+            },
+            {
+              speaker: 'architect',
+              text: 'ты сразу запустишь несколько агентов?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Да, поднимаем 4 субагента в параллель: Агент 1 (Drift/Argon2id), Агент 2 (dartssh2), Агент 3 (xterm.dart UI), Агент 4 (Plugin SDK). Каждый работает в изолированном пакете со своим набором тестов.'
+            },
+            {
+              speaker: 'architect',
+              text: 'да! подтверждаю'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 2 (Hardware, UI and First Windows Launch) -->
+    {act.data.actNumber === 2 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма отладки: Столкновение UI с суровой реальностью"
+          timestamp="18 сентября 2026, 10:49 — 11:14"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'созданный хост не сохраняется'
+            },
+            {
+              speaker: 'architect',
+              text: 'я не понял, а куда вводить пароль для созданного хоста?'
+            },
+            {
+              speaker: 'architect',
+              text: 'скажи мне, приложение не должно запрашивать доступ в сеть? сейчас оно пишет, что хост недоступен, хотя в обычном терминале я прекрасно соединяюсь с ним'
+            },
+            {
+              speaker: 'agent',
+              text: 'Вскрылся разрыв между ядром и интерфейсом: юнит-тесты проверяли репозиторий на mock-хранилище в памяти, а контроллер формы в UI ещё не сохранял пароль в SecureStorage. Сетевой сокет на Windows блокировался из-за отсутствия сетевых разрешений в манифесте сборки. Исправляю связку формы с хранилищем и сетевой слой.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 3 (SFTP and Tabs Architecture) -->
+    {act.data.actNumber === 3 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма проектирования: Архитектурный разнос вкладок"
+          timestamp="18 сентября 2026, 13:13"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'Система вкладок не реализована. Если открыт какой-то хост (в терминале или в sftp), список хостов недоступен, другую вкладку открыть невозможно. SFTP тоже должно быть отдельной вкладкой, как в термиус. Объясни, как понял задачу, прежде чем писать код.'
+            },
+            {
+              speaker: 'agent',
+              text: 'Принято, стоп кодинг. Сейчас активная сессия терминала модально захватывает экран, закрывая доступ к каталогу серверов. Требуется поднять TabBar на уровень корневого шелла: каждая сессия (SSH, SFTP, локальный терминал) живёт в отдельной вкладке с независимым состоянием, между ними можно мгновенно переключаться, а каталог хостов всегда доступен на соседней вкладке или в боковой панели.'
+            },
+            {
+              speaker: 'architect',
+              text: 'Именно так. Делай.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 4 (Zero-Knowledge & Encryption Audit) -->
+    {act.data.actNumber === 4 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма крипто-аудита: Проверка сквозного шифрования"
+          timestamp="19 сентября 2026, 02:25"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'я не понял, пароль хранится в открытом виде?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Пароли ни в коем случае не хранятся в открытом виде. Мастер-пароль пользователя никогда не покидает локальное устройство. Из него через Argon2id (память: 64 МБ, итерации: 3, параллелизм: 4) на лету генерируется 256-битный ключ, которым локально зашифровывается вся база данных (AES-256-GCM). На сервер синхронизации уходят исключительно криптографические шифротексты — даже имея полный доступ к серверу синхронизации, восстановить учетные данные без мастер-пароля невозможно.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Security Act 7 -->
+    {act.data.actNumber === 7 && (
+      <div class="space-y-8 my-8">
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-035: Ликвидация скрытого Fail-Open в SSH-рукопожатии"
+          bugId="BUG-035"
+          vulnerableTitle="Уязвимый Fail-Open (Было)"
+          fixedTitle="Строгий Fail-Closed (Стало)"
+          vulnerableCode={`// ОПАСНО: При отсутствии UI-коллбэка возвращался true!
+if (onVerifyHostKey == null) {
+  _logger.warning('Коллбэк не передан, продолжаем...');
+  return true; // Уязвимость к перехвату MitM!
+}
+// Падение на случайных байтах хэша:
+return utf8.decode(fingerprint);`}
+          fixedCode={`// БЕЗОПАСНО: Запрет по умолчанию (Fail-Closed)
+if (onVerifyHostKey == null) {
+  _logger.severe('КРИТИЧНО: Нет коллбэка верификации. Разрыв.');
+  return false; // Соединение отклоняется!
+}
+// Каноничный Base64 дайджест OpenSSH:
+return 'SHA256:' + base64.encode(fingerprint);`}
+          explanation="Qwen вскрыл, что тихое поведение Fail-Open позволяло злоумышленникам в локальной сети Wi-Fi перехватывать SSH-сессии без какого-либо предупреждения. Внедрен абсолютный отказ по умолчанию."
+        />
+
+        <RandomartVisualizer lang={lang} />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Meta-Act 8 (Typography & Meta-Chronicle) -->
+    {act.data.actNumber === 8 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма решения: Выход летописи в свет и бунт против «слепой простыни»"
+          timestamp="25 сентября 2026, 13:12 — 18:40"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'как лучше сделать, выкладывать прямо из хроники текст, или писать новые файлы под каждую главу?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Делаем отдельные главы под каждый Акт на базе Astro Content Layer, но берем текст напрямую из репозитория. Разворачиваем раздел «Хроника» прямо в шапке сайта.'
+            },
+            {
+              speaker: 'architect',
+              text: 'это слепая простыня. Надо разбавить как то, заголовки выделить, абзацы и тп. /plan'
+            },
+            {
+              speaker: 'architect',
+              text: 'разве выключка не должна быть по ширине?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Подключаю сервер mcp-typography-server автора на базе алгоритма Кнута — Пласса (Justif). Настраиваем text-align: justify с автоматическими дефисами и микротипографикой. Текст больше не плывёт «рваным флагом» и читается как хорошая книга.'
+            },
+            {
+              speaker: 'architect',
+              text: 'стенограммы убрать под спойлеры с начальным закрытым состоянием. Оглавление на десктопе при прокрутке страницы должно съезжать вправо. На мобильном оставаться как есть'
+            },
+            {
+              speaker: 'architect',
+              text: 'ну собственно вноси это в летопись проекта и делай главу на сайте про это ))))))'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Main Markdown Body (Pagefind Indexed) -->
+    <article data-pagefind-body class="chronicle-article max-w-none">
+      <span data-pagefind-filter="type:Хроника" class="hidden">Хроника</span>
+      <span data-pagefind-meta="act" class="hidden">Акт {act.data.actNumber}</span>
+      <span data-pagefind-meta="stage" class="hidden">{act.data.stage}</span>
+      <Content />
+    </article>
+
+    <!-- Knuth-Plass Typography Attribution -->
+    <div class="mt-12 p-4 rounded-xl bg-obsidian-card/60 border border-obsidian-border text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3 not-prose">
+      <div class="flex items-center gap-2">
+        <span class="text-base">📖</span>
+        <span>
+          Типографика статьи выровнена по алгоритму <strong>Кнута — Пласса</strong> с помощью 
+          <a href="https://github.com/kobaltgit/mcp-typography-server" target="_blank" rel="noopener noreferrer" class="text-cyber-lime font-mono hover:underline font-semibold">
+            mcp-typography-server
+          </a> 
+          на базе Justif.
+        </span>
+      </div>
+      <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/60 border border-obsidian-border text-slate-400">
+        Knuth-Plass • TeX Style
+      </span>
+    </div>
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/justif@0.9.1/dist/auto.js"></script>
+
+    <!-- Bottom Navigation: Prev / Next Act -->
+    <nav class="mt-10 pt-8 border-t border-obsidian-border/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {prevAct ? (
+        <a
+          href={`/ru/chronicle/${prevSlug}`}
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-start"
+        >
+          <ArrowLeft class="w-4 h-4 text-cyber-lime" />
+          <div class="text-left">
+            <div class="text-[10px] text-slate-400">{t.chroniclePage.prevAct}</div>
+            <div class="font-bold text-white truncate max-w-[200px]">{prevAct.data.title}</div>
+          </div>
+        </a>
+      ) : (
+        <div class="hidden sm:block"></div>
+      )}
+
+      <a
+        href="/ru/chronicle"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-obsidian-bg text-slate-400 hover:text-cyber-lime border border-obsidian-border text-xs font-mono transition-colors"
+      >
+        <Layers class="w-3.5 h-3.5" />
+        <span>{t.chroniclePage.allActs}</span>
+      </a>
+
+      {nextAct ? (
+        <a
+          href={`/ru/chronicle/${nextSlug}`}
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-end text-right"
+        >
+          <div>
+            <div class="text-[10px] text-slate-400">{t.chroniclePage.nextAct}</div>
+            <div class="font-bold text-white truncate max-w-[200px]">{nextAct.data.title}</div>
+          </div>
+          <ArrowRight class="w-4 h-4 text-cyber-lime" />
+        </a>
+      ) : (
+        <div class="hidden sm:block"></div>
+      )}
+    </nav>
+  </div>
+</Layout>

@@ -1,0 +1,358 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RandomartVisualizer from '../../components/chronicle/RandomartVisualizer.astro';
+import CodeDiffViewer from '../../components/chronicle/CodeDiffViewer.astro';
+import DialogueSnippet from '../../components/chronicle/DialogueSnippet.astro';
+import ChapterTOC from '../../components/chronicle/ChapterTOC.astro';
+import { ArrowLeft, ArrowRight, BookOpen, Bug, Calendar, Clock, Layers, Sparkles } from 'lucide-astro';
+import { useTranslations } from '../../i18n/translations';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const acts = await getCollection('chronicle', ({ data }) => data.lang === 'en');
+  return acts.map((act) => {
+    const slug = act.id.replace(/^en\//, '').replace(/\.md$/, '');
+    return {
+      params: { slug },
+      props: { act },
+    };
+  });
+}
+
+const { act } = Astro.props;
+const lang = 'en';
+const t = useTranslations(lang);
+const { Content, headings } = await render(act);
+
+// Navigation: previous and next chapters
+const allActs = await getCollection('chronicle', ({ data }) => data.lang === 'en');
+const sorted = allActs.sort((a, b) => a.data.actNumber - b.data.actNumber);
+const currentIndex = sorted.findIndex((a) => a.id === act.id);
+const prevAct = currentIndex > 0 ? sorted[currentIndex - 1] : null;
+const nextAct = currentIndex < sorted.length - 1 ? sorted[currentIndex + 1] : null;
+
+const prevSlug = prevAct ? prevAct.id.replace(/^en\//, '').replace(/\.md$/, '') : null;
+const nextSlug = nextAct ? nextAct.id.replace(/^en\//, '').replace(/\.md$/, '') : null;
+---
+
+<Layout
+  lang={lang}
+  title={`${act.data.title} — Shellit Chronicle`}
+  description={act.data.description}
+  articleMeta={{
+    publishedTime: new Date(act.data.pubDate),
+    author: "Kobalt",
+    section: "Engineering Devlog",
+    tags: act.data.tags,
+    readingTime: act.data.readingTime,
+    stage: act.data.stage,
+    actNumber: act.data.actNumber,
+  }}
+  breadcrumbList={[
+    { name: "Home", url: "https://shellit.top/" },
+    { name: "Chronicle", url: "https://shellit.top/chronicle/" },
+    { name: act.data.title, url: `https://shellit.top/chronicle/${act.id.replace(/^en\//, '').replace(/\.md$/, '')}/` },
+  ]}
+>
+  <div class="max-w-3xl xl:max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb -->
+    <div class="mb-8">
+      <a 
+        href="/chronicle" 
+        class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyber-lime transition-colors"
+      >
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>{t.chroniclePage.backToTimeline}</span>
+      </a>
+    </div>
+
+    <!-- Chapter Header -->
+    <header class="pb-8 mb-8 border-b border-obsidian-border/70 space-y-4">
+      <div class="flex items-center gap-2 flex-wrap text-xs font-mono">
+        <span class="px-2.5 py-0.5 rounded-full bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 font-bold">
+          {act.data.stage}
+        </span>
+        <span class="flex items-center gap-1 text-slate-400">
+          <Clock class="w-3.5 h-3.5 text-slate-500" />
+          <span>{act.data.readingTime}</span>
+        </span>
+        <span class="text-slate-400">
+          {act.data.period}
+        </span>
+      </div>
+
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+        {act.data.title}
+      </h1>
+
+      <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+        {act.data.description}
+      </p>
+
+      <!-- Bug Badges and Tags -->
+      <div class="flex items-center gap-2 flex-wrap pt-2">
+        {act.data.relatedBugs?.map((bug: string) => (
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30">
+            <Bug class="w-3 h-3" />
+            <span>{bug}</span>
+          </span>
+        ))}
+        {act.data.tags?.map((tag: string) => (
+          <span class="px-2.5 py-1 rounded text-xs font-mono bg-obsidian-card text-slate-400 border border-obsidian-border">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    </header>
+
+    <!-- Table of Contents (Inline at top, smoothly slides right upon scroll on desktop) -->
+    <ChapterTOC headings={headings} lang={lang} />
+
+    <!-- Dynamic Interactive Widgets for Act 1 (Foundations & Dialogues) -->
+    {act.data.actNumber === 1 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Interview Transcript (/grill-me): Launching the Parallel Swarm"
+          timestamp="September 18, 2026, 08:28"
+          messages={[
+            {
+              speaker: 'architect',
+              text: '/grill-me'
+            },
+            {
+              speaker: 'agent',
+              text: 'Running deep architecture interview. I propose decoupling the repo into 5 isolated packages (core_foundation, storage_vault, ssh_network_core, terminal_ui, desktop_plugin_sdk). No monolith couplings. Ready?'
+            },
+            {
+              speaker: 'architect',
+              text: 'will you launch multiple agents at once?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Yes, spinning up 4 subagents in parallel: Agent 1 (Drift/Argon2id), Agent 2 (dartssh2), Agent 3 (xterm.dart UI), Agent 4 (Plugin SDK). Each works within its isolated package with its own test suite.'
+            },
+            {
+              speaker: 'architect',
+              text: 'yes! confirmed'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 2 (Hardware, UI and First Windows Launch) -->
+    {act.data.actNumber === 2 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Debugging Transcript: UI Meets Hard Reality"
+          timestamp="September 18, 2026, 10:49 — 11:14"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'created host does not save'
+            },
+            {
+              speaker: 'architect',
+              text: 'I do not get it, where do I enter the password for the created host?'
+            },
+            {
+              speaker: 'architect',
+              text: 'tell me, shouldn’t the app request network access? right now it says the host is unreachable, even though in the standard terminal I connect to it just fine'
+            },
+            {
+              speaker: 'agent',
+              text: 'A gap between core and UI was identified: unit tests validated the repository on in-memory mocks, but the UI form controller was not yet forwarding passwords to SecureStorage. The Windows socket was also blocked due to missing network capabilities in the runner manifest. Patching the form-to-vault binding and network layer.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 3 (SFTP and Tabs Architecture) -->
+    {act.data.actNumber === 3 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Architecture Transcript: The Tab System Overhaul"
+          timestamp="September 18, 2026, 13:13"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'The tab system is not implemented. If a host is open (in terminal or sftp), the host list is unreachable, and opening another tab is impossible. SFTP must also be a separate tab, like in Termius. Explain how you understood the task before writing any code.'
+            },
+            {
+              speaker: 'agent',
+              text: 'Understood, code generation paused. Right now the active terminal session modal locks the viewport, hiding the server catalog. We must lift the TabBar to the root app shell: every session (SSH, SFTP, local shell) lives in an independent tab with its own state. The user can switch between them instantly while keeping the host catalog accessible in a sidebar or background tab.'
+            },
+            {
+              speaker: 'architect',
+              text: 'Exactly that. Proceed.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Act 4 (Zero-Knowledge & Encryption Audit) -->
+    {act.data.actNumber === 4 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Crypto-Audit Transcript: Zero-Knowledge End-to-End Verification"
+          timestamp="September 19, 2026, 02:25"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'I do not get it, is the password stored in plain text?'
+            },
+            {
+              speaker: 'agent',
+              text: 'Passwords are never stored or transmitted in plain text. The user’s master password never leaves the local machine. From it, Argon2id (memory: 64MB, iterations: 3, parallelism: 4) derives a 256-bit key that encrypts the local database with AES-256-GCM. The sync server receives only encrypted ciphertexts — even with full access to the sync backend, decrypting user credentials without the master password is computationally impossible.'
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Security Act 7 -->
+    {act.data.actNumber === 7 && (
+      <div class="space-y-8 my-8">
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-035: Eliminating Silent Fail-Open in SSH Handshake"
+          bugId="BUG-035"
+          vulnerableTitle="Naive Fail-Open (Vulnerable)"
+          fixedTitle="Strict Fail-Closed (Hardened)"
+          vulnerableCode={`// DANGEROUS: If UI callback is missing, returns true!
+if (onVerifyHostKey == null) {
+  _logger.warning('No callback provided, continuing connection');
+  return true; // Vulnerable to MitM!
+}
+// Crash on raw random bytes:
+return utf8.decode(fingerprint);`}
+          fixedCode={`// SAFE: Zero-Trust default deny (Fail-Closed)
+if (onVerifyHostKey == null) {
+  _logger.severe('CRITICAL: Verification callback missing. Aborting.');
+  return false; // Connection rejected!
+}
+// Canonical Base64 digest:
+return 'SHA256:' + base64.encode(fingerprint);`}
+          explanation="Qwen revealed that silent Fail-Open behavior allowed attackers on local Wi-Fi networks to intercept SSH connections without warning. We enforced strict Fail-Closed rejection."
+        />
+
+        <RandomartVisualizer lang={lang} />
+      </div>
+    )}
+
+    <!-- Dynamic Interactive Widgets for Meta-Act 8 (Typography & Meta-Chronicle) -->
+    {act.data.actNumber === 8 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Decision Transcript: Bringing the Chronicle to Light & Rebellion Against the Blind Text Wall"
+          timestamp="September 25, 2026, 13:12 — 18:40"
+          messages={[
+            {
+              speaker: 'architect',
+              text: "What's the best way: publish text directly from the chronicle, or create new files for each chapter?"
+            },
+            {
+              speaker: 'agent',
+              text: "We create dedicated chapters per Act powered by Astro Content Layer, while sourcing the text directly from the repository chronicle. We place the 'Chronicle' link directly in the top navigation bar."
+            },
+            {
+              speaker: 'architect',
+              text: "This is a blind wall of text. We need to break it up somehow, highlight headings, paragraphs, etc. /plan"
+            },
+            {
+              speaker: 'architect',
+              text: "Shouldn't the text justification be fully justified across the width?"
+            },
+            {
+              speaker: 'agent',
+              text: "Connecting the author's own mcp-typography-server based on the Knuth-Plass algorithm (Justif). Configuring text-align: justify with automatic hyphens and micro-typography. The text now reads like a finely typeset book rather than ragged markdown."
+            },
+            {
+              speaker: 'architect',
+              text: "Put transcripts under spoilers with an initially closed state. Table of contents on desktop should slide right upon page scroll. Keep mobile as is."
+            },
+            {
+              speaker: 'architect',
+              text: "Well, record this into the project chronicle and make a chapter on the site about it ))))))"
+            }
+          ]}
+        />
+      </div>
+    )}
+
+    <!-- Main Markdown Body (Pagefind Indexed) -->
+    <article data-pagefind-body class="chronicle-article max-w-none">
+      <span data-pagefind-filter="type:Chronicle" class="hidden">Chronicle</span>
+      <span data-pagefind-meta="act" class="hidden">Act {act.data.actNumber}</span>
+      <span data-pagefind-meta="stage" class="hidden">{act.data.stage}</span>
+      <Content />
+    </article>
+
+    <!-- Knuth-Plass Typography Attribution -->
+    <div class="mt-12 p-4 rounded-xl bg-obsidian-card/60 border border-obsidian-border text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3 not-prose">
+      <div class="flex items-center gap-2">
+        <span class="text-base">📖</span>
+        <span>
+          Article typography justified using the <strong>Knuth-Plass</strong> algorithm via 
+          <a href="https://github.com/kobaltgit/mcp-typography-server" target="_blank" rel="noopener noreferrer" class="text-cyber-lime font-mono hover:underline font-semibold">
+            mcp-typography-server
+          </a> 
+          powered by Justif.
+        </span>
+      </div>
+      <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/60 border border-obsidian-border text-slate-400">
+        Knuth-Plass • TeX Style
+      </span>
+    </div>
+
+    <script type="module" src="https://cdn.jsdelivr.net/npm/justif@0.9.1/dist/auto.js"></script>
+
+    <!-- Bottom Navigation: Prev / Next Act -->
+    <nav class="mt-10 pt-8 border-t border-obsidian-border/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {prevAct ? (
+        <a
+          href={`/chronicle/${prevSlug}`}
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-start"
+        >
+          <ArrowLeft class="w-4 h-4 text-cyber-lime" />
+          <div class="text-left">
+            <div class="text-[10px] text-slate-400">{t.chroniclePage.prevAct}</div>
+            <div class="font-bold text-white truncate max-w-[200px]">{prevAct.data.title}</div>
+          </div>
+        </a>
+      ) : (
+        <div class="hidden sm:block"></div>
+      )}
+
+      <a
+        href="/chronicle"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-obsidian-bg text-slate-400 hover:text-cyber-lime border border-obsidian-border text-xs font-mono transition-colors"
+      >
+        <Layers class="w-3.5 h-3.5" />
+        <span>{t.chroniclePage.allActs}</span>
+      </a>
+
+      {nextAct ? (
+        <a
+          href={`/chronicle/${nextSlug}`}
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-end text-right"
+        >
+          <div>
+            <div class="text-[10px] text-slate-400">{t.chroniclePage.nextAct}</div>
+            <div class="font-bold text-white truncate max-w-[200px]">{nextAct.data.title}</div>
+          </div>
+          <ArrowRight class="w-4 h-4 text-cyber-lime" />
+        </a>
+      ) : (
+        <div class="hidden sm:block"></div>
+      )}
+    </nav>
+  </div>
+</Layout>

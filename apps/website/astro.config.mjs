@@ -18,6 +18,8 @@ export default defineConfig({
     '/ru/ai': '/ru/ai/gemini-snippets/',
     '/plugins': '/plugins/creating-plugins/',
     '/ru/plugins': '/ru/plugins/creating-plugins/',
+    '/devlog': '/chronicle/',
+    '/ru/devlog': '/ru/chronicle/',
   },
   integrations: [
     starlight({

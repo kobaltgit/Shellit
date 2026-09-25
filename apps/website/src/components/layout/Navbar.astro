@@ -12,6 +12,7 @@ import {
   Star,
   Map,
   BookOpen,
+  Sparkles,
 } from 'lucide-astro';
 import type { Locale } from '../../i18n/translations';
 import { useTranslations } from '../../i18n/translations';
@@ -136,6 +137,15 @@ const repoStars = await getRepoStars();
         class="nav-item px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap"
       >
         {t.nav.roadmap}
+      </a>
+
+      <!-- Chronicle -->
+      <a
+        href={`${basePath}/chronicle`}
+        data-nav-target="chronicle"
+        class="nav-item px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap"
+      >
+        {t.nav.chronicle}
       </a>
 
       <!-- Docs -->
@@ -274,6 +284,10 @@ const repoStars = await getRepoStars();
       <a href={`${basePath}/roadmap`} data-nav-target="roadmap" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
         <Map class="w-4 h-4 text-cyber-cyan" />
         <span>{t.nav.roadmap}</span>
+      </a>
+      <a href={`${basePath}/chronicle`} data-nav-target="chronicle" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+        <Sparkles class="w-4 h-4 text-cyber-lime" />
+        <span>{t.nav.chronicle}</span>
       </a>
       <a href={`${basePath}/getting-started/quick-start`} data-nav-target="docs" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
         <BookOpen class="w-4 h-4 text-cyber-cyan" />

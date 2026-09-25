@@ -1,0 +1,84 @@
+---
+import { Clock, ShieldCheck, Bug, Layers, CheckCircle2, Zap } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+
+const isRu = lang === 'ru';
+
+const stats = [
+  {
+    icon: Clock,
+    value: isRu ? '~19 часов' : '~19 hours',
+    label: isRu ? 'Время до MVP' : 'Time to MVP',
+    detail: isRu ? 'От чистой папки до первого релиза' : 'From clean folder to working MVP',
+    color: 'lime',
+  },
+  {
+    icon: Bug,
+    value: '35+',
+    label: isRu ? 'Разобранных багов' : 'Documented Post-Mortems',
+    detail: isRu ? '0 скрытых дефектов' : 'Zero hidden regressions',
+    color: 'amber',
+  },
+  {
+    icon: Layers,
+    value: '5',
+    label: isRu ? 'Изолированных пакетов' : 'Isolated Packages',
+    detail: isRu ? '0 циклических связей' : '0 circular dependencies',
+    color: 'cyan',
+  },
+  {
+    icon: ShieldCheck,
+    value: '411',
+    label: isRu ? 'Зеленых тестов' : 'Green Unit Tests',
+    detail: isRu ? '100% Fail-Closed защита' : '100% Fail-Closed Zero-Trust',
+    color: 'lime',
+  },
+];
+---
+
+<div class="rounded-2xl bg-obsidian-card/80 border border-obsidian-border/90 p-6 backdrop-blur-xl relative overflow-hidden">
+  <!-- Subtle ambient glow -->
+  <div class="absolute -top-24 -right-24 w-60 h-60 bg-cyber-lime/10 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Header pill -->
+  <div class="flex items-center justify-between flex-wrap gap-3 pb-4 mb-6 border-b border-obsidian-border/70">
+    <div class="flex items-center gap-2.5">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30">
+        <Zap class="w-3.5 h-3.5 animate-pulse" />
+        <span>{isRu ? 'БОРТОВОЙ СТАТУС' : 'MISSION STATUS'}</span>
+      </span>
+      <span class="text-xs font-mono text-slate-400">
+        {isRu ? 'Архитектурный контроль • Qwen & Antigravity' : 'Architectural Control • Qwen & Antigravity'}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 text-xs font-mono text-slate-400">
+      <CheckCircle2 class="w-3.5 h-3.5 text-cyber-lime" />
+      <span>{isRu ? 'Статус: v0.8.6 Alpha Preview' : 'Status: v0.8.6 Alpha Preview'}</span>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    {stats.map((s) => (
+      <div class="p-4 rounded-xl bg-obsidian-bg/60 border border-obsidian-border/70 hover:border-cyber-lime/40 transition-all group">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-mono text-slate-400 group-hover:text-slate-300 transition-colors">{s.label}</span>
+          <s.icon class="w-4 h-4 text-cyber-lime opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+        </div>
+        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight group-hover:text-cyber-lime transition-colors">
+          {s.value}
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1 leading-snug">
+          {s.detail}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>

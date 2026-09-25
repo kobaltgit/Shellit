@@ -1,0 +1,410 @@
+---
+import { KeyRound, ShieldAlert, ShieldCheck, Terminal, AlertTriangle, RefreshCw, Check, X, Lock } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<div class="my-10 rounded-2xl bg-obsidian-card/95 border border-obsidian-border p-5 sm:p-7 shadow-2xl relative overflow-hidden not-prose">
+  <!-- Top Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-6 border-b border-obsidian-border/70">
+    <div class="flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-xl bg-cyber-lime/10 border border-cyber-lime/30 flex items-center justify-center text-cyber-lime shrink-0 shadow-glow-cyan">
+        <KeyRound class="w-5 h-5" />
+      </div>
+      <div>
+        <h4 class="text-base font-bold text-white tracking-wide flex items-center gap-2">
+          <span>{isRu ? 'Симулятор защиты Shellit: проверка ключей хоста' : 'Shellit Host Key Security Simulator'}</span>
+          <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 font-semibold">
+            Fail-Closed
+          </span>
+        </h4>
+        <p class="text-xs text-slate-400 mt-0.5">
+          {isRu 
+            ? 'Интерактивная демонстрация: первое подключение, фоновая сверка и реакция на атаку перехвата (MitM)' 
+            : 'Interactive simulation: first-time TOFU connection, background verification, and MitM attack reaction'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Scenario Switcher Buttons -->
+    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-obsidian-bg border border-obsidian-border text-xs font-mono">
+      <button
+        type="button"
+        class="scenario-tab-btn px-3 py-1.5 rounded-lg transition-all cursor-pointer font-medium bg-cyber-lime/20 text-cyber-lime border border-cyber-lime/40 shadow-sm"
+        data-scenario="tofu"
+      >
+        <span>{isRu ? '1. Первое подключение' : '1. First Connect'}</span>
+      </button>
+      <button
+        type="button"
+        class="scenario-tab-btn px-3 py-1.5 rounded-lg transition-all cursor-pointer font-medium text-slate-400 hover:text-white"
+        data-scenario="routine"
+      >
+        <span>{isRu ? '2. Обычный вход (авто)' : '2. Routine (Auto)'}</span>
+      </button>
+      <button
+        type="button"
+        class="scenario-tab-btn px-3 py-1.5 rounded-lg transition-all cursor-pointer font-medium text-slate-400 hover:text-white hover:text-red-400"
+        data-scenario="mitm"
+      >
+        <span class="flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
+          <span>{isRu ? '3. Атака MitM (Тревога)' : '3. MitM Attack'}</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SCENARIO 1: First Connection (TOFU - Trust On First Use) -->
+  <div id="scenario-view-tofu" class="scenario-panel space-y-5">
+    <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+      <AlertTriangle class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      <div class="text-xs text-slate-300 leading-relaxed">
+        <strong class="text-amber-300 font-medium">
+          {isRu ? 'Сценарий №1: Вы арендовали новый сервер и подключаетесь к нему впервые' : 'Scenario #1: Connecting to a newly deployed server for the first time'}
+        </strong>
+        <p class="mt-1 text-slate-400">
+          {isRu 
+            ? 'Сервер ранее не встречался в базе Vault. Программа не может подтвердить подлинность автоматически и запрашивает разовое подтверждение человека (RFC 4253 / TOFU).' 
+            : 'Host key is not yet recorded in Vault. Shellit requires one-time human confirmation before trusting the node.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Simulated Shellit Modal Window -->
+    <div class="rounded-xl bg-obsidian-bg/90 border border-obsidian-border p-5 shadow-inner space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-obsidian-border/70 text-xs font-mono">
+        <div class="flex items-center gap-2">
+          <Terminal class="w-4 h-4 text-cyber-lime" />
+          <span class="text-white font-bold">ssh dev@198.51.100.42:22</span>
+          <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] border border-amber-500/30">
+            {isRu ? 'Новый хост' : 'New Host'}
+          </span>
+        </div>
+        <span class="text-slate-500 text-[11px]">TOFU Verification Dialog</span>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        {isRu
+          ? 'Подлинность хоста не может быть установлена. Сверьте отпечаток с консолью вашего хостинга:'
+          : 'The authenticity of host cannot be established. Verify this fingerprint against your server console:'}
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <!-- Visual ASCII Box -->
+        <div class="flex flex-col items-center">
+          <pre class="font-mono text-xs leading-none p-3.5 rounded-xl bg-black/90 border border-cyber-lime/30 text-cyber-lime shadow-inner select-all overflow-x-auto">+--[ED25519 256]--+
+|    .. .         |
+|o.... *          |
+|+oo+o* .         |
+|**.*o=oo         |
+|*++ X.=.S        |
+|o.+oo*..         |
+|o..*  +o         |
+|o . o....        |
+| .   E ..        |
++----[SHA256]-----+</pre>
+          <span class="text-[10px] font-mono text-slate-500 mt-1.5">
+            {isRu ? 'Визуальный образ ключа (OpenSSH Randomart)' : 'Key visual fingerprint (OpenSSH Randomart)'}
+          </span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <div class="text-[11px] font-mono text-slate-400 mb-1">{isRu ? 'Криптографический хэш SHA-256:' : 'SHA-256 Digest:'}</div>
+            <div class="p-2.5 rounded-lg bg-black/60 border border-obsidian-border text-cyber-lime font-mono text-[11px] break-all select-all">
+              SHA256:4mG+zW1+oK9yL1a9B7tPqR8vC3xZ0kM4jN7sW2qX5yU
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-obsidian-card/60 border border-obsidian-border text-[11px] text-slate-400 leading-relaxed">
+            {isRu 
+              ? '💡 В консоли хостинга при создании сервера печатается такой же рисунок. За 1 секунду взглядом сверяем картинку (звёзды в центре) и подтверждаем.' 
+              : '💡 The hosting provider console prints the identical art upon server init. Compare the central star cluster in 1 second.'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="tofu-action-bar" class="pt-3 border-t border-obsidian-border/70 flex flex-wrap items-center justify-between gap-3">
+        <span class="text-[11px] text-slate-500 font-mono">
+          {isRu ? 'Решение пользователя:' : 'User Decision:'}
+        </span>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            id="tofu-reject-btn"
+            class="px-3.5 py-1.5 rounded-lg bg-obsidian-card hover:bg-red-500/10 text-slate-300 hover:text-red-400 border border-obsidian-border hover:border-red-500/30 text-xs font-mono transition-all cursor-pointer"
+          >
+            {isRu ? 'Отклонить соединение' : 'Reject Connection'}
+          </button>
+          <button
+            type="button"
+            id="tofu-trust-btn"
+            class="px-4 py-1.5 rounded-lg bg-cyber-lime/20 hover:bg-cyber-lime/30 text-cyber-lime border border-cyber-lime/50 text-xs font-mono font-bold transition-all shadow-glow-cyan cursor-pointer flex items-center gap-1.5"
+          >
+            <Check class="w-3.5 h-3.5" />
+            <span>{isRu ? 'Доверять и сохранить в Vault' : 'Trust & Save to Vault'}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dynamic Saved Feedback -->
+      <div id="tofu-success-msg" class="hidden p-3 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
+        <ShieldCheck class="w-4 h-4 text-emerald-400 shrink-0" />
+        <span>
+          {isRu 
+            ? '✅ Ключ успешно сохранён в зашифрованное хранилище Vault! Теперь переключитесь на вкладку «2. Обычный вход», чтобы увидеть, как это работает в повседневности.' 
+            : '✅ Key securely stored into encrypted Vault! Switch to tab "2. Routine" to see everyday behavior.'}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO 2: Routine Everyday Connect (Zero Friction, 100% Background) -->
+  <div id="scenario-view-routine" class="scenario-panel hidden space-y-5">
+    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+      <ShieldCheck class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+      <div class="text-xs text-slate-300 leading-relaxed">
+        <strong class="text-emerald-300 font-medium">
+          {isRu ? 'Сценарий №2: Повседневная работа (хост уже известен)' : 'Scenario #2: Everyday connection (Known host)'}
+        </strong>
+        <p class="mt-1 text-slate-400">
+          {isRu 
+            ? 'Пользователь НЕ сличает никакие палочки и не видит всплывающих окон. Программа за долю миллисекунды сама сверяет хэш с Vault и мгновенно открывает сессию.' 
+            : 'The user never manually verifies patterns. Shellit verifies the host key against encrypted Vault in under 1ms and opens the terminal instantly.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Terminal Fast-Forward Log -->
+    <div class="rounded-xl bg-black/90 border border-obsidian-border p-4 font-mono text-xs text-slate-300 space-y-2 shadow-inner">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10 text-[11px] text-slate-500">
+        <span>Shellit SSH Engine • Log stream</span>
+        <span class="text-cyber-lime">Total: 1.2ms</span>
+      </div>
+      <div class="space-y-1 text-[11px]">
+        <div class="text-slate-400">[0.1ms] Connecting to 198.51.100.42:22 (TCP Socket Established)...</div>
+        <div class="text-slate-400">[0.3ms] Server banner: SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13</div>
+        <div class="text-slate-400">[0.5ms] SSHv2 Key Exchange (kex): curve25519-sha256</div>
+        <div class="text-slate-400">[0.7ms] Host key received: ssh-ed25519 (256 bits)</div>
+        <div class="p-2 rounded bg-emerald-950/30 border border-emerald-500/30 text-emerald-300 font-semibold flex items-center justify-between">
+          <span>[0.9ms] Vault Lookup: Host Key SHA256:4mG+zW1+... matches stored known_hosts.</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">AUTO-APPROVED</span>
+        </div>
+        <div class="text-slate-400">[1.1ms] Publickey authentication with Argon2id Vault key: ACCEPTED</div>
+        <div class="text-cyber-lime font-bold pt-1">[1.2ms] PTY Shell allocated. Welcome to Ubuntu 24.04 LTS!</div>
+      </div>
+      <div class="p-3 mt-3 rounded-lg bg-obsidian-card/80 border border-obsidian-border text-white text-xs font-mono">
+        <span class="text-cyber-lime">dev@prod-vault-01:~$</span> <span class="animate-pulse">_</span>
+      </div>
+    </div>
+
+    <div class="text-xs text-slate-400 italic text-center">
+      {isRu 
+        ? 'В 99.9% случаев сисадмин даже не замечает проверки — всё работает с нулевой задержкой и абсолютной защитой.' 
+        : 'In 99.9% of routine sessions, verification is instantaneous and transparent.'}
+    </div>
+  </div>
+
+  <!-- SCENARIO 3: MitM Attack / Spoofed Host Key (Fail-Closed Alert) -->
+  <div id="scenario-view-mitm" class="scenario-panel hidden space-y-5">
+    <div class="p-4 rounded-xl bg-red-500/15 border border-red-500/40 flex items-start gap-3">
+      <ShieldAlert class="w-5 h-5 text-red-400 shrink-0 mt-0.5 animate-bounce" />
+      <div class="text-xs text-slate-300 leading-relaxed">
+        <strong class="text-red-300 font-medium">
+          {isRu ? 'Сценарий №3: Попытка атаки перехвата (Man-in-the-Middle) или подмена сервера' : 'Scenario #3: MitM Interception Attack or Server Spoofing'}
+        </strong>
+        <p class="mt-1 text-slate-300">
+          {isRu 
+            ? 'Злоумышленник в локальной сети подменил DNS/шлюз и выдает свой сервер за ваш. Ключ не совпал с сохраненным в Vault. Срабатывает строгий принцип Fail-Closed — немедленный разрыв соединения!' 
+            : 'An attacker spoofed the gateway or ARP table. The key differs from Vault. Strict Fail-Closed triggers: connection dropped, credentials withheld.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Critical Alert Modal -->
+    <div class="rounded-xl bg-red-950/20 border-2 border-red-500/50 p-5 space-y-5 shadow-2xl relative overflow-hidden">
+      <div class="flex items-center justify-between pb-3 border-b border-red-500/30 text-xs font-mono">
+        <div class="flex items-center gap-2 text-red-400 font-bold">
+          <AlertTriangle class="w-4 h-4" />
+          <span>WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!</span>
+        </div>
+        <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-[10px] font-bold border border-red-500/40">
+          FAIL-CLOSED
+        </span>
+      </div>
+
+      <p class="text-xs text-slate-200 leading-relaxed">
+        {isRu
+          ? 'КТО-ТО ПЕРЕХВАТЫВАЕТ ВАШЕ СОЕДИНЕНИЕ! Возможно, вас атакуют прямо сейчас (Man-in-the-Middle). Передача паролей и ключей полностью заблокирована.'
+          : 'IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY! Someone could be eavesdropping on you right now (Man-in-the-Middle). Passwords and keys withheld.'}
+      </p>
+
+      <!-- Side-by-Side Comparison: Why Visual Art is Powerful -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Trusted Host Key (Vault) -->
+        <div class="p-3.5 rounded-xl bg-obsidian-bg/90 border border-emerald-500/40 space-y-2.5">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+              <Check class="w-3.5 h-3.5" />
+              <span>{isRu ? 'Доверенный ключ (в Vault):' : 'Trusted Key (in Vault):'}</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Original</span>
+          </div>
+          <div class="p-2 rounded bg-black/60 border border-obsidian-border text-emerald-300 font-mono text-[10px] break-all">
+            SHA256:4mG+zW1+oK9yL1a9B7tPqR8vC3xZ0kM4jN7sW2qX5yU
+          </div>
+          <pre class="font-mono text-[11px] leading-none p-3 rounded-lg bg-black text-emerald-400 border border-emerald-500/20 select-all overflow-x-auto">+--[ED25519 256]--+
+|    .. .         |
+|o.... *          |
+|+oo+o* .         |
+|**.*o=oo         |
+|*++ X.=.S        |
+|o.+oo*..         |
+|o..*  +o         |
+|o . o....        |
+| .   E ..        |
++----[SHA256]-----+</pre>
+          <div class="text-[10px] text-emerald-400/80 text-center font-mono">
+            {isRu ? 'Узор: звёздное скопление в центре' : 'Pattern: Central star cluster'}
+          </div>
+        </div>
+
+        <!-- Attacker Spoofed Key (Network) -->
+        <div class="p-3.5 rounded-xl bg-obsidian-bg/90 border border-red-500/50 space-y-2.5 relative">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-red-400 font-bold flex items-center gap-1.5">
+              <X class="w-3.5 h-3.5" />
+              <span>{isRu ? 'Ключ перехватчика (из сети):' : 'Attacker Key (from Network):'}</span>
+            </span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 font-mono font-bold">MitM ALERT</span>
+          </div>
+          <div class="p-2 rounded bg-black/60 border border-red-500/30 text-red-300 font-mono text-[10px] break-all">
+            SHA256:4mG+zW1+oK9yL1a9B7tPqR8vC3xZ0kM4jN7sW2qX5yA
+          </div>
+          <pre class="font-mono text-[11px] leading-none p-3 rounded-lg bg-black text-red-400 border border-red-500/30 select-all overflow-x-auto">+--[ED25519 256]--+
+|      .          |
+|     + o         |
+|    . * = .      |
+|   . B O B       |
+|  . = = @ S      |
+|   . + O B       |
+|    . * = .      |
+|     + o E       |
+|      .          |
++----[SHA256]-----+</pre>
+          <div class="text-[10px] text-red-400/90 text-center font-mono">
+            {isRu ? 'Узор: полностью разрушен в ромб!' : 'Pattern: Altered into diamond!'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Human vs Computer Explanation -->
+      <div class="p-3 rounded-lg bg-black/60 border border-obsidian-border text-xs text-slate-300 leading-relaxed">
+        <strong class="text-white font-mono">
+          {isRu ? 'Почему человек сразу видит подмену:' : 'Why human instantly spots the attack:'}
+        </strong>
+        <p class="mt-1 text-slate-400">
+          {isRu 
+            ? 'Сравните две строки Base64 выше: хакер подменил всего одну последнюю букву (U на A). Беглым взглядом в тексте эту разницу заметить почти невозможно. Но посмотрите на два рисунка: узор оригинального сервера — асимметричный с плотным центром, а узор хакера — симметричный ромб. Глаз фиксирует подмену мгновенно.' 
+            : 'Look at the two Base64 strings: only the last char differs (U vs A). Reading text, you miss it. But looking at the two ASCII patterns, the change is unmissable.'}
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <span class="text-slate-400 text-[11px]">
+          {isRu ? 'Реакция ядра Shellit:' : 'Shellit Action:'}
+        </span>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded-lg bg-obsidian-card border border-obsidian-border text-slate-400 hover:text-white transition-colors cursor-pointer text-xs"
+          >
+            {isRu ? 'Я переустановил сервер (Обновить ключ)' : 'I reinstalled server (Update)'}
+          </button>
+          <button
+            type="button"
+            class="px-4 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-lg cursor-pointer flex items-center gap-1.5 text-xs"
+          >
+            <Lock class="w-3.5 h-3.5" />
+            <span>{isRu ? 'Заблокировать и разорвать связь' : 'Abort & Block Connection'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupScenarioSwitcher() {
+    const tabBtns = document.querySelectorAll('.scenario-tab-btn');
+    const tofuView = document.getElementById('scenario-view-tofu');
+    const routineView = document.getElementById('scenario-view-routine');
+    const mitmView = document.getElementById('scenario-view-mitm');
+
+    const views: Record<string, HTMLElement | null> = {
+      tofu: tofuView,
+      routine: routineView,
+      mitm: mitmView
+    };
+
+    tabBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const scenario = btn.getAttribute('data-scenario') || 'tofu';
+
+        // Update buttons styling
+        tabBtns.forEach((b) => {
+          b.classList.remove('bg-cyber-lime/20', 'text-cyber-lime', 'border-cyber-lime/40', 'shadow-sm');
+          b.classList.add('text-slate-400');
+        });
+
+        btn.classList.add('bg-cyber-lime/20', 'text-cyber-lime', 'border-cyber-lime/40', 'shadow-sm');
+        btn.classList.remove('text-slate-400');
+
+        // Toggle views
+        Object.entries(views).forEach(([key, viewEl]) => {
+          if (viewEl) {
+            if (key === scenario) {
+              viewEl.classList.remove('hidden');
+            } else {
+              viewEl.classList.add('hidden');
+            }
+          }
+        });
+      });
+    });
+
+    // TOFU interactive buttons
+    const trustBtn = document.getElementById('tofu-trust-btn');
+    const rejectBtn = document.getElementById('tofu-reject-btn');
+    const actionBar = document.getElementById('tofu-action-bar');
+    const successMsg = document.getElementById('tofu-success-msg');
+
+    if (trustBtn && actionBar && successMsg) {
+      trustBtn.addEventListener('click', () => {
+        actionBar.classList.add('hidden');
+        successMsg.classList.remove('hidden');
+      });
+    }
+
+    if (rejectBtn) {
+      rejectBtn.addEventListener('click', () => {
+        alert('Соединение разорвано пользователем. Никакие данные не сохранены.');
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupScenarioSwitcher);
+  } else {
+    setupScenarioSwitcher();
+  }
+</script>

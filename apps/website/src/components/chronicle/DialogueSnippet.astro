@@ -1,0 +1,83 @@
+---
+import { MessageSquare, User, Bot, Clock, ChevronDown } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+export interface DialogueMessage {
+  speaker: 'architect' | 'agent';
+  text: string;
+  name?: string;
+}
+
+interface Props {
+  lang: Locale;
+  title: string;
+  timestamp: string;
+  messages: DialogueMessage[];
+}
+
+const { lang, title, timestamp, messages } = Astro.props;
+const isRu = lang === 'ru';
+---
+
+<details class="my-6 rounded-2xl bg-obsidian-card/90 border border-obsidian-border overflow-hidden shadow-xl not-prose group transition-all">
+  <!-- Interactive Summary Header (Initially Closed) -->
+  <summary class="px-5 py-3.5 bg-obsidian-bg/80 cursor-pointer list-none select-none flex items-center justify-between flex-wrap gap-3 hover:bg-obsidian-card transition-colors [&::-webkit-details-marker]:hidden">
+    <div class="flex items-center gap-2.5">
+      <div class="w-6 h-6 rounded-lg bg-cyber-lime/10 border border-cyber-lime/30 flex items-center justify-center text-cyber-lime group-hover:scale-105 transition-transform shrink-0">
+        <MessageSquare class="w-3.5 h-3.5" />
+      </div>
+      <span class="font-bold text-xs sm:text-sm text-white tracking-wide group-hover:text-cyber-lime transition-colors">
+        {title}
+      </span>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-[11px] font-mono text-slate-400">
+        <Clock class="w-3 h-3 text-slate-500" />
+        <span>{timestamp}</span>
+      </div>
+
+      <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-obsidian-surface border border-obsidian-border text-[11px] font-mono text-slate-300 group-hover:border-cyber-lime/30 transition-colors">
+        <span class="group-open:hidden">{isRu ? 'Развернуть' : 'Expand'}</span>
+        <span class="hidden group-open:inline">{isRu ? 'Свернуть' : 'Collapse'}</span>
+        <ChevronDown class="w-3.5 h-3.5 text-cyber-lime transition-transform duration-200 group-open:rotate-180" />
+      </div>
+    </div>
+  </summary>
+
+  <!-- Messages List (Revealed when open) -->
+  <div class="p-4 sm:p-6 space-y-4 bg-obsidian-card/40 border-t border-obsidian-border/70">
+    {messages.map((msg) => {
+      const isArchitect = msg.speaker === 'architect';
+      return (
+        <div class="flex gap-3 sm:gap-4 items-start">
+          <div class={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 border ${
+            isArchitect 
+              ? 'bg-cyber-lime/15 border-cyber-lime/30 text-cyber-lime' 
+              : 'bg-cyber-cyan/15 border-cyber-cyan/30 text-cyber-cyan'
+          }`}>
+            {isArchitect ? <User class="w-3.5 h-3.5" /> : <Bot class="w-3.5 h-3.5" />}
+          </div>
+
+          <div class="flex-grow space-y-1">
+            <div class="flex items-center gap-2">
+              <span class={`text-[11px] font-mono font-bold tracking-wider ${
+                isArchitect ? 'text-cyber-lime' : 'text-cyber-cyan'
+              }`}>
+                {msg.name || (isArchitect ? (isRu ? 'Архитектор' : 'Architect') : 'Antigravity')}
+              </span>
+            </div>
+
+            <div class={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed border ${
+              isArchitect
+                ? 'bg-cyber-lime/[0.03] border-cyber-lime/20 text-slate-200'
+                : 'bg-cyber-cyan/[0.03] border-cyber-cyan/20 text-slate-300'
+            }`}>
+              {msg.text}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</details>

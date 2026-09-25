@@ -29,7 +29,8 @@ Shellit/
 │       ├── AGENT_3_TERMINAL_UI.md  # UI & Terminal Cross-Platform Team (xterm.dart, UI Shell)
 │       ├── AGENT_4_PLUGINS.md      # Desktop Plugin Ecosystem Team (manifest, IPC bridge)
 │       ├── AGENT_5_WEBSITE.md      # Web Ecosystem & Docs Team (Astro, Starlight, Scrollytelling)
-│       └── AGENT_CHRONICLE_WRITER.md # Chronicle & Devlog Writer Agent
+│       ├── AGENT_6_CHRONICLE_PUBLISHER.md # Chronicle Web Publisher Agent (Astro MDX, Interactive Timeline)
+│       └── AGENT_CHRONICLE_WRITER.md # Chronicle & Devlog Writer Agent (Raw Repository Devlog)
 ├── packages/
 │   ├── core_foundation/            # Pure domain entities, contracts/interfaces, Result/Failure, logger
 │   ├── storage_vault/              # Encrypted DB, master-password, hosts/keys repositories

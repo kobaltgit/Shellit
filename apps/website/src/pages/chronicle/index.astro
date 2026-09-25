@@ -1,0 +1,115 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import StatsHUD from '../../components/chronicle/StatsHUD.astro';
+import TimelineTrack from '../../components/chronicle/TimelineTrack.astro';
+import { ArrowLeft, BookOpen, Sparkles, Terminal } from 'lucide-astro';
+import { useTranslations } from '../../i18n/translations';
+import { getCollection } from 'astro:content';
+
+const lang = 'en';
+const t = useTranslations(lang);
+
+const allActs = await getCollection('chronicle', ({ data }) => data.lang === 'en');
+const sortedActs = allActs.sort((a, b) => a.data.actNumber - b.data.actNumber);
+
+const blogJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Shellit Chronicle",
+  "description": t.chroniclePage.subtitle,
+  "url": "https://shellit.top/chronicle/",
+  "inLanguage": "en",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Shellit",
+    "url": "https://shellit.top",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://shellit.top/logo.svg"
+    }
+  },
+  "blogPost": sortedActs.map((act) => ({
+    "@type": "BlogPosting",
+    "headline": act.data.title,
+    "description": act.data.description,
+    "url": `https://shellit.top/chronicle/${act.id.replace(/^en\//, '').replace(/\.md$/, '')}/`,
+    "datePublished": new Date(act.data.pubDate).toISOString(),
+    "author": {
+      "@type": "Person",
+      "name": "Kobalt",
+      "url": "https://github.com/kobaltgit"
+    }
+  }))
+};
+---
+
+<Layout
+  lang={lang}
+  title={`${t.chroniclePage.title} — Shellit`}
+  description={t.chroniclePage.subtitle}
+  breadcrumbList={[
+    { name: "Home", url: "https://shellit.top/" },
+    { name: "Chronicle", url: "https://shellit.top/chronicle/" },
+  ]}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(blogJsonLd)} />
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Breadcrumb & Header -->
+    <div class="space-y-4 mb-10">
+      <a href="/" class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyber-lime transition-colors">
+        <ArrowLeft class="w-3.5 h-3.5" />
+        <span>{t.chroniclePage.backHome}</span>
+      </a>
+
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-obsidian-border/70">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium bg-cyber-lime/10 text-cyber-lime border border-cyber-lime/30 mb-3">
+            <Sparkles class="w-3.5 h-3.5" />
+            <span>{t.chroniclePage.badge}</span>
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            {t.chroniclePage.title}
+          </h1>
+          <p class="mt-3 text-sm sm:text-base text-slate-300 max-w-3xl leading-relaxed">
+            {t.chroniclePage.subtitle}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0">
+          <a
+            href="https://github.com/kobaltgit/Shellit"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/50 text-slate-200 text-xs font-mono font-medium transition-colors"
+          >
+            <Terminal class="w-4 h-4 text-cyber-lime" />
+            <span>GitHub Repository</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUD Stats Banner -->
+    <div class="mb-14">
+      <StatsHUD lang={lang} />
+    </div>
+
+    <!-- Section Heading -->
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <h2 class="text-2xl font-bold text-white tracking-tight">
+        {t.chroniclePage.allActs}
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-2">
+        Explore 8 thematic chapters tracking the evolution of Shellit from architectural blueprint to audited release and web chronicle.
+      </p>
+    </div>
+
+    <!-- Interactive Vertical Timeline -->
+    <TimelineTrack acts={allActs} lang={lang} />
+
+    <!-- Open Source Note -->
+    <div class="mt-16 text-center text-xs text-slate-500 font-mono">
+      <p>{t.chroniclePage.shareNote}</p>
+    </div>
+  </div>
+</Layout>

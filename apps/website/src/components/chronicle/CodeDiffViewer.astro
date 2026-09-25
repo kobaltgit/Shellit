@@ -1,0 +1,71 @@
+---
+import { AlertTriangle, CheckCircle2 } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+
+interface Props {
+  lang: Locale;
+  title: string;
+  bugId?: string;
+  vulnerableTitle?: string;
+  fixedTitle?: string;
+  vulnerableCode: string;
+  fixedCode: string;
+  explanation: string;
+}
+
+const {
+  lang,
+  title,
+  bugId = 'BUG-035',
+  vulnerableTitle,
+  fixedTitle,
+  vulnerableCode,
+  fixedCode,
+  explanation,
+} = Astro.props;
+
+const isRu = lang === 'ru';
+const defVulnTitle = vulnerableTitle || (isRu ? 'Уязвимый код (Fail-Open)' : 'Vulnerable Code (Fail-Open)');
+const defFixedTitle = fixedTitle || (isRu ? 'Защищенный код (Fail-Closed)' : 'Hardened Code (Fail-Closed)');
+---
+
+<div class="my-8 rounded-2xl bg-obsidian-card/90 border border-obsidian-border overflow-hidden shadow-xl not-prose">
+  <!-- Card Header -->
+  <div class="px-5 py-3.5 bg-obsidian-bg/80 border-b border-obsidian-border flex items-center justify-between flex-wrap gap-2">
+    <div class="flex items-center gap-2.5">
+      <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+        {bugId}
+      </span>
+      <span class="font-bold text-xs sm:text-sm text-white tracking-wide">{title}</span>
+    </div>
+    <span class="text-[11px] font-mono text-slate-400">
+      {isRu ? 'Анатомия инцидента безопасности' : 'Security Incident Post-Mortem'}
+    </span>
+  </div>
+
+  <!-- Diff Grid (Side by Side on desktop) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-obsidian-border">
+    <!-- Left: Vulnerable -->
+    <div class="p-4 sm:p-5 bg-red-950/10">
+      <div class="flex items-center gap-2 mb-2.5 text-xs font-mono font-semibold text-rose-400">
+        <AlertTriangle class="w-3.5 h-3.5 shrink-0" />
+        <span>{defVulnTitle}</span>
+      </div>
+      <pre class="font-mono text-xs leading-relaxed p-3.5 rounded-xl bg-black/70 border border-rose-500/20 text-rose-200 overflow-x-auto select-all"><code>{vulnerableCode}</code></pre>
+    </div>
+
+    <!-- Right: Fixed -->
+    <div class="p-4 sm:p-5 bg-emerald-950/10">
+      <div class="flex items-center gap-2 mb-2.5 text-xs font-mono font-semibold text-cyber-lime">
+        <CheckCircle2 class="w-3.5 h-3.5 shrink-0" />
+        <span>{defFixedTitle}</span>
+      </div>
+      <pre class="font-mono text-xs leading-relaxed p-3.5 rounded-xl bg-black/70 border border-cyber-lime/30 text-emerald-200 overflow-x-auto select-all"><code>{fixedCode}</code></pre>
+    </div>
+  </div>
+
+  <!-- Bottom Explainer -->
+  <div class="px-5 py-3 bg-obsidian-bg/60 border-t border-obsidian-border text-xs text-slate-300 leading-relaxed">
+    <strong class="text-white font-mono">{isRu ? 'Вердикт аудита:' : 'Audit Verdict:'}</strong> {explanation}
+  </div>
+</div>
