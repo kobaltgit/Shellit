@@ -19,11 +19,11 @@ interface Props {
 const {
   lang = 'en',
   title = lang === 'ru' 
-    ? 'Shellit — современный SSH & SFTP клиент нового поколения'
-    : 'Shellit — Modern Cross-Platform SSH & SFTP Client',
+    ? 'Shellit — Бесплатный SSH и SFTP клиент для Windows, Linux, Android | Альтернатива Termius'
+    : 'Shellit — Modern Open-Source SSH & SFTP Client | Free Termius Alternative',
   description = lang === 'ru'
-    ? 'Shellit — современный, безопасный и расширяемый SSH & SFTP клиент с матричными сплитами 2x2, Prod Guard и честным Zero-Knowledge шифрованием.'
-    : 'Shellit — modern, secure, cross-platform SSH & SFTP client with 2x2 matrix splits, Prod Guard environment defense, and true zero-knowledge vault.',
+    ? 'Shellit — быстрый и безопасный SSH/SFTP клиент: матричные сплиты 2x2, защита Prod Guard, MCP сервер для ИИ и E2EE шифрование. Скачать бесплатно для Windows, Linux и Android.'
+    : 'Shellit — modern, fast, secure SSH & SFTP client with 2x2 matrix splits, Prod Guard, AI MCP gateway, and zero-knowledge encryption. Free download for Windows, Linux, Android.',
   image = "/og-image.png",
 } = Astro.props;
 
@@ -137,9 +137,11 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
       "@type": "SoftwareApplication",
       "name": "Shellit",
       "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "SSH and SFTP Terminal Emulator",
       "operatingSystem": "Windows, Linux, Android",
       "description": description,
-      "url": "https://shellit.dev",
+      "url": "https://shellit.top",
+      "downloadUrl": "https://shellit.top/#download",
       "image": socialImageURL.toString(),
       "softwareVersion": latestRelease.version.replace(/^v/, ''),
       "inLanguage": lang,

@@ -1,9 +1,24 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import tailwind from '@astrojs/tailwind';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://shellit.top',
+  redirects: {
+    '/docs': '/getting-started/quick-start/',
+    '/ru/docs': '/ru/getting-started/quick-start/',
+    '/getting-started': '/getting-started/quick-start/',
+    '/ru/getting-started': '/ru/getting-started/quick-start/',
+    '/security': '/security/prod-guard/',
+    '/ru/security': '/ru/security/prod-guard/',
+    '/sync': '/sync/self-hosted-server/',
+    '/ru/sync': '/ru/sync/self-hosted-server/',
+    '/ai': '/ai/gemini-snippets/',
+    '/ru/ai': '/ru/ai/gemini-snippets/',
+    '/plugins': '/plugins/creating-plugins/',
+    '/ru/plugins': '/ru/plugins/creating-plugins/',
+  },
   integrations: [
     starlight({
       title: 'Shellit Docs',
@@ -69,6 +84,19 @@ export default defineConfig({
     }),
     tailwind({
       applyBaseStyles: false,
+    }),
+    sitemap({
+      filter: (page) =>
+        !page.includes('/admin') &&
+        !page.includes('/404') &&
+        !page.includes('/api'),
+      i18n: {
+        defaultLocale: 'root',
+        locales: {
+          root: 'en',
+          ru: 'ru',
+        },
+      },
     }),
   ],
   vite: {

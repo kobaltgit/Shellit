@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_/
 
-Sitemap: https://shellit.dev/sitemap-index.xml
+Sitemap: https://shellit.top/sitemap-index.xml

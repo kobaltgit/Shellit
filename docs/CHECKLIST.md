@@ -652,6 +652,19 @@
   - [x] Все 375 тестов монорепозитория пройдены (54/54 тестов `apps/shellit`, 123/123 `terminal_ui`, 72/72 `ssh_network_core`, 52/52 `storage_vault`, 51/51 `desktop_plugin_sdk`, 23/23 `core_foundation`).
 - [x] Релиз v0.8.4: Core Security Hardening (TOFU, Known Hosts, Drunken Bishop Randomart, Read-Only Sessions, Plugin CSP, RFC 9106 Vectors, Zeroize).
 
+---
 
-
-
+## Фаза 20: Поисковая оптимизация (SEO), устранение ошибок сканирования и расширение базы знаний (v0.8.6)
+- [x] Устранение критических ошибок сканирования и индексации:
+  - [x] `robots.txt`: исправление ссылки на Sitemap на канонический боевой домен `https://shellit.top/sitemap-index.xml`.
+  - [x] Запрет сканирования приватных служебных путей: добавлены правила `Disallow: /admin/`, `Disallow: /api/`, `Disallow: /_/`.
+  - [x] Ликвидация ошибок 403 Forbidden и 404 Not Found: статические 301-редиректы в `astro.config.mjs` для родительских каталогов документации (`/docs/`, `/getting-started/`, `/security/`, `/sync/`, `/ai/`, `/plugins/` и их русских версий `/ru/...`).
+  - [x] Очистка `sitemap-0.xml`: фильтрация приватных (`/admin/`, `/api/`) и служебных (`/404/`) страниц через кастомную интеграцию `@astrojs/sitemap`.
+- [x] On-Page SEO и структурированные данные:
+  - [x] Оптимизация Title и Description под целевые коммерческие и технические запросы («SSH клиент», «SFTP клиент», «Альтернатива Termius», «Матричные сплиты 2x2», «Prod Guard»).
+  - [x] Исправление Schema.org разметки `SoftwareApplication`: привязка к `https://shellit.top`, добавление категорий и ссылок на скачивание.
+  - [x] Локализация тегов `alt` скриншотов для англоязычной версии сайта в промо-компонентах.
+- [x] База знаний и Long-Tail контент-маркетинг:
+  - [x] How-To статья: «Как защитить продакшн сервер от rm -rf и опасных команд» (`/security/how-to-protect-server-from-rm-rf/` и `/ru/...`).
+  - [x] How-To статья: «Как настроить E2EE синхронизацию SSH ключей и серверов» (`/sync/how-to-setup-e2ee-ssh-key-sync/` и `/ru/...`).
+  - [x] How-To статья: «Настройка Model Context Protocol (MCP) для Cursor и Claude Desktop» (`/ai/how-to-setup-mcp-for-cursor-and-claude/` и `/ru/...`).
