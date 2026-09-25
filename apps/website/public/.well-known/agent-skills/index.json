@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "shellit-mcp",
+      "type": "skill-md",
+      "description": "Manage remote SSH sessions and execute safe commands via Shellit Model Context Protocol gateway.",
+      "url": "/.well-known/agent-skills/shellit-mcp/SKILL.md",
+      "digest": "sha256:cc5e4282860f62dc3c4b499817f30fe39865c8b84a111f68a6469a1921f2163e"
+    }
+  ]
+}

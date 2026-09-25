@@ -1,0 +1,20 @@
+/*
+  Access-Control-Allow-Origin: *
+  Link: </.well-known/ai-catalog.json>; rel="ai-catalog", </.well-known/mcp/server-card.json>; rel="service-desc", </llms.txt>; rel="describedby"
+
+/.well-known/*
+  Access-Control-Allow-Origin: *
+  Content-Type: application/json; charset=utf-8
+
+/.well-known/api-catalog
+  Access-Control-Allow-Origin: *
+  Content-Type: application/linkset+json; charset=utf-8
+
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/auth.md
+  Content-Type: text/markdown; charset=utf-8

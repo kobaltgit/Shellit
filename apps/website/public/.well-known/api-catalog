@@ -1,0 +1,19 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://shellit.top/ai/mcp-server/",
+      "service-desc": [
+        {
+          "href": "https://shellit.top/.well-known/mcp/server-card.json",
+          "type": "application/mcp-server-card+json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://shellit.top/ai/mcp-server/",
+          "type": "text/html"
+        }
+      ]
+    }
+  ]
+}

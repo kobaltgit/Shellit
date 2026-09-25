@@ -74,6 +74,11 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <link rel="canonical" href={canonicalURL} />
     <link rel="alternate" hreflang="en" href={enURL} />
     <link rel="alternate" hreflang="ru" href={ruURL} />
+
+    <!-- AI Agent Protocols & Resource Discovery (ARD, MCP, LLMs) -->
+    <link rel="ai-catalog" type="application/json" href="/.well-known/ai-catalog.json" />
+    <link rel="service-desc" type="application/json" href="/.well-known/mcp/server-card.json" />
+    <link rel="describedby" type="text/plain" href="/llms.txt" />
     <!-- Global App Configuration -->
     <script is:inline define:vars={{ pbDefaultUrl }}>
       window.__PUBLIC_POCKETBASE_URL__ = pbDefaultUrl;
@@ -109,6 +114,28 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
           }
         } catch (e) {}
       })();
+    </script>
+
+    <!-- WebMCP Tool Registration for In-Browser AI Agents -->
+    <script is:inline>
+      if (typeof window !== 'undefined' && 'modelContext' in navigator && navigator.modelContext && typeof navigator.modelContext.registerTool === 'function') {
+        try {
+          navigator.modelContext.registerTool({
+            name: "shellit_docs_search",
+            description: "Search Shellit documentation, SSH architecture guides, and engineering chronicles.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                query: { type: "string", description: "Search query for Shellit features, security, or guides" }
+              },
+              required: ["query"]
+            },
+            execute: async ({ query }) => {
+              return { status: "success", url: `https://shellit.top/?q=${encodeURIComponent(query)}` };
+            }
+          });
+        } catch (_) {}
+      }
     </script>
 
     <!-- Primary Meta Tags -->

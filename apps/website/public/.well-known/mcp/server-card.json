@@ -1,0 +1,31 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schemas/server-card/v1.json",
+  "serverInfo": {
+    "name": "shellit",
+    "version": "0.8.5",
+    "description": "Native Model Context Protocol server enabling AI agents to execute safe diagnostic commands and inspect remote servers with Prod Guard protection."
+  },
+  "endpoint": "https://shellit.top/ai/mcp-server/",
+  "capabilities": {
+    "tools": [
+      {
+        "name": "shellit_list_servers",
+        "description": "List all configured servers with environment tags and connection status."
+      },
+      {
+        "name": "shellit_exec_command",
+        "description": "Execute a remote command on a designated server with Prod Guard policy enforcement."
+      },
+      {
+        "name": "shellit_read_remote_file",
+        "description": "Read file contents from remote server via SFTP channel."
+      },
+      {
+        "name": "shellit_get_terminal_buffer",
+        "description": "Get current output buffer of an active terminal session."
+      }
+    ],
+    "prompts": [],
+    "resources": []
+  }
+}
