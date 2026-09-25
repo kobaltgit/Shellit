@@ -23,7 +23,7 @@ const latestRelease = await getLatestRelease();
     <!-- Release Badge -->
     <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-obsidian-card border border-obsidian-border text-xs font-mono text-slate-300 mb-6 shadow-sm hover:border-cyber-cyan/40 transition-colors">
       <span class="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse"></span>
-      <span>Shellit {latestRelease.version} {lang === 'ru' ? 'Alpha Preview • Open Source & Zero-Trust' : 'Alpha Preview • Open Source & Zero-Trust'}</span>
+      <span data-hero-release-label>Shellit {latestRelease.version} {lang === 'ru' ? 'Alpha Preview • Open Source & Zero-Trust' : 'Alpha Preview • Open Source & Zero-Trust'}</span>
     </div>
 
     <!-- Main Headline -->

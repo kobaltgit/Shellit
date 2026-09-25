@@ -17,6 +17,10 @@ on:
     paths:
       - 'apps/website/**'
       - 'docs/roadmap.data.json'
+  workflow_run:
+    workflows: ["Release Multiplatform"]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -66,11 +70,11 @@ jobs:
           echo "All critical pages built successfully!"
 
       - name: Archive Production Dist
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
         run: tar -czf site_deploy.tar.gz -C dist .
 
       - name: Upload Production Dist Artifact
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
         uses: actions/upload-artifact@v4
         with:
           name: site-dist-archive
@@ -80,7 +84,7 @@ jobs:
   deploy-senko:
     name: Deploy to Senko (https://shellit.top)
     needs: build
-    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Download Dist Archive

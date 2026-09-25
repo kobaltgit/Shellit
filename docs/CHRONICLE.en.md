@@ -1762,7 +1762,7 @@ We refactored `apps/website/src/pages/admin/index.astro`:
 3. **Official Shellit Lime Accent:**
    - Replaced legacy cyan styling across range selectors, filter pills, charts, and status indicators with official `#7BE113` / `#8AEB1A` and `.shadow-glow-lime`.
 4. **Dedicated Responsive Admin Footer:**
-   - Mounted a stylish backdrop-blur footer featuring live Senko node telemetry (`144.31.19.22`), portal quick links, roadmap pulse, GitHub repository, and PocketBase engine links.
+   - Mounted a stylish backdrop-blur footer featuring live Senko node telemetry, portal quick links, roadmap pulse, GitHub repository, and PocketBase engine links.
 
 ### 3. Outcome
 - Astro build verified clean (27 pages generated in 8.14s).

@@ -7,6 +7,7 @@ import Tracker from '../components/analytics/Tracker.astro';
 import FeedbackModal from '../components/common/FeedbackModal.astro';
 import DownloadModal from '../components/common/DownloadModal.astro';
 import type { Locale } from '../i18n/translations';
+import { getLatestRelease } from '../lib/github-releases';
 
 interface Props {
   title?: string;
@@ -26,6 +27,7 @@ const {
   image = "/og-image.png",
 } = Astro.props;
 
+const latestRelease = await getLatestRelease();
 const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://shellit.top');
 const socialImageURL = new URL(image, Astro.site || 'https://shellit.top');
 
@@ -139,7 +141,7 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
       "description": description,
       "url": "https://shellit.dev",
       "image": socialImageURL.toString(),
-      "softwareVersion": "0.8.3",
+      "softwareVersion": latestRelease.version.replace(/^v/, ''),
       "inLanguage": lang,
       "offers": {
         "@type": "Offer",
@@ -187,5 +189,96 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <FeedbackModal lang={lang} />
     <DownloadModal lang={lang} />
     <Tracker />
+
+    <!-- Dynamic Live Release Synchronization Script (Progressive Enhancement) -->
+    <script is:inline>
+      (function() {
+        const CACHE_KEY = 'shellit_latest_release_v1';
+        const CACHE_TTL = 5 * 60 * 1000;
+
+        function applyRelease(data) {
+          if (!data || !data.tag_name) return;
+          const tag = data.tag_name.startsWith('v') ? data.tag_name : 'v' + data.tag_name;
+
+          // 1. Update version badges in Navbar & Modals
+          document.querySelectorAll('[data-shellit-version-badge]').forEach(function(el) {
+            el.textContent = tag;
+          });
+          document.querySelectorAll('[data-shellit-version-text]').forEach(function(el) {
+            el.textContent = tag;
+          });
+
+          // 2. Update Hero release label if present
+          const heroLabel = document.querySelector('[data-hero-release-label]');
+          if (heroLabel) {
+            heroLabel.textContent = 'Shellit ' + tag + ' Alpha Preview • Open Source & Zero-Trust';
+          }
+
+          // 3. Extract asset download URLs
+          const assets = Array.isArray(data.assets) ? data.assets : [];
+          let winExe, winZip, linuxTar, apk;
+          for (var i = 0; i < assets.length; i++) {
+            var a = assets[i];
+            var name = String(a.name || '');
+            if (name.endsWith('.exe')) winExe = a.browser_download_url;
+            else if (name.includes('Windows') && name.endsWith('.zip')) winZip = a.browser_download_url;
+            else if (name.includes('Linux') && name.endsWith('.tar.gz')) linuxTar = a.browser_download_url;
+            else if (name.endsWith('.apk')) apk = a.browser_download_url;
+          }
+
+          // 4. Update Hero Primary Download Button
+          const primaryBtn = document.getElementById('primary-download-btn');
+          if (primaryBtn) {
+            if (winExe) primaryBtn.setAttribute('data-win-url', winExe);
+            if (linuxTar) primaryBtn.setAttribute('data-linux-url', linuxTar);
+            if (apk) primaryBtn.setAttribute('data-android-url', apk);
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('win') && winExe) primaryBtn.href = winExe;
+            else if (ua.includes('android') && apk) primaryBtn.href = apk;
+            else if (ua.includes('linux') && linuxTar) primaryBtn.href = linuxTar;
+          }
+
+          // 5. Update DownloadModal links
+          if (winExe) {
+            document.querySelectorAll('[data-modal-win-setup]').forEach(function(a) { a.href = winExe; });
+          }
+          if (winZip) {
+            document.querySelectorAll('[data-modal-win-zip]').forEach(function(a) { a.href = winZip; });
+          }
+          if (linuxTar) {
+            document.querySelectorAll('[data-modal-linux-tar]').forEach(function(a) { a.href = linuxTar; });
+          }
+          if (apk) {
+            document.querySelectorAll('[data-modal-android-apk]').forEach(function(a) { a.href = apk; });
+          }
+          document.querySelectorAll('[data-modal-android-direct]').forEach(function(el) {
+            el.textContent = tag + ' Direct';
+          });
+        }
+
+        try {
+          var raw = sessionStorage.getItem(CACHE_KEY);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (Date.now() - parsed.ts < CACHE_TTL) {
+              applyRelease(parsed.data);
+              return;
+            }
+          }
+        } catch (_) {}
+
+        fetch('https://api.github.com/repos/kobaltgit/Shellit/releases?per_page=1')
+          .then(function(r) { return r.ok ? r.json() : null; })
+          .then(function(list) {
+            if (Array.isArray(list) && list[0]) {
+              applyRelease(list[0]);
+              try {
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: list[0] }));
+              } catch (_) {}
+            }
+          })
+          .catch(function() {});
+      })();
+    </script>
   </body>
 </html>
