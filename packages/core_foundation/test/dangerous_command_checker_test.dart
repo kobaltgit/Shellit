@@ -2,7 +2,8 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('DangerousCommandChecker tests (BUG-039 Regression & Enhancements)', () {
+  group('DangerousCommandChecker tests (BUG-039 Regression & Enhancements)',
+      () {
     test('Correctly identifies standard dangerous commands', () {
       final dangerous = [
         'rm -rf /',
@@ -42,7 +43,9 @@ void main() {
       }
     });
 
-    test('Correctly detects bypasses: absolute paths, systemctl, wipefs, truncate', () {
+    test(
+        'Correctly detects bypasses: absolute paths, systemctl, wipefs, truncate',
+        () {
       final bypassCommands = [
         '/bin/rm -rf /',
         '/usr/bin/rm -fr /var/lib',
@@ -70,7 +73,8 @@ void main() {
         expect(
           DangerousCommandChecker.isDangerous(cmd),
           isTrue,
-          reason: 'Expected bypass command "$cmd" to be caught by DangerousCommandChecker',
+          reason:
+              'Expected bypass command "$cmd" to be caught by DangerousCommandChecker',
         );
       }
     });
@@ -124,13 +128,11 @@ void main() {
         'reboot',
       );
       expect(
-        DangerousCommandChecker.cleanPromptAndExtractCommand(
-            '> shutdown now'),
+        DangerousCommandChecker.cleanPromptAndExtractCommand('> shutdown now'),
         'shutdown now',
       );
       expect(
-        DangerousCommandChecker.cleanPromptAndExtractCommand(
-            '# poweroff'),
+        DangerousCommandChecker.cleanPromptAndExtractCommand('# poweroff'),
         'poweroff',
       );
     });

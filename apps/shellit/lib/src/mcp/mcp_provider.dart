@@ -101,7 +101,8 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
 
         final host = targetTab.host;
         // Command Guard Protection Check
-        final isGuarded = host != null &&
+        final isGuarded =
+            host != null &&
             (host.environment == HostEnvironment.production ||
                 host.dangerousCommandProtection);
 

@@ -33,9 +33,8 @@ class ProdGuardBorder extends StatelessWidget {
     final iconData =
         isStrictProd ? Icons.warning_rounded : Icons.shield_outlined;
 
-    final hostSuffix = hostLabel != null && hostLabel!.isNotEmpty
-        ? ': $hostLabel'
-        : '';
+    final hostSuffix =
+        hostLabel != null && hostLabel!.isNotEmpty ? ': $hostLabel' : '';
     final defaultBannerText = isStrictProd
         ? 'PROD ENVIRONMENT$hostSuffix — DANGEROUS OPERATIONS GUARD ACTIVE'
         : 'COMMAND GUARD ACTIVE$hostSuffix — DESTRUCTIVE COMMANDS INTERCEPTED';

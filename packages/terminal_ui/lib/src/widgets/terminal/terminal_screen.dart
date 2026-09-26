@@ -798,13 +798,13 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           }
         } catch (_) {}
 
-        final effectiveCmd = DangerousCommandChecker.isDangerous(screenCmd)
-            ? screenCmd
-            : cmd;
+        final effectiveCmd =
+            DangerousCommandChecker.isDangerous(screenCmd) ? screenCmd : cmd;
 
         if (DangerousCommandChecker.isDangerous(effectiveCmd)) {
           _isAwaitingConfirmation = true;
-          final confirmed = await ProdConfirmationDialog.confirmDangerousCommand(
+          final confirmed =
+              await ProdConfirmationDialog.confirmDangerousCommand(
             context: context,
             command: effectiveCmd,
             hostLabel: widget.host?.label ?? 'Server',
