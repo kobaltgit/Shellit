@@ -1929,7 +1929,7 @@ We have queued Qwen's recommendation for an automated MitM simulation test into 
 
 ---
 
-## Entry 45. The Battle for Organic Discovery: Independent SEO Audit by Qwen, 403 Dead Zone Elimination & Long-Tail Content Marketing (v0.8.6)
+## Entry 45. The Battle for Organic Discovery: Independent SEO Audit by Qwen, 403 Dead Zone Elimination & Long-Tail Content Marketing
 
 *Timestamp: September 25, 2026, 10:15 — 10:45 (~30 minutes)*
 
@@ -1993,7 +1993,7 @@ Once again, multi-model adversarial collaboration converted an audit into measur
 
 ### 1. The Context: Why the Project Needs Its Own Public Blog on the Website
 
-As Shellit approached version v0.8.6, successfully passing rigorous cryptographic security audits and establishing comprehensive technical documentation, we paused to reflect upon the path travelled.
+As Shellit reached version v0.8.5, successfully passing rigorous cryptographic security audits and establishing comprehensive technical documentation, we paused to reflect upon the path travelled.
 
 From day one, our repository had housed a remarkable living document: `docs/CHRONICLE.md` — an authentic devlog spanning over 50 detailed entries and 2,600+ lines of engineering reality. It was never a dry git commit log or boilerplate release notes; it recorded the visceral experience of building an ambitious developer tool from scratch: vibe-coding without prior Dart syntax expertise, orchestrating a parallel multi-agent swarm, UI collisions with raw Windows network sockets, and an adversarial midnight security duel between Qwen and Antigravity.
 

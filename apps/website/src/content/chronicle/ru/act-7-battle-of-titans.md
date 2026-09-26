@@ -5,7 +5,7 @@ actNumber: 7
 period: "24 сентября 2026, 20:00 — 25 сентября 2026, 11:00"
 pubDate: 2026-09-25
 readingTime: "12 мин"
-stage: "v0.8.5 — v0.8.6 Hardened Citadel"
+stage: "v0.8.5 Hardened Citadel"
 relatedBugs: ["BUG-034", "BUG-035", "BUG-036"]
 tags: ["qwen", "antigravity", "security-audit", "fail-closed", "randomart", "seo"]
 lang: "ru"
@@ -56,7 +56,7 @@ lang: "ru"
 
 ---
 
-## Запись 45. Битва за органику: Long-Tail руководства и релиз v0.8.6
+## Запись 45. Битва за органику: Long-Tail руководства и оптимизация сайта
 
 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 my-2">
   ⏱️ Время: 25 сентября 2026, 10:15 — 10:45 (~30 минут)

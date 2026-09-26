@@ -5,7 +5,7 @@ actNumber: 7
 period: "September 24, 2026, 20:00 — September 25, 2026, 11:00"
 pubDate: 2026-09-25
 readingTime: "12 min"
-stage: "v0.8.5 — v0.8.6 Hardened Citadel"
+stage: "v0.8.5 Hardened Citadel"
 relatedBugs: ["BUG-034", "BUG-035", "BUG-036"]
 tags: ["qwen", "antigravity", "security-audit", "fail-closed", "randomart", "seo"]
 lang: "en"
@@ -56,7 +56,7 @@ Upon deploying v0.8.5, I submitted the updated codebase back to Qwen for verific
 
 ---
 
-## Entry 45. The Organic Quest: Long-Tail Strategy & v0.8.6
+## Entry 45. The Organic Quest: Long-Tail Strategy & Website Hardening
 
 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 my-2">
   ⏱️ Timestamp: September 25, 2026, 10:15 — 10:45 (~30 minutes)
