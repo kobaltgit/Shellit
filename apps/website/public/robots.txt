@@ -7,7 +7,4 @@ Disallow: /_/
 # Content Signals for AI Crawlers (IETF draft & Contentsignals.org)
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
-# Agentic Resource Discovery (ARD) Manifest
-Agentmap: https://shellit.top/.well-known/ai-catalog.json
-
 Sitemap: https://shellit.top/sitemap-index.xml
