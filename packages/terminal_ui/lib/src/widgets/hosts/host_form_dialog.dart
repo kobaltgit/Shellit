@@ -532,8 +532,8 @@ class _HostFormDialogState extends State<HostFormDialog> {
                   contentPadding: EdgeInsets.zero,
                   title: Text(
                     context.tr(
-                      'hosts.form.prod_guard_title',
-                      defaultText: 'Production Command Guard',
+                      'hosts.form.guard_title',
+                      defaultText: 'Command Guard (Destructive Protection)',
                     ),
                     style: const TextStyle(
                       fontSize: 14,
@@ -541,18 +541,26 @@ class _HostFormDialogState extends State<HostFormDialog> {
                     ),
                   ),
                   subtitle: Text(
-                    context.tr(
-                      'hosts.form.prod_guard_subtitle',
-                      defaultText:
-                          'Intercept destructive commands (rm -rf, reboot, etc.) and require confirmation',
-                    ),
+                    _environment == HostEnvironment.production
+                        ? context.tr(
+                            'hosts.form.guard_subtitle_prod',
+                            defaultText:
+                                'Enabled automatically for production: strict interception of destructive commands (rm -rf, reboot, dd) with confirmation',
+                          )
+                        : context.tr(
+                            'hosts.form.guard_subtitle_general',
+                            defaultText:
+                                'Intercept destructive commands (rm -rf, reboot, dd) and require confirmation on this server',
+                          ),
                     style: const TextStyle(
                       fontSize: 12,
                       color: ShellitColors.textSecondary,
                     ),
                   ),
                   value: _dangerousCommandProtection,
-                  activeThumbColor: ShellitColors.statusRed,
+                  activeThumbColor: _environment == HostEnvironment.production
+                      ? ShellitColors.statusRed
+                      : ShellitColors.statusYellow,
                   onChanged: (val) {
                     setState(() => _dangerousCommandProtection = val);
                   },

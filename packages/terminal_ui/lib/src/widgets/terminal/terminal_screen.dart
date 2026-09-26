@@ -768,30 +768,62 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (_isAwaitingConfirmation) return;
 
     final isProd = widget.host?.isProduction ?? false;
-    final hasProtection = widget.host?.dangerousCommandProtection ?? false;
+    final hasProtection =
+        (widget.host?.dangerousCommandProtection ?? false) || isProd;
 
     // Enter pressed
     if (data.contains('\r') || data.contains('\n')) {
       final cmd = _commandLineBuffer.toString().trim();
       _commandLineBuffer.clear();
 
-      if (isProd && hasProtection && DangerousCommandChecker.isDangerous(cmd)) {
-        _isAwaitingConfirmation = true;
-        final confirmed = await ProdConfirmationDialog.confirmDangerousCommand(
-          context: context,
-          command: cmd,
-          hostLabel: widget.host?.label ?? 'Server',
-        );
-        _isAwaitingConfirmation = false;
+      // Check if terminal is in Alternate Screen Buffer (nano, vim, less, top)
+      final isInTuiApp = _terminal.isUsingAltBuffer;
 
-        if (confirmed) {
-          _sendToSession(data);
-        } else {
-          // Send Ctrl+C to remote terminal to abort line safely
-          _sendToSession('\x03');
-          _terminal.write('\r\n[Aborted by PROD Guard]\r\n');
+      if (hasProtection && !isInTuiApp) {
+        // Read current line from terminal buffer to detect commands pulled from Bash history (Up Arrow)
+        String screenCmd = '';
+        try {
+          final buffer = _terminal.buffer;
+          final cursorY = buffer.cursorY;
+          if (cursorY >= 0 && cursorY < buffer.lines.length) {
+            final line = buffer.lines[cursorY];
+            final trimmedLen = line.getTrimmedLength();
+            final sb = StringBuffer();
+            for (var col = 0; col < trimmedLen; col++) {
+              final cp = line.getCodePoint(col);
+              sb.writeCharCode(cp == 0 ? 32 : cp);
+            }
+            screenCmd = DangerousCommandChecker.cleanPromptAndExtractCommand(
+                sb.toString());
+          }
+        } catch (_) {}
+
+        final effectiveCmd = DangerousCommandChecker.isDangerous(screenCmd)
+            ? screenCmd
+            : cmd;
+
+        if (DangerousCommandChecker.isDangerous(effectiveCmd)) {
+          _isAwaitingConfirmation = true;
+          final confirmed = await ProdConfirmationDialog.confirmDangerousCommand(
+            context: context,
+            command: effectiveCmd,
+            hostLabel: widget.host?.label ?? 'Server',
+          );
+          _isAwaitingConfirmation = false;
+
+          if (confirmed) {
+            _sendToSession(data);
+          } else {
+            // Send Ctrl+C to remote terminal to abort line safely
+            _sendToSession('\x03');
+            final abortMsg = context.tr(
+              'prod_guard.aborted_message',
+              defaultText: '\r\n[Aborted by Command Guard]\r\n',
+            );
+            _terminal.write(abortMsg);
+          }
+          return;
         }
-        return;
       }
 
       _sendToSession(data);
@@ -826,12 +858,15 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   Widget build(BuildContext context) {
     final terminalTheme = ref.watch(activeTerminalThemeProvider);
     final isProd = widget.host?.isProduction ?? false;
+    final hasProtection = widget.host?.dangerousCommandProtection ?? false;
+    final showGuardBanner = isProd || hasProtection;
     final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux ||
         defaultTargetPlatform == TargetPlatform.macOS;
 
     return ProdGuardBorder(
       isProduction: isProd,
+      hasProtection: hasProtection,
       hostLabel: widget.host?.label,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -844,7 +879,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           children: [
             Container(
               color: terminalTheme.background,
-              padding: EdgeInsets.only(top: isProd ? 24 : 0),
+              padding: EdgeInsets.only(top: showGuardBanner ? 24 : 0),
               child: MouseRegion(
                 cursor: _hoveredLink != null
                     ? SystemMouseCursors.click
@@ -962,7 +997,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
             // Floating font zoom buttons on hover/top-right
             Positioned(
-              top: isProd ? 28 : 8,
+              top: showGuardBanner ? 28 : 8,
               right: 12,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),

@@ -88,8 +88,13 @@
 - [x] Интеграция `xterm.dart`:
   - [x] Отрисовка ANSI-последовательностей, цветов TrueColor и цветовых схем (Obsidian Dark, Dracula, Nord, OLED True Black, Cyberpunk).
   - [x] Поддержка горячих клавиш копирования/вставки и масштабирования шрифта.
-  - [x] Подключение стримов `ITerminalSession` к `TerminalView` с авторесайзом PTY.
-  - [x] Защита PROD Guard (красная рамка и перехват опасных команд `rm -rf`, `reboot`, `shutdown`, `drop database`).
+  - [x] Защита PROD Guard и универсальный Command Guard (`BUG-037` – `BUG-042`):
+    - [x] Универсальная защита для всех окружений: янтарная рамка (amber 2.0px) и бейдж `[🛡️ COMMAND GUARD ACTIVE]` для `defaultEnv`/`staging`/`dev`; строгая красная рамка (red 2.5px) и бейдж `[⚠️ PRODUCTION ENVIRONMENT]` для `production`.
+    - [x] Предотвращение обхода через историю команд Bash (`Up Arrow` + `Enter`) с чтением экранного буфера xterm и очисткой системных промптов (`cleanPromptAndExtractCommand`).
+    - [x] Перенос `DangerousCommandChecker` в ядро `core_foundation` с поддержкой абсолютных путей (`/bin/rm`), произвольного порядка флагов и расширенным списком деструктивных команд (`wipefs`, `truncate`, `systemctl`, `dd`, `mkfs`, `chmod -R`).
+    - [x] Исключение ложных срабатываний в полноэкранных TUI-утилитах (`nano`, `vim`, `less`, `htop`) через детектирование `_terminal.isUsingAltBuffer`.
+    - [x] Унификация проверки опасных команд в MCP Server AI Gateway (`apps/shellit`).
+    - [x] Полное соблюдение Zero Hardcoded Strings (`context.tr()`) и бейджи окружения (`PROD`, `STAGE`, `DEV`) + `[🛡️ GUARD]` на вкладках сессий.
 - [x] Omni-Bar / Command Palette (`Ctrl+K` / `Cmd+K`):
   - [x] Быстрый поиск и коннект к хосту, смена цветовой схемы и управление сплитами.
 - [x] Двухпанельный SFTP-менеджер файлов (Termius-like):

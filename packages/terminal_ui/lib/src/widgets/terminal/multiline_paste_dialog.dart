@@ -2,7 +2,6 @@ import 'package:core_foundation/core_foundation.dart';
 import 'package:flutter/material.dart';
 import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
-import 'prod_confirmation_dialog.dart';
 
 /// Modal dialog warning the user before pasting multiline text into the terminal.
 /// Provides line preview, dangerous command detection, newline stripping,

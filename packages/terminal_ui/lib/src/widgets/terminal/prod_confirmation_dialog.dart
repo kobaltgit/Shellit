@@ -2,47 +2,6 @@ import 'package:flutter/material.dart';
 import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
-/// Helper to detect destructive and dangerous commands before execution on servers.
-class DangerousCommandChecker {
-  DangerousCommandChecker._();
-
-  static final List<RegExp> _dangerousPatterns = [
-    RegExp(
-        r'\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f[a-zA-Z]*|-[a-zA-Z]*f[a-zA-Z]*r[a-zA-Z]*)\b',
-        caseSensitive: false),
-    RegExp(
-        r'\brm\s+.*(-[a-zA-Z]*r[a-zA-Z]*\s+-[a-zA-Z]*f[a-zA-Z]*|-[a-zA-Z]*f[a-zA-Z]*\s+-[a-zA-Z]*r[a-zA-Z]*)',
-        caseSensitive: false),
-    RegExp(r'\brm\s+.*--recursive', caseSensitive: false),
-    RegExp(r'\breboot\b', caseSensitive: false),
-    RegExp(r'\bshutdown\b', caseSensitive: false),
-    RegExp(r'\binit\s+0\b', caseSensitive: false),
-    RegExp(r'\binit\s+6\b', caseSensitive: false),
-    RegExp(r'\bmkfs(\.[a-z0-9]+)?\b', caseSensitive: false),
-    RegExp(r'\bdd\s+.*of=/dev/', caseSensitive: false),
-    RegExp(r'\bdrop\s+(database|table)\b', caseSensitive: false),
-    RegExp(r':\(\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:', caseSensitive: false),
-    RegExp(r'>\s*/dev/sd[a-z]', caseSensitive: false),
-  ];
-
-  /// Returns true if the command matches any dangerous pattern.
-  static bool isDangerous(String command) {
-    final trimmed = command.trim();
-    return _dangerousPatterns.any((pattern) => pattern.hasMatch(trimmed));
-  }
-
-  /// Returns description of the matched dangerous pattern or null.
-  static String? detectPatternDescription(String command) {
-    final trimmed = command.trim();
-    for (final pattern in _dangerousPatterns) {
-      if (pattern.hasMatch(trimmed)) {
-        return 'Potentially destructive command detected: "$trimmed"';
-      }
-    }
-    return null;
-  }
-}
-
 /// Modal confirmation dialog shown when a destructive command is intercepted on PROD.
 class ProdConfirmationDialog extends StatelessWidget {
   final String command;

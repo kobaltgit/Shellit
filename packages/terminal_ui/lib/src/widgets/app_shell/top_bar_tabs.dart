@@ -645,7 +645,10 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                         : (isActive
                             ? (isProd
                                 ? ShellitColors.statusRed
-                                : ShellitColors.accentBlue)
+                                : ((tab.host?.dangerousCommandProtection ??
+                                        false)
+                                    ? ShellitColors.statusYellow
+                                    : ShellitColors.accentBlue))
                             : ShellitColors.border))),
             width: tab.colorTag != null ? 1.8 : (isActive ? 1.5 : 1.0),
           ),
@@ -686,11 +689,13 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                 size: 14,
                 color: isProd
                     ? ShellitColors.statusRed
-                    : (tab.type == TabType.sftp
-                        ? ShellitColors.accentCyan
-                        : (isActive
-                            ? ShellitColors.accentBlue
-                            : ShellitColors.textSecondary)),
+                    : ((tab.host?.dangerousCommandProtection ?? false)
+                        ? ShellitColors.statusYellow
+                        : (tab.type == TabType.sftp
+                            ? ShellitColors.accentCyan
+                            : (isActive
+                                ? ShellitColors.accentBlue
+                                : ShellitColors.textSecondary))),
               ),
             ],
             if (isPinned) ...[
@@ -737,6 +742,72 @@ class _TopBarTabsState extends ConsumerState<TopBarTabs> {
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
                   ),
+                ),
+              )
+            else if (tab.host?.environment == HostEnvironment.staging)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: ShellitColors.envStageBg,
+                  borderRadius: BorderRadius.circular(3),
+                  border:
+                      Border.all(color: ShellitColors.envStageText, width: 0.5),
+                ),
+                child: Text(
+                  context.tr('hosts.card.env_stage', defaultText: 'STAGE'),
+                  style: const TextStyle(
+                    color: ShellitColors.envStageText,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            else if (tab.host?.environment == HostEnvironment.development)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: ShellitColors.envDevBg,
+                  borderRadius: BorderRadius.circular(3),
+                  border:
+                      Border.all(color: ShellitColors.envDevText, width: 0.5),
+                ),
+                child: Text(
+                  context.tr('hosts.card.env_dev', defaultText: 'DEV'),
+                  style: const TextStyle(
+                    color: ShellitColors.envDevText,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            if (!isProd && (tab.host?.dangerousCommandProtection ?? false))
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: ShellitColors.statusYellow.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(3),
+                  border:
+                      Border.all(color: ShellitColors.statusYellow, width: 0.5),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.shield_outlined,
+                        size: 9, color: ShellitColors.statusYellow),
+                    const SizedBox(width: 2),
+                    Text(
+                      context.tr('prod_guard.badge_guard',
+                          defaultText: 'GUARD'),
+                      style: const TextStyle(
+                        color: ShellitColors.statusYellow,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             if (tab.type == TabType.localTerminal)

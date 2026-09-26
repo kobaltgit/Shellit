@@ -1,31 +1,56 @@
 import 'package:flutter/material.dart';
+import '../../localization/localization_scope.dart';
 import '../../theme/shellit_theme.dart';
 
-/// Wraps a terminal widget with a perimeter red status border and optional warning badge
-/// when connected to a production host.
+/// Wraps a terminal widget with a perimeter status border and warning banner
+/// when connected to a production host or when Command Guard protection is active.
 class ProdGuardBorder extends StatelessWidget {
   final Widget child;
   final bool isProduction;
+  final bool hasProtection;
   final String? hostLabel;
 
   const ProdGuardBorder({
     super.key,
     required this.child,
     this.isProduction = false,
+    this.hasProtection = false,
     this.hostLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (!isProduction) {
+    if (!isProduction && !hasProtection) {
       return child;
     }
+
+    final isStrictProd = isProduction;
+    final borderColor =
+        isStrictProd ? ShellitColors.statusRed : ShellitColors.statusYellow;
+    final bannerBg = isStrictProd
+        ? ShellitColors.statusRed.withValues(alpha: 0.92)
+        : const Color(0xFFD97706).withValues(alpha: 0.95);
+    final iconData =
+        isStrictProd ? Icons.warning_rounded : Icons.shield_outlined;
+
+    final hostSuffix = hostLabel != null && hostLabel!.isNotEmpty
+        ? ': $hostLabel'
+        : '';
+    final defaultBannerText = isStrictProd
+        ? 'PROD ENVIRONMENT$hostSuffix — DANGEROUS OPERATIONS GUARD ACTIVE'
+        : 'COMMAND GUARD ACTIVE$hostSuffix — DESTRUCTIVE COMMANDS INTERCEPTED';
+
+    final bannerText = context.tr(
+      isStrictProd ? 'prod_guard.banner_prod' : 'prod_guard.banner_guard',
+      defaultText: defaultBannerText,
+      params: {'host': hostSuffix},
+    );
 
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: ShellitColors.statusRed,
-          width: 2.5,
+          color: borderColor,
+          width: isStrictProd ? 2.5 : 2.0,
         ),
       ),
       child: Stack(
@@ -38,17 +63,16 @@ class ProdGuardBorder extends StatelessWidget {
             right: 0,
             child: Container(
               height: 22,
-              color: ShellitColors.statusRed.withValues(alpha: 0.9),
+              color: bannerBg,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.warning_rounded,
-                      color: Colors.white, size: 14),
+                  Icon(iconData, color: Colors.white, size: 14),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      'PROD ENVIRONMENT${hostLabel != null ? ": $hostLabel" : ""} — DANGEROUS OPERATIONS GUARD ACTIVE',
+                      bannerText,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,

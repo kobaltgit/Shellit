@@ -30,3 +30,6 @@ export 'src/interfaces/plugin_interfaces.dart';
 export 'src/interfaces/session_recorder_interface.dart';
 export 'src/interfaces/localization_interfaces.dart';
 export 'src/interfaces/local_terminal_interfaces.dart';
+
+// Security & Command Protection
+export 'src/security/dangerous_command_checker.dart';

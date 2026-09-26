@@ -100,28 +100,21 @@ final mcpServerServiceProvider = Provider<McpServerService>((ref) {
         }
 
         final host = targetTab.host;
-        // PROD Guard Protection Check
-        if (host != null && host.environment == HostEnvironment.production) {
-          final lower = command.toLowerCase();
-          final isDestructive =
-              lower.contains('rm -rf') ||
-              lower.contains('reboot') ||
-              lower.contains('shutdown') ||
-              lower.contains('drop database') ||
-              lower.contains('mkfs') ||
-              lower.contains('dd if=');
+        // Command Guard Protection Check
+        final isGuarded = host != null &&
+            (host.environment == HostEnvironment.production ||
+                host.dangerousCommandProtection);
 
-          if (isDestructive) {
-            AppLogger.w(
-              'MCP blocked destructive command on PROD: $command',
-              tag: 'McpServer',
-            );
-            return {
-              'text':
-                  'PROD Guard Alert: Command "$command" is classified as dangerous and was blocked on production server "${host.label}". Please execute it directly in Shellit terminal if intended.',
-              'isError': true,
-            };
-          }
+        if (isGuarded && DangerousCommandChecker.isDangerous(command)) {
+          AppLogger.w(
+            'MCP blocked destructive command: $command on ${host.label}',
+            tag: 'McpServer',
+          );
+          return {
+            'text':
+                'Command Guard Alert: Command "$command" is classified as dangerous and was blocked on server "${host.label}". Please execute it directly in Shellit terminal if intended.',
+            'isError': true,
+          };
         }
 
         final client = targetTab.terminalSession?.underlyingClient;

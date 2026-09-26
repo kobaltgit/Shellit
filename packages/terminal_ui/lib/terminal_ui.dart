@@ -41,6 +41,7 @@ export 'src/widgets/terminal/terminal_link_detector.dart';
 export 'src/widgets/terminal/multiline_paste_dialog.dart';
 export 'src/widgets/terminal/prod_guard_border.dart';
 export 'src/widgets/terminal/prod_confirmation_dialog.dart';
+export 'package:core_foundation/core_foundation.dart' show DangerousCommandChecker;
 export 'src/widgets/terminal/host_key_dialog.dart';
 export 'src/widgets/terminal/local_terminal_button.dart';
 

@@ -92,13 +92,38 @@ void main() {
       );
     });
 
-    testWidgets('Renders only child when isProduction is false',
+    testWidgets('Renders amber border and banner when isProduction is false but hasProtection is true',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
             body: ProdGuardBorder(
               isProduction: false,
+              hasProtection: true,
+              hostLabel: 'STAGING-01',
+              child: SizedBox(
+                  width: 300, height: 200, child: Text('Terminal Body')),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Terminal Body'), findsOneWidget);
+      expect(
+        find.text(
+            'COMMAND GUARD ACTIVE: STAGING-01 — DESTRUCTIVE COMMANDS INTERCEPTED'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Renders only child when isProduction is false and hasProtection is false',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ProdGuardBorder(
+              isProduction: false,
+              hasProtection: false,
               hostLabel: 'DEV-SERVER',
               child: SizedBox(
                   width: 300, height: 200, child: Text('Terminal Body')),
@@ -110,6 +135,10 @@ void main() {
       expect(find.text('Terminal Body'), findsOneWidget);
       expect(
         find.textContaining('PROD ENVIRONMENT'),
+        findsNothing,
+      );
+      expect(
+        find.textContaining('COMMAND GUARD'),
         findsNothing,
       );
     });
@@ -188,6 +217,50 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(result, isTrue);
+    });
+  });
+
+  group('Command Guard Host & Screen Line Interception (BUG-037 & BUG-038)', () {
+    testWidgets(
+        'BUG-037: Renders amber Command Guard border for defaultEnv host with dangerousCommandProtection: true',
+        (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: ProdGuardBorder(
+              isProduction: false,
+              hasProtection: true,
+              hostLabel: 'Hetzner-VPS',
+              child: SizedBox(
+                  width: 300, height: 200, child: Text('Terminal Body')),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Terminal Body'), findsOneWidget);
+      expect(
+        find.text(
+            'COMMAND GUARD ACTIVE: Hetzner-VPS — DESTRUCTIVE COMMANDS INTERCEPTED'),
+        findsOneWidget,
+      );
+    });
+
+    test('BUG-038: DangerousCommandChecker extracts command from bash history prompt', () {
+      final line1 = 'kobalt@vpn-1-xagq8g:~\$ rm -rf /';
+      final clean1 = DangerousCommandChecker.cleanPromptAndExtractCommand(line1);
+      expect(clean1, 'rm -rf /');
+      expect(DangerousCommandChecker.isDangerous(clean1), isTrue);
+
+      final line2 = 'root@hetzner:/var/lib# /bin/rm -rf *';
+      final clean2 = DangerousCommandChecker.cleanPromptAndExtractCommand(line2);
+      expect(clean2, '/bin/rm -rf *');
+      expect(DangerousCommandChecker.isDangerous(clean2), isTrue);
+
+      final line3 = 'user@server:~\$ systemctl poweroff';
+      final clean3 = DangerousCommandChecker.cleanPromptAndExtractCommand(line3);
+      expect(clean3, 'systemctl poweroff');
+      expect(DangerousCommandChecker.isDangerous(clean3), isTrue);
     });
   });
 }
