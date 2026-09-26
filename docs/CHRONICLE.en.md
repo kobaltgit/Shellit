@@ -2159,6 +2159,46 @@ Terminal tab headers in `top_bar_tabs.dart` now display color-coded environment 
 
 Server protection in Shellit is now intuitive, visually unmistakable, resilient against history bypasses, and unobtrusive during daily configuration workflows.
 
+---
+
+## Entry 51. The Mystery of GitHub Releases 404: Why the Update Checker Missed Fresh Builds & Decoupling the Site from Hardcoded Counts
+
+*Timestamp: September 26, 2026, 18:20 — 18:35 (~15 minutes)*
+
+### 1. Motivation & Investigation
+
+Immediately following the v0.8.6 release publication, we tested the "Check for updates" button directly inside the Shellit Settings screen. Upon clicking, the application presented a placid message: *«No remote releases found. You are running the latest preview build»*.
+
+How could this be? GitHub held the published releases, tag v0.8.6 was live, yet the client failed to detect them.
+
+Simultaneously, a design flaw was noticed on the chronicle web portal: pages displayed "8 thematic chapters". With each newly authored Act (such as the newly published Act IX), incrementing this hardcoded count across multiple templates, RSS feeds, and manifests was prone to continuous desynchronization.
+
+---
+
+### 2. GitHub REST API Gotchas
+
+Inspecting `AboutSettingsCard.releasesApiUrl` revealed the standard endpoint:
+`https://api.github.com/repos/kobaltgit/Shellit/releases/latest`
+
+While seemingly ideal for fetching the latest release, the official GitHub REST API specification notes a key caveat:
+> The `/releases/latest` endpoint strictly returns **Stable** releases. If all releases in a repository are flagged as **Pre-release** (as is standard during the Shellit Alpha preview phase where all releases are marked prerelease), this endpoint unconditionally returns **HTTP 404 Not Found**!
+
+Upon receiving HTTP 404, our client inferred that no releases existed on the remote repository.
+
+---
+
+### 3. Remediation & Stabilization
+
+1. **Unrestricted Release Query (`BUG-043`):**
+   The endpoint was updated to `https://api.github.com/repos/kobaltgit/Shellit/releases?per_page=5`. The client now parses the recent release array, filters out draft artifacts (`r['draft'] != true`), and targets the latest published release regardless of its pre-release flag.
+   
+2. **Dynamic Chronicle Phrasing:**
+   Astro templates (`ru/chronicle/index.astro`, `chronicle/index.astro`), RSS builders, and `llms.txt` replaced the fixed "8" with qualitative descriptions ("Thematic chapters..."), ensuring permanent accuracy without manual count increments.
+
+3. **Release v0.8.7:**
+   All updates were verified against the unit test suite (7/7 in `about_settings_card_test.dart`), and the application version was incremented to **v0.8.7**.
+
+
 
 
 

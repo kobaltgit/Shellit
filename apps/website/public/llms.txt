@@ -25,7 +25,7 @@
 
 ## Chronicle & Engineering Devlog
 
-- [Shellit Chronicle (EN)](https://shellit.top/chronicle/): 8 thematic acts detailing the architecture, hardware debugging, security audits, and release engineering.
+- [Shellit Chronicle (EN)](https://shellit.top/chronicle/): Thematic acts detailing the architecture, hardware debugging, security audits, and release engineering.
 - [Act I: Foundations](https://shellit.top/chronicle/act-1-foundation/): Architecture manifesto and 5 isolated packages.
 - [Act II: Hardware & Console](https://shellit.top/chronicle/act-2-hardware-and-console/): xterm.dart, ConPTY, and Safe Build Protocol.
 - [Act III: SFTP & Splits](https://shellit.top/chronicle/act-3-sftp-and-splits/): 2x2 matrix terminal multiplexer and broadcast input.

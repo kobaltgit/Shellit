@@ -48,7 +48,7 @@ ${categories}
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Shellit Chronicle | Engineering Devlog</title>
-    <description>8 thematic chapters tracking the evolution of Shellit from architectural blueprint to audited release.</description>
+    <description>Thematic chapters tracking the evolution of Shellit from architectural blueprint to audited release.</description>
     <link>https://shellit.top/chronicle/</link>
     <atom:link href="https://shellit.top/chronicle/rss.xml" rel="self" type="application/rss+xml" />
     <language>en</language>

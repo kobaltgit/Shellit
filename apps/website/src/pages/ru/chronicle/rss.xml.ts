@@ -48,7 +48,7 @@ ${categories}
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Летопись Shellit | Архитектура и разработка</title>
-    <description>8 тематических глав с разбором архитектурных решений, отладки багов, перекрестного аудита нейросетей и веб-летописи.</description>
+    <description>Тематические главы с разбором архитектурных решений, отладки багов, перекрестного аудита нейросетей и веб-летописи.</description>
     <link>https://shellit.top/ru/chronicle/</link>
     <atom:link href="https://shellit.top/ru/chronicle/rss.xml" rel="self" type="application/rss+xml" />
     <language>ru</language>

@@ -15,12 +15,12 @@ import 'feedback_report_dialog.dart';
 class AboutSettingsCard extends ConsumerStatefulWidget {
   const AboutSettingsCard({super.key});
 
-  static const String defaultAppVersion = '0.8.6';
+  static const String defaultAppVersion = '0.8.7';
   static String appVersion = defaultAppVersion;
   static const String appReleaseChannel = 'α';
   static const String githubRepoUrl = 'https://github.com/kobaltgit/Shellit';
   static const String releasesApiUrl =
-      'https://api.github.com/repos/kobaltgit/Shellit/releases/latest';
+      'https://api.github.com/repos/kobaltgit/Shellit/releases?per_page=5';
 
   @override
   ConsumerState<AboutSettingsCard> createState() => _AboutSettingsCardState();
@@ -374,16 +374,37 @@ class _AboutSettingsCardState extends ConsumerState<AboutSettingsCard> {
       if (!mounted) return;
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final tagName = (data['tag_name'] as String? ?? '').replaceFirst(
-          'v',
-          '',
-        );
+        final dynamic raw = jsonDecode(response.body);
+        Map<String, dynamic>? latestRelease;
+        if (raw is List && raw.isNotEmpty) {
+          final list = raw.cast<Map<String, dynamic>>();
+          latestRelease = list.firstWhere(
+            (r) => r['draft'] != true,
+            orElse: () => list.first,
+          );
+        } else if (raw is Map<String, dynamic>) {
+          latestRelease = raw;
+        }
+
+        if (latestRelease == null) {
+          _showSnackBar(
+            context.tr(
+              'settings.about.no_releases_found',
+              defaultText:
+                  'No remote releases found. You are running the latest preview build.',
+            ),
+            backgroundColor: ShellitColors.obsidianCard,
+          );
+          return;
+        }
+
+        final tagName = (latestRelease['tag_name'] as String? ?? '')
+            .replaceFirst('v', '');
         final htmlUrl =
-            data['html_url'] as String? ??
+            latestRelease['html_url'] as String? ??
             '${AboutSettingsCard.githubRepoUrl}/releases';
-        final releaseName = data['name'] as String? ?? tagName;
-        final releaseBody = data['body'] as String? ?? '';
+        final releaseName = latestRelease['name'] as String? ?? tagName;
+        final releaseBody = latestRelease['body'] as String? ?? '';
 
         final isNewer = _isVersionGreater(tagName, _currentVersion);
 
