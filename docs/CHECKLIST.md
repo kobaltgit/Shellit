@@ -704,3 +704,21 @@
   - [x] Акт VIII на портале `shellit.top` (`/chronicle/act-8-meta-chronicle` и `/ru/chronicle/act-8-meta-chronicle`).
   - [x] Верификация сборки: 51 статическая страница без предупреждений, 0 дефектов верстки.
 
+---
+
+## Фаза 20: Спасение пула сокетов и релиз v0.8.8 (Socket Pool Salvation)
+- [x] Устранение исчерпания сетевого пула Windows (`BUG-044`):
+  - [x] Переход с `socket.close()` на обязательный `socket.destroy()` в блоке `finally` метода `SshClientService.pingHost`.
+  - [x] Защита сессий `createTerminalSession` и `openSftpSession` от зависания сокетов при ошибках аутентификации.
+  - [x] Оптимизация реактивного слоя телеметрии в `HostsNotifier`: `persist: false` для RTT-пинга, отвязка от постоянных дисковых записей в SQLite.
+  - [x] Модульный регрессионный тест эмуляции баннера OpenSSH в `packages/ssh_network_core/test/ssh_client_service_test.dart`.
+- [x] Веб-портал и публикация Хроники:
+  - [x] Публикация Акта X: «Спасение пула сокетов — 16 000 открытых портов, OpenSSH-баннер и релиз v0.8.8» (`ru` и `en`).
+  - [x] Интерактивные компоненты `<DialogueSnippet />` и `<CodeDiffViewer />` для Акта X.
+  - [x] Актуализация `StatsHUD.astro`: 44+ разобранных багов, 430+ зелёных тестов, статус `v0.8.8 Alpha Preview`.
+  - [x] 100% успешная сборка веб-сайта (`npm run build`) — 55 страниц без ошибок.
+- [x] Релиз v0.8.8:
+  - [x] Создание описания релиза в `docs/releases/v0.8.8.md`.
+  - [x] Повышение версии до `0.8.8` в `pubspec.yaml`, `AboutSettingsCard`, `.well-known/mcp.json` и `github-releases.ts`.
+
+

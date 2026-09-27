@@ -45,94 +45,111 @@ class SshClientService implements ISshClientService {
         identities = keyRes.getOrThrow().keyPairs;
       }
 
-      onProgress?.call('Connecting socket to ${host.hostname}:${host.port}...');
-      AppLogger.d(
-        'Connecting SSH socket to ${host.connectionTarget}...',
-        tag: 'SshClientService',
-      );
-
-      final socket = await SSHSocket.connect(
-        host.hostname,
-        host.port,
-        timeout: const Duration(seconds: 15),
-      );
-
-      onProgress?.call('SSH protocol handshake...');
-      final client = SSHClient(
-        socket,
-        username: host.username,
-        onPasswordRequest: password != null ? () => password : null,
-        identities: identities,
-        keepAliveInterval: host.keepAliveIntervalSeconds > 0
-            ? Duration(seconds: host.keepAliveIntervalSeconds)
-            : null,
-        onVerifyHostKey: (String type, Uint8List fingerprint) => verifyHostKey(
-          host: host,
-          type: type,
-          fingerprint: fingerprint,
-          onVerifyHostKey: onVerifyHostKey,
-        ),
-      );
-
-      onProgress?.call('Authenticating as ${host.username}...');
-      AppLogger.d(
-        'Authenticating SSH session for ${host.username}...',
-        tag: 'SshClientService',
-      );
-
-      await client.authenticated;
-
-      onProgress?.call('Allocating remote PTY shell...');
-      AppLogger.d(
-        'Spawning PTY shell (${initialDimensions.cols}x${initialDimensions.rows})...',
-        tag: 'SshClientService',
-      );
-
-      SSHSession sshSession;
+      SSHSocket? socket;
+      SSHClient? client;
+      bool isSessionReady = false;
       try {
-        sshSession = await client.shell(
-          pty: SSHPtyConfig(
-            width: initialDimensions.cols,
-            height: initialDimensions.rows,
-            type: 'xterm-256color',
-          ),
-          environment: const {
-            'TERM': 'xterm-256color',
-            'LANG': 'en_US.UTF-8',
-          },
-        );
-      } catch (e) {
-        AppLogger.w(
-          'Failed to request shell with environment variables: $e. Retrying without custom env...',
+        onProgress
+            ?.call('Connecting socket to ${host.hostname}:${host.port}...');
+        AppLogger.d(
+          'Connecting SSH socket to ${host.connectionTarget}...',
           tag: 'SshClientService',
         );
-        sshSession = await client.shell(
-          pty: SSHPtyConfig(
-            width: initialDimensions.cols,
-            height: initialDimensions.rows,
-            type: 'xterm-256color',
+
+        socket = await SSHSocket.connect(
+          host.hostname,
+          host.port,
+          timeout: const Duration(seconds: 15),
+        );
+
+        onProgress?.call('SSH protocol handshake...');
+        client = SSHClient(
+          socket,
+          username: host.username,
+          onPasswordRequest: password != null ? () => password : null,
+          identities: identities,
+          keepAliveInterval: host.keepAliveIntervalSeconds > 0
+              ? Duration(seconds: host.keepAliveIntervalSeconds)
+              : null,
+          onVerifyHostKey: (String type, Uint8List fingerprint) =>
+              verifyHostKey(
+            host: host,
+            type: type,
+            fingerprint: fingerprint,
+            onVerifyHostKey: onVerifyHostKey,
           ),
         );
+
+        onProgress?.call('Authenticating as ${host.username}...');
+        AppLogger.d(
+          'Authenticating SSH session for ${host.username}...',
+          tag: 'SshClientService',
+        );
+
+        await client.authenticated;
+
+        onProgress?.call('Allocating remote PTY shell...');
+        AppLogger.d(
+          'Spawning PTY shell (${initialDimensions.cols}x${initialDimensions.rows})...',
+          tag: 'SshClientService',
+        );
+
+        SSHSession sshSession;
+        try {
+          sshSession = await client.shell(
+            pty: SSHPtyConfig(
+              width: initialDimensions.cols,
+              height: initialDimensions.rows,
+              type: 'xterm-256color',
+            ),
+            environment: const {
+              'TERM': 'xterm-256color',
+              'LANG': 'en_US.UTF-8',
+            },
+          );
+        } catch (e) {
+          AppLogger.w(
+            'Failed to request shell with environment variables: $e. Retrying without custom env...',
+            tag: 'SshClientService',
+          );
+          sshSession = await client.shell(
+            pty: SSHPtyConfig(
+              width: initialDimensions.cols,
+              height: initialDimensions.rows,
+              type: 'xterm-256color',
+            ),
+          );
+        }
+
+        final sessionId =
+            'term_${host.id}_${DateTime.now().millisecondsSinceEpoch}';
+
+        final session = TerminalSession(
+          id: sessionId,
+          hostId: host.id,
+          client: client,
+          sshSession: sshSession,
+          recorder: recorder,
+          isReadOnly: isReadOnly,
+        );
+
+        AppLogger.i(
+          'Terminal session $sessionId successfully opened for ${host.label}',
+          tag: 'SshClientService',
+        );
+
+        isSessionReady = true;
+        return Result.success(session);
+      } finally {
+        if (!isSessionReady) {
+          try {
+            client?.close();
+          } catch (_) {}
+          try {
+            socket?.destroy();
+          } catch (_) {}
+        }
       }
-
-      final sessionId =
-          'term_${host.id}_${DateTime.now().millisecondsSinceEpoch}';
-
-      final session = TerminalSession(
-        id: sessionId,
-        hostId: host.id,
-        client: client,
-        sshSession: sshSession,
-        recorder: recorder,
-        isReadOnly: isReadOnly,
-      );
-
-      AppLogger.i(
-        'Terminal session $sessionId successfully opened for ${host.label}',
-        tag: 'SshClientService',
-      );
-
-      return Result.success(session);
     } on SocketException catch (e) {
       return Result.error(
           NetworkFailure.unreachable(host.hostname, host.port, e));
@@ -184,58 +201,75 @@ class SshClientService implements ISshClientService {
         identities = keyRes.getOrThrow().keyPairs;
       }
 
-      onProgress?.call('Connecting socket to ${host.hostname}:${host.port}...');
-      AppLogger.d(
-        'Opening SFTP connection to ${host.connectionTarget}...',
-        tag: 'SshClientService',
-      );
+      SSHSocket? socket;
+      SSHClient? client;
+      bool isSessionReady = false;
+      try {
+        onProgress
+            ?.call('Connecting socket to ${host.hostname}:${host.port}...');
+        AppLogger.d(
+          'Opening SFTP connection to ${host.connectionTarget}...',
+          tag: 'SshClientService',
+        );
 
-      final socket = await SSHSocket.connect(
-        host.hostname,
-        host.port,
-        timeout: const Duration(seconds: 15),
-      );
+        socket = await SSHSocket.connect(
+          host.hostname,
+          host.port,
+          timeout: const Duration(seconds: 15),
+        );
 
-      onProgress?.call('SSH protocol handshake...');
-      final client = SSHClient(
-        socket,
-        username: host.username,
-        onPasswordRequest: password != null ? () => password : null,
-        identities: identities,
-        keepAliveInterval: host.keepAliveIntervalSeconds > 0
-            ? Duration(seconds: host.keepAliveIntervalSeconds)
-            : null,
-        onVerifyHostKey: (String type, Uint8List fingerprint) => verifyHostKey(
-          host: host,
-          type: type,
-          fingerprint: fingerprint,
-          onVerifyHostKey: onVerifyHostKey,
-        ),
-      );
+        onProgress?.call('SSH protocol handshake...');
+        client = SSHClient(
+          socket,
+          username: host.username,
+          onPasswordRequest: password != null ? () => password : null,
+          identities: identities,
+          keepAliveInterval: host.keepAliveIntervalSeconds > 0
+              ? Duration(seconds: host.keepAliveIntervalSeconds)
+              : null,
+          onVerifyHostKey: (String type, Uint8List fingerprint) =>
+              verifyHostKey(
+            host: host,
+            type: type,
+            fingerprint: fingerprint,
+            onVerifyHostKey: onVerifyHostKey,
+          ),
+        );
 
-      onProgress?.call('Authenticating as ${host.username}...');
-      await client.authenticated;
+        onProgress?.call('Authenticating as ${host.username}...');
+        await client.authenticated;
 
-      onProgress?.call('Initializing SFTP subsystem...');
-      AppLogger.d('Initializing SFTP subsystem...', tag: 'SshClientService');
-      final sftp = await client.sftp();
+        onProgress?.call('Initializing SFTP subsystem...');
+        AppLogger.d('Initializing SFTP subsystem...', tag: 'SshClientService');
+        final sftp = await client.sftp();
 
-      final sessionId =
-          'sftp_${host.id}_${DateTime.now().millisecondsSinceEpoch}';
+        final sessionId =
+            'sftp_${host.id}_${DateTime.now().millisecondsSinceEpoch}';
 
-      final session = SftpSession(
-        id: sessionId,
-        hostId: host.id,
-        client: client,
-        sftp: sftp,
-      );
+        final session = SftpSession(
+          id: sessionId,
+          hostId: host.id,
+          client: client,
+          sftp: sftp,
+        );
 
-      AppLogger.i(
-        'SFTP session $sessionId successfully opened for ${host.label}',
-        tag: 'SshClientService',
-      );
+        AppLogger.i(
+          'SFTP session $sessionId successfully opened for ${host.label}',
+          tag: 'SshClientService',
+        );
 
-      return Result.success(session);
+        isSessionReady = true;
+        return Result.success(session);
+      } finally {
+        if (!isSessionReady) {
+          try {
+            client?.close();
+          } catch (_) {}
+          try {
+            socket?.destroy();
+          } catch (_) {}
+        }
+      }
     } on SocketException catch (e) {
       return Result.error(
           NetworkFailure.unreachable(host.hostname, host.port, e));
@@ -270,10 +304,10 @@ class SshClientService implements ISshClientService {
     Duration timeout = const Duration(seconds: 4),
   }) async {
     final stopwatch = Stopwatch()..start();
+    Socket? socket;
     try {
-      final socket = await Socket.connect(hostname, port, timeout: timeout);
+      socket = await Socket.connect(hostname, port, timeout: timeout);
       stopwatch.stop();
-      await socket.close();
       final latencyMs = stopwatch.elapsedMilliseconds;
       AppLogger.d('Ping to $hostname:$port succeeded in ${latencyMs}ms',
           tag: 'SshClientService');
@@ -294,6 +328,10 @@ class SshClientService implements ISshClientService {
           stackTrace: stack,
         ),
       );
+    } finally {
+      try {
+        socket?.destroy();
+      } catch (_) {}
     }
   }
 

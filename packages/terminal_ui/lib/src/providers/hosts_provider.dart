@@ -173,12 +173,13 @@ class HostsNotifier extends StateNotifier<List<HostEntity>> {
     }
   }
 
-  void updateHostLatency(String hostId, int? latencyMs) {
+  void updateHostLatency(String hostId, int? latencyMs,
+      {bool persist = false}) {
     state = [
       for (final h in state)
         if (h.id == hostId) h.copyWith(lastPingLatencyMs: latencyMs) else h,
     ];
-    if (_repository != null && latencyMs != null) {
+    if (persist && _repository != null && latencyMs != null) {
       _repository!.updateHostLatency(hostId, latencyMs);
     }
   }

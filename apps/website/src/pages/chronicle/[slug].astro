@@ -287,6 +287,57 @@ return 'SHA256:' + base64.encode(fingerprint);`}
       </div>
     )}
 
+    <!-- Dynamic Interactive Widgets for Act 10 (Socket Pool Salvation & BUG-044) -->
+    {act.data.actNumber === 10 && (
+      <div class="space-y-8 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Incident Transcript: 16,000 Sockets & Network Blackout"
+          timestamp="September 27, 2026, 20:02"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'Incident diagnosis: Background shellit.exe (PID 5932) hung in a connection leak cycle and opened 16,071 active TCP sockets, exhausting the entire OS network pool. Once terminated, occupied sockets dropped from 16,602 to 533. What is the root cause? Run diagnostics and answer, do not fix yet.'
+            },
+            {
+              speaker: 'agent',
+              text: 'Root cause: pingHost was using socket.close(). In Dart, this only shuts down writes (FIN), but OpenSSH sends an identification banner. Because bytes were unread and socket.destroy() was not invoked, the Windows kernel kept handles and ephemeral ports open indefinitely. Every 15s ping leaked a port until all 16,384 Windows ephemeral ports were exhausted.'
+            },
+            {
+              speaker: 'architect',
+              text: 'give me a plan. And explain in plain English for a layperson what all of this means'
+            },
+            {
+              speaker: 'architect',
+              text: 'proceed'
+            }
+          ]}
+        />
+
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-044: Socket Pool Protection — from socket.close() to socket.destroy()"
+          bugId="BUG-044"
+          vulnerableTitle="Half-closed socket (Before)"
+          fixedTitle="Guaranteed Destruction (After)"
+          vulnerableCode={`// VULNERABLE: socket.close() waits for unread buffer
+final socket = await Socket.connect(hostname, port, timeout: effectiveTimeout);
+stopwatch.stop();
+await socket.close(); // FIN sent, but OpenSSH banner hangs in kernel!`}
+          fixedCode={`// SECURE: socket.destroy() immediately releases kernel port
+Socket? socket;
+try {
+  socket = await Socket.connect(hostname, port, timeout: effectiveTimeout);
+  stopwatch.stop();
+  return PingResult.success(latencyMs: stopwatch.elapsedMilliseconds);
+} finally {
+  socket?.destroy(); // Instant cleanup of handle and ephemeral port
+}`}
+          explanation="Upon TCP handshake, OpenSSH immediately sends its version banner. Calling close() closed only writes, leaving the port locked until the Windows OS pool collapsed. A finally block with destroy() completely eliminated the leak."
+        />
+      </div>
+    )}
+
     <!-- Main Markdown Body (Pagefind Indexed) -->
     <article data-pagefind-body class="chronicle-article max-w-none">
       <span data-pagefind-filter="type:Chronicle" class="hidden">Chronicle</span>

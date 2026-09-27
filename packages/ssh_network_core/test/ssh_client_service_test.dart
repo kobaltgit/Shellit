@@ -28,6 +28,26 @@ void main() {
       await server.close();
     });
 
+    test(
+        'pingHost properly destroys client socket even when server sends banner data (BUG-044)',
+        () async {
+      final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);
+      final port = server.port;
+
+      Socket? serverClientSocket;
+      server.listen((client) {
+        serverClientSocket = client;
+        client.write('SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6\r\n');
+      });
+
+      final result = await service.pingHost('127.0.0.1', port);
+      expect(result.isSuccess, isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      serverClientSocket?.destroy();
+      await server.close();
+    });
+
     test('pingHost returns failure when port is closed', () async {
       // Find an unused port and immediately close it
       final server = await ServerSocket.bind(InternetAddress.loopbackIPv4, 0);

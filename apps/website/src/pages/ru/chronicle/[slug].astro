@@ -287,6 +287,57 @@ return 'SHA256:' + base64.encode(fingerprint);`}
       </div>
     )}
 
+    <!-- Dynamic Interactive Widgets for Act 10 (Socket Pool Salvation & BUG-044) -->
+    {act.data.actNumber === 10 && (
+      <div class="space-y-8 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма инцидента: 16 000 открытых сокетов и сетевой блэкаут"
+          timestamp="27 сентября 2026, 20:02"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'Что было обнаружено при диагностике: Фоновый процесс shellit.exe (PID 5932) завис в цикле утечки соединений и открыл 16 071 активный TCP-сокет, исчерпав сетевой пул всей системы. Процесс был принудительно остановлен, после чего количество занятых сетевых сокетов мгновенно вернулось в норму (с 16 602 до 533). Причина этого. Просто проведи диагностику и ответь, пока не исправляй.'
+            },
+            {
+              speaker: 'agent',
+              text: 'Диагноз: в pingHost вызывался socket.close(). В Dart это закрывает сокет только на запись (FIN), но OpenSSH-сервер отправляет баннер идентификации. Поскольку сокет не вычитывался и не вызывался socket.destroy(), дескриптор сокета и динамический порт удерживались ядром Windows. Каждые 15 секунд утекал порт, пока не исчерпался диапазон эфемеров Windows (49152-65535, ровно 16384 порта).'
+            },
+            {
+              speaker: 'architect',
+              text: 'давай план. И человеческим языком для чайника объясни, что все это значит'
+            },
+            {
+              speaker: 'architect',
+              text: 'делай'
+            }
+          ]}
+        />
+
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-044: Защита пула сокетов — от socket.close() к socket.destroy()"
+          bugId="BUG-044"
+          vulnerableTitle="Полузакрытый сокет (Было)"
+          fixedTitle="Гарантированное уничтожение (Стало)"
+          vulnerableCode={`// УЯЗВИМО: socket.close() ждет вычитки буфера
+final socket = await Socket.connect(hostname, port, timeout: effectiveTimeout);
+stopwatch.stop();
+await socket.close(); // FIN отправлен, но баннер OpenSSH висит в ядре!`}
+          fixedCode={`// НАДЕЖНО: socket.destroy() немедленно освобождает порт ядра
+Socket? socket;
+try {
+  socket = await Socket.connect(hostname, port, timeout: effectiveTimeout);
+  stopwatch.stop();
+  return PingResult.success(latencyMs: stopwatch.elapsedMilliseconds);
+} finally {
+  socket?.destroy(); // Мгновенный сброс дескриптора и порта
+}`}
+          explanation="OpenSSH при установке TCP-соединения первым делом отправляет строку приветствия. Вызов close() закрывал только передачу, оставляя порт заблокированным в ядре ОС до исчерпания пула Windows. Блок finally с destroy() полностью ликвидировал утечку."
+        />
+      </div>
+    )}
+
     <!-- Main Markdown Body (Pagefind Indexed) -->
     <article data-pagefind-body class="chronicle-article max-w-none">
       <span data-pagefind-filter="type:Хроника" class="hidden">Хроника</span>

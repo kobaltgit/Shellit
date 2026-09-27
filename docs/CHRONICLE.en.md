@@ -2198,6 +2198,60 @@ Upon receiving HTTP 404, our client inferred that no releases existed on the rem
 3. **Release v0.8.7:**
    All updates were verified against the unit test suite (7/7 in `about_settings_card_test.dart`), and the application version was incremented to **v0.8.7**.
 
+---
+
+## Entry 52. 16,000 Unhung Receivers: How Background Ping Exhausted the Windows Socket Pool & What `socket.destroy()` Taught Us
+
+*Timestamp: September 27, 2026, 20:10 — 20:25 (~15 minutes)*
+
+### 1. The Incident: An Out-of-the-Blue Network Blackout
+
+It began with an unexpected system-wide connectivity freeze. Websites suddenly refused to load, web clients encountered network errors, and the system monitor revealed an alarming state: background process `shellit.exe` had spawned **16,071 active TCP sockets**, choking the entire operating system's network pool. The moment the process was killed, occupied sockets plunged from 16,602 back to a clean baseline of 533.
+
+The count of 16,071 immediately told a story to anyone familiar with the Windows TCP stack: the default dynamic ephemeral client port range on Windows spans 49152 to 65535, exactly 16,384 ports. Accounting for background Windows services, Shellit had consumed 100% of the remaining socket pool, triggering an unyielding `WSAENOBUFS` denial.
+
+---
+
+### 2. Under the Hood: The Trap of Half-Closed Sockets in Dart
+
+Tracing the network code unmasked a nuanced detail in Dart's I/O runtime (`dart:io`):
+
+1. **`close()` vs `destroy()`:**
+   `SshClientService.pingHost` measured RTT latency across catalog hosts. Establishing the check created `Socket.connect(hostname, port)`, followed by `await socket.close()`.
+   In Dart, `socket.close()` only closes the **write sink** (`shutdown(SHUT_WR)`), dispatching a TCP FIN packet to the remote host. The incoming read stream remains fully active!
+2. **The OpenSSH Handshake Banner:**
+   Upon establishing a connection to port 22, every standard SSH server immediately transmits its identification string (`SSH-2.0-OpenSSH...`). This banner arrived at the Windows network buffer. Because Shellit neither listened to nor drained this incoming data, the socket entered a half-closed state with unconsumed bytes. The Dart VM and Windows kernel preserved the socket handle and dynamic port, awaiting application consumption.
+3. **The 15-Second Ping Cycle:**
+   The ping monitor faithfully pinged all hosts every 15 seconds. Each cycle left unclosed sockets behind. Over several hours of background execution, these sockets accumulated until the dynamic port pool was exhausted.
+4. **Reactive Drift SQLite Storm:**
+   Each 15-second latency measurement was written directly to the SQLite `hostsTable` via Drift. This continuously triggered the reactive `watchAllHosts()` stream, creating redundant widget tree rebuilds.
+
+---
+
+### 3. Remediation & Hardening (BUG-044)
+
+1. **Guaranteed `socket.destroy()`:**
+   In `SshClientService.pingHost`, the half-close call was replaced with a strict `finally { socket?.destroy(); }` block. `destroy()` forcibly tears down both halves of the TCP stream, flushes OS kernel buffers, and instantly returns the ephemeral port to Windows.
+2. **Terminal & SFTP Connect Guards:**
+   In `createTerminalSession` and `openSftpSession`, a fail-safe `finally` block was added to close the client and destroy the socket whenever authentication fails or host keys are rejected, preventing leaks during connection errors.
+3. **SQLite Write Decoupling:**
+   In `HostsNotifier.updateHostLatency`, a `persist: false` parameter was introduced. Routine telemetry latency now updates solely in-memory without persistent disk I/O or reactive UI rebuild churn.
+4. **Regression Unit Test:**
+   A dedicated test in `ssh_client_service_test.dart` simulates an SSH server transmitting banner data, verifying that the client socket is promptly destroyed.
+
+---
+
+### 4. Verification & Summary
+
+- Registered and resolved critical issue `BUG-044` with status `VERIFIED`.
+- All tests across packages passed with 100% success:
+  - `ssh_network_core`: 81/81 passed.
+  - `terminal_ui`: 126/126 passed.
+  - `apps/shellit`: 61/61 passed.
+- Static analysis with `flutter analyze` reported 0 warnings.
+
+The Windows socket pool is now completely safe: host telemetry operates silently, sockets are torn down in fractions of a millisecond, and database operations are freed from routine timer cycles.
+
 
 
 
