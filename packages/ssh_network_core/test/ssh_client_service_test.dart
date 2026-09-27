@@ -35,16 +35,24 @@ void main() {
       final port = server.port;
 
       Socket? serverClientSocket;
-      server.listen((client) {
-        serverClientSocket = client;
-        client.write('SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6\r\n');
-      });
+      server.listen(
+        (client) {
+          serverClientSocket = client;
+          client.listen((_) {}, onError: (_) {});
+          client.done.catchError((_) {});
+          try {
+            client.write('SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6\r\n');
+          } catch (_) {}
+        },
+        onError: (_) {},
+      );
 
       final result = await service.pingHost('127.0.0.1', port);
       expect(result.isSuccess, isTrue);
 
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      serverClientSocket?.destroy();
+      try {
+        serverClientSocket?.destroy();
+      } catch (_) {}
       await server.close();
     });
 
