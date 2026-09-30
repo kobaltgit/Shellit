@@ -46,6 +46,13 @@ export 'package:core_foundation/core_foundation.dart'
 export 'src/widgets/terminal/host_key_dialog.dart';
 export 'src/widgets/terminal/local_terminal_button.dart';
 
+// OSC 133 Shell Integration
+export 'src/shell_integration/shell_command_block.dart';
+export 'src/shell_integration/shell_integration_controller.dart';
+export 'src/shell_integration/shell_command_markers_overlay.dart';
+export 'src/shell_integration/shell_gutter_markers_overlay.dart';
+export 'src/shell_integration/shell_integration_bootstrap.dart';
+
 // Local Terminal Services & Providers
 export 'src/services/local_terminal_session.dart';
 export 'src/services/local_shell_detector.dart';

@@ -15,6 +15,7 @@ class TerminalContextMenu {
     TerminalLinkMatch? detectedLink,
     VoidCallback? onOpenLink,
     VoidCallback? onCopyLink,
+    VoidCallback? onCopyLastCommandOutput,
     required VoidCallback onCopy,
     required VoidCallback onPaste,
     required VoidCallback onSelectAll,
@@ -122,6 +123,21 @@ class TerminalContextMenu {
           enabled: true,
         ),
       ),
+      if (onCopyLastCommandOutput != null) ...[
+        PopupMenuItem<String>(
+          value: 'copyCommandOutput',
+          enabled: true,
+          height: 38,
+          child: _buildMenuItem(
+            icon: Icons.code_rounded,
+            title: context.tr('terminal.context_menu_copy_command_output',
+                defaultText: 'Copy Last Command Output'),
+            shortcut: '',
+            enabled: true,
+            highlightAccent: true,
+          ),
+        ),
+      ],
       const PopupMenuDivider(height: 8),
       PopupMenuItem<String>(
         value: 'clear',
@@ -174,6 +190,9 @@ class TerminalContextMenu {
         break;
       case 'copyLink':
         onCopyLink?.call();
+        break;
+      case 'copyCommandOutput':
+        onCopyLastCommandOutput?.call();
         break;
       case 'copy':
         onCopy();

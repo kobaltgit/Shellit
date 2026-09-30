@@ -742,5 +742,40 @@
   - [x] Создание описания релиза в `docs/releases/v0.8.9.md`.
   - [x] Повышение версии до `0.8.9+24` в `pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json` и `github-releases.ts`.
 
+---
+
+## Фаза 22: Семантическая интеграция шелла OSC 133 и командные блоки (Shell Integration)
+- [x] Архитектурное ядро семантического парсинга (`packages/terminal_ui`):
+  - [x] Доменная модель `ShellCommandBlock` с расчетом длительности, таймстемпами и статусами (`isSuccess`, `isFailure`, `isRunning`).
+  - [x] Реактивный контроллер `ShellIntegrationController` для обработки маркеров FinalTerm/OSC 133 (`A` — Prompt, `B` — Command, `C` — Output, `D` — Finished с кодом возврата) и OSC 7 (`currentCwd`).
+  - [x] Метод `getBlockOutput` для чистого извлечения вывода команды без шелл-промпта.
+  - [x] Алгоритмы навигации `getPreviousCommandPromptLine` и `getNextCommandPromptLine` для мгновенных прыжков между командами.
+  - [x] Zero-Trace генератор скриптов `ShellIntegrationBootstrap` для Bash, Zsh и Fish.
+- [x] Интеграция с PTY и сессиями:
+  - [x] Подключение `onPrivateOSC` хука в `TerminalSessionRegistry` для автоматического захвата escape-последовательностей как в локальных шеллах, так и по SSH без модификации серверов.
+  - [x] Сохранение истории блоков и состояния контроллера в `TerminalSessionEntry` при переключении табов и сплитов.
+- [x] Пользовательский интерфейс и горячие клавиши:
+  - [x] Левые маркеры промптов `ShellGutterMarkersOverlay` с цветной индикацией (зеленый — успех, красный — ошибка, циан — выполнение) и тултипами.
+  - [x] Копирование стандартного вывода команды в буфер обмена в 1 клик по маркеру.
+  - [x] Захват момента старта команды на Enter (`notifyCommandStarted`) и точный хронометраж выполнения (`[1.2s]`).
+  - [x] Виджет `ShellCommandMarkersOverlay` на полосе прокрутки с цветными индикаторами для длинного вывода.
+  - [x] Клавиатурные шорткаты последовательного хоппинга по командам: `Cmd + ↑/↓` (macOS), `Alt + ↑/↓`, `Ctrl + Shift + ↑/↓` и `Alt + PageUp/Down` (Windows/Linux) с устранением залипания скролла (`BUG-048`).
+  - [x] Тумблер `[ ⚡ Markers ]` в тулбаре для быстрого скрытия/показа разметки.
+  - [x] Пункт «Скопировать вывод команды» в контекстном меню `TerminalContextMenu`.
+  - [x] Обновление памятки горячих клавиш `TerminalShortcutsDialog`.
+- [x] Тестирование и верификация:
+  - [x] 18 модульных и виджет-тестов в `packages/terminal_ui/test/shell_integration_test.dart`.
+  - [x] 100% успешный прогон всех 146 тестов `packages/terminal_ui` и всех тестов монорепозитория.
+  - [x] 0 предупреждений и ошибок в `flutter analyze`.
+- [x] Веб-портал и публикация Хроники:
+  - [x] Публикация Акта XII: «Живая простыня терминала / The Living Terminal Canvas» (`ru` и `en`).
+  - [x] Честное распределение благодарностей: автору оригинала Фабрицио Ла Роза (`fbrzlarosa/terminale`) и форку `uxiew/terminale`.
+  - [x] Актуализация `StatsHUD.astro`: 48+ разобранных багов, статус `v0.9.0 Alpha Preview`.
+  - [x] 100% успешная сборка веб-сайта (`npm run build`) — 59 страниц без ошибок.
+- [x] Релиз v0.9.0:
+  - [x] Создание описания релиза в `docs/releases/v0.9.0.md`.
+  - [x] Повышение версии до `0.9.0+25` в `pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json` и `github-releases.ts`.
+
+
 
 

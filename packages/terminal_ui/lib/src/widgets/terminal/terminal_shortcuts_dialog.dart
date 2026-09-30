@@ -229,6 +229,29 @@ class TerminalShortcutsDialog extends StatelessWidget {
                             defaultText: '⌨ toolbar icon')
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                      icon: Icons.alt_route_rounded,
+                      title: context.tr('terminal.shortcuts_section_navigation',
+                          defaultText: 'Command Navigation (OSC 133)'),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildShortcutRow(
+                      label: context.tr('terminal.shortcuts_jump_prev_cmd',
+                          defaultText: 'Jump to previous command block'),
+                      keys: [
+                        isMac ? '⌘ + ↑' : 'Alt + ↑',
+                        '$cmdOrCtrl + Shift + ↑'
+                      ],
+                    ),
+                    _buildShortcutRow(
+                      label: context.tr('terminal.shortcuts_jump_next_cmd',
+                          defaultText: 'Jump to next command block'),
+                      keys: [
+                        isMac ? '⌘ + ↓' : 'Alt + ↓',
+                        '$cmdOrCtrl + Shift + ↓'
+                      ],
+                    ),
                   ],
                 ),
               ),

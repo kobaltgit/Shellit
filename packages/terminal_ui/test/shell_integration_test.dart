@@ -1,0 +1,396 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:terminal_ui/src/widgets/terminal/terminal_session_registry.dart';
+import 'package:terminal_ui/terminal_ui.dart';
+import 'package:xterm/xterm.dart';
+import 'test_helpers.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  group('ShellCommandBlock model tests', () {
+    test('reports running state when command has started but exitCode is null',
+        () {
+      final block = ShellCommandBlock(
+        id: 1,
+        promptLine: 0,
+        startTime: DateTime.now(),
+      );
+      expect(block.isRunning, isTrue);
+      expect(block.isPendingPrompt, isFalse);
+      expect(block.isSuccess, isFalse);
+      expect(block.isFailure, isFalse);
+      expect(block.formatDuration(), isEmpty);
+    });
+
+    test(
+        'reports pending prompt state when prompt appeared but command not started',
+        () {
+      final block = ShellCommandBlock(id: 1, promptLine: 0);
+      expect(block.isPendingPrompt, isTrue);
+      expect(block.isRunning, isFalse);
+    });
+
+    test('reports success state when exitCode is 0', () {
+      final now = DateTime.now();
+      final block = ShellCommandBlock(
+        id: 2,
+        promptLine: 5,
+        exitCode: 0,
+        startTime: now.subtract(const Duration(milliseconds: 1400)),
+        endTime: now,
+      );
+      expect(block.isRunning, isFalse);
+      expect(block.isSuccess, isTrue);
+      expect(block.isFailure, isFalse);
+      expect(block.formatDuration(), '1.4s');
+    });
+
+    test('reports failure state when exitCode is non-zero', () {
+      final now = DateTime.now();
+      final block = ShellCommandBlock(
+        id: 3,
+        promptLine: 12,
+        exitCode: 127,
+        startTime: now.subtract(const Duration(milliseconds: 450)),
+        endTime: now,
+      );
+      expect(block.isRunning, isFalse);
+      expect(block.isSuccess, isFalse);
+      expect(block.isFailure, isTrue);
+      expect(block.formatDuration(), '450ms');
+    });
+
+    test('formats long duration in minutes and seconds', () {
+      final now = DateTime.now();
+      final block = ShellCommandBlock(
+        id: 4,
+        promptLine: 20,
+        exitCode: 0,
+        startTime: now.subtract(const Duration(minutes: 2, seconds: 15)),
+        endTime: now,
+      );
+      expect(block.formatDuration(), '2m 15s');
+    });
+  });
+
+  group('ShellIntegrationController OSC 133 processing tests', () {
+    late ShellIntegrationController controller;
+    late Terminal terminal;
+
+    setUp(() {
+      controller = ShellIntegrationController();
+      terminal = Terminal(maxLines: 100);
+    });
+
+    tearDown(() {
+      controller.dispose();
+    });
+
+    test(
+        'processes complete lifecycle of successful command: A -> B -> C -> D;0',
+        () {
+      terminal.write('user@host:~\$ ');
+      controller.handleOSC('133', ['A'], terminal);
+
+      expect(controller.blocks.length, 1);
+      final block = controller.currentBlock!;
+      expect(block.id, 1);
+      expect(block.isPendingPrompt, isTrue);
+
+      // User presses enter
+      terminal.write('echo hello\r\n');
+      controller.handleOSC('133', ['B'], terminal);
+      expect(block.startTime, isNotNull);
+      expect(block.isRunning, isTrue);
+
+      // Output starts
+      controller.handleOSC('133', ['C'], terminal);
+      expect(block.outputStartLine, isNotNull);
+
+      terminal.write('hello\r\n');
+
+      // Command finished with 0
+      controller.handleOSC('133', ['D', '0'], terminal);
+      expect(block.isRunning, isFalse);
+      expect(block.isSuccess, isTrue);
+      expect(block.exitCode, 0);
+      expect(block.endTime, isNotNull);
+    });
+
+    test('processes failed command with non-zero exit code (OSC 133;D;127)',
+        () {
+      controller.handleOSC('133', ['A'], terminal);
+      controller.handleOSC('133', ['B'], terminal);
+      controller.handleOSC('133', ['C'], terminal);
+      controller.handleOSC('133', ['D', '127'], terminal);
+
+      expect(controller.blocks.length, 1);
+      final block = controller.blocks.first;
+      expect(block.exitCode, 127);
+      expect(block.isFailure, isTrue);
+      expect(block.isSuccess, isFalse);
+    });
+
+    test('extracts command property from OSC 133;P;cl=<cmd>', () {
+      controller.handleOSC('133', ['A'], terminal);
+      controller.handleOSC('133', ['P', 'cl=docker compose ps'], terminal);
+
+      expect(controller.currentBlock?.command, 'docker compose ps');
+    });
+
+    test('tracks current working directory via OSC 7', () {
+      controller.handleOSC('7', ['file://my-vps/var/log/nginx'], terminal);
+      expect(controller.currentCwd, '/var/log/nginx');
+    });
+
+    test('extracts clean command output via getBlockOutput', () {
+      controller.handleOSC('133', ['A'], terminal);
+      terminal.write('uptime\r\n');
+      controller.handleOSC('133', ['B'], terminal);
+      controller.handleOSC('133', ['C'], terminal);
+      terminal.write(' 14:02:10 up 45 days, 1 user, load: 0.05\r\n');
+      controller.handleOSC('133', ['D', '0'], terminal);
+
+      final block = controller.blocks.first;
+      final output = controller.getBlockOutput(terminal, block);
+      expect(output, contains('load: 0.05'));
+    });
+
+    test(
+        'command hopping navigation accurately finds prev and next prompt lines',
+        () {
+      // Simulate 3 commands at different lines
+      final b1 = ShellCommandBlock(id: 1, promptLine: 0, exitCode: 0);
+      final b2 = ShellCommandBlock(id: 2, promptLine: 10, exitCode: 0);
+      final b3 = ShellCommandBlock(id: 3, promptLine: 25, exitCode: 1);
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+      controller.addBlock(b3);
+
+      // At line 30, prev should be 25
+      expect(controller.getPreviousCommandPromptLine(30), 25);
+      // At line 25, prev should be 10
+      expect(controller.getPreviousCommandPromptLine(25), 10);
+      // At line 10, prev should be 0
+      expect(controller.getPreviousCommandPromptLine(10), 0);
+      // At line 0, prev is null
+      expect(controller.getPreviousCommandPromptLine(0), isNull);
+
+      // Next from 0 is 10
+      expect(controller.getNextCommandPromptLine(0), 10);
+      // Next from 10 is 25
+      expect(controller.getNextCommandPromptLine(10), 25);
+      // Next from 25 is null
+      expect(controller.getNextCommandPromptLine(25), isNull);
+    });
+
+    test('clear() resets blocks and current block', () {
+      controller.handleOSC('133', ['A'], terminal);
+      expect(controller.blocks, isNotEmpty);
+      controller.clear();
+      expect(controller.blocks, isEmpty);
+      expect(controller.currentBlock, isNull);
+    });
+
+    test(
+        'notifyCommandStarted sets startTime and allows duration calculation on finish',
+        () async {
+      terminal.write('PS C:\\Users> ');
+      controller.handleOSC('133', ['A'], terminal);
+
+      final block = controller.currentBlock!;
+      expect(block.startTime, isNull);
+      expect(block.isRunning, isFalse);
+
+      // User presses Enter
+      controller.notifyCommandStarted();
+      expect(block.startTime, isNotNull);
+      expect(block.isRunning, isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 25));
+
+      // Command finishes
+      controller.handleOSC('133', ['D', '0'], terminal);
+      expect(block.isRunning, isFalse);
+      expect(block.isSuccess, isTrue);
+      expect(block.duration, isNotNull);
+      expect(block.formatDuration(), isNotEmpty);
+    });
+  });
+
+  group('ShellIntegrationBootstrap scripts tests', () {
+    test('generates valid bootstrap scripts for bash, zsh and fish', () {
+      expect(ShellIntegrationBootstrap.bashSnippet, contains('133;A'));
+      expect(ShellIntegrationBootstrap.bashSnippet, contains('133;B'));
+      expect(ShellIntegrationBootstrap.bashSnippet, contains('133;D'));
+
+      expect(ShellIntegrationBootstrap.zshSnippet,
+          contains('add-zsh-hook precmd'));
+      expect(ShellIntegrationBootstrap.zshSnippet, contains('133;A'));
+
+      expect(ShellIntegrationBootstrap.fishSnippet, contains('fish_prompt'));
+      expect(ShellIntegrationBootstrap.fishSnippet, contains('133;D'));
+    });
+  });
+
+  group('TerminalSessionRegistry shell integration wiring tests', () {
+    test(
+        'creates TerminalSessionEntry with initialized ShellIntegrationController and OSC hook',
+        () {
+      final session = FakeTerminalSession(id: 's-osc-1', hostId: 'h-1');
+      final entry = TerminalSessionRegistry.instance.getOrCreate(session);
+
+      expect(entry.shellIntegration, isNotNull);
+      expect(entry.terminal.onPrivateOSC, isNotNull);
+
+      // Test driving OSC sequence through the terminal
+      entry.terminal.onPrivateOSC!('133', ['A']);
+      expect(entry.shellIntegration.blocks.length, 1);
+
+      entry.terminal.onPrivateOSC!('133', ['D', '0']);
+      expect(entry.shellIntegration.blocks.first.isSuccess, isTrue);
+
+      TerminalSessionRegistry.instance.remove('s-osc-1');
+    });
+  });
+
+  group('ShellCommandMarkersOverlay widget tests', () {
+    testWidgets('renders success, error and running markers on scrollbar',
+        (tester) async {
+      final controller = ShellIntegrationController();
+      final terminal = Terminal(maxLines: 100);
+
+      // Add success, failure and running blocks
+      final b1 = ShellCommandBlock(id: 1, promptLine: 5, exitCode: 0);
+      final b2 = ShellCommandBlock(id: 2, promptLine: 20, exitCode: 1);
+      final b3 = ShellCommandBlock(
+        id: 3,
+        promptLine: 40,
+        startTime: DateTime.now(),
+      ); // running
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+      controller.addBlock(b3);
+
+      int? scrolledToLine;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 200,
+              height: 400,
+              child: ShellCommandMarkersOverlay(
+                controller: controller,
+                terminal: terminal,
+                onScrollToLine: (line) {
+                  scrolledToLine = line;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify 3 markers rendered in tooltips
+      expect(find.byType(Tooltip), findsNWidgets(3));
+
+      // Tap on first marker
+      await tester.tap(find.byType(GestureDetector).first);
+      await tester.pump();
+
+      expect(scrolledToLine, 5);
+
+      controller.dispose();
+    });
+  });
+
+  group('ShellGutterMarkersOverlay widget tests', () {
+    testWidgets(
+        'renders gutter dots for visible prompt lines and handles clicks',
+        (tester) async {
+      final controller = ShellIntegrationController();
+      final terminal = Terminal(maxLines: 100);
+      final scrollController = ScrollController();
+
+      // Add success, failure and running blocks
+      final b1 = ShellCommandBlock(id: 1, promptLine: 0, exitCode: 0);
+      final b2 = ShellCommandBlock(id: 2, promptLine: 3, exitCode: 1);
+      final b3 = ShellCommandBlock(
+        id: 3,
+        promptLine: 6,
+        startTime: DateTime.now(),
+      ); // running
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+      controller.addBlock(b3);
+
+      ShellCommandBlock? tappedBlock;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 300,
+              height: 400,
+              child: ShellGutterMarkersOverlay(
+                controller: controller,
+                terminal: terminal,
+                scrollController: scrollController,
+                lineHeight: 20.0,
+                onBlockTap: (b) {
+                  tappedBlock = b;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Verify 3 markers rendered
+      expect(find.byType(Tooltip), findsNWidgets(3));
+
+      // Tap on first marker
+      await tester.tap(find.byType(GestureDetector).first);
+      await tester.pump();
+
+      expect(tappedBlock?.id, 1);
+
+      controller.dispose();
+      scrollController.dispose();
+    });
+  });
+
+  group('TerminalScreen with Shell Integration integration tests', () {
+    testWidgets(
+        'TerminalScreen renders without errors with ShellIntegrationController',
+        (tester) async {
+      final session = FakeTerminalSession(id: 'test-si-screen', hostId: 'h-1');
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: TerminalScreen(
+                session: session,
+                autoFocus: false,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+      expect(find.byType(TerminalScreen), findsOneWidget);
+      expect(find.byType(ShellGutterMarkersOverlay), findsOneWidget);
+      expect(find.byType(ShellCommandMarkersOverlay), findsOneWidget);
+
+      TerminalSessionRegistry.instance.remove('test-si-screen');
+    });
+  });
+}

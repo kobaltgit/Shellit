@@ -105,9 +105,28 @@ class LocalTerminalSession implements ITerminalSession {
       env.addAll(profile.environment);
     }
 
+    // Auto-inject OSC 133 Shell Integration into local shells
+    final effectiveArgs = List<String>.from(profile.arguments);
+    if (effectiveArgs.isEmpty) {
+      if (profile.shellType == ShellType.powershell ||
+          profile.shellType == ShellType.pwsh) {
+        effectiveArgs.addAll([
+          '-NoExit',
+          '-Command',
+          r"function prompt { $c = if (-not $global:?) { 1 } elseif ($LASTEXITCODE) { $LASTEXITCODE } else { 0 }; $e = [char]27; $b = [char]7; return ($e + ']133;D;' + $c + $b + $e + ']133;A' + $b + 'PS ' + (Get-Location) + '> ') }",
+        ]);
+      }
+    }
+
+    if (profile.shellType == ShellType.bash ||
+        profile.shellType == ShellType.gitBash ||
+        profile.shellType == ShellType.wsl) {
+      env['PROMPT_COMMAND'] = r'printf "\033]133;D;%s\007\033]133;A\007" "$?"';
+    }
+
     final pty = Pty.start(
       profile.executablePath,
-      arguments: profile.arguments,
+      arguments: effectiveArgs,
       workingDirectory: homeDir,
       environment: env,
       rows: initialDimensions.rows > 0 ? initialDimensions.rows : 24,

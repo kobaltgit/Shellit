@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../shell_integration/shell_integration_controller.dart';
+
 /// Entry holding the live [Terminal], [TerminalController], and stream subscription
 /// for an active [ITerminalSession], ensuring scrollback and state survive across
 /// splits, tab switches, and undocking.
@@ -10,16 +12,19 @@ class TerminalSessionEntry {
   final Terminal terminal;
   final TerminalController controller;
   final StreamSubscription<dynamic> outputSubscription;
+  final ShellIntegrationController shellIntegration;
 
   TerminalSessionEntry({
     required this.terminal,
     required this.controller,
     required this.outputSubscription,
+    required this.shellIntegration,
   });
 
   void dispose() {
     outputSubscription.cancel();
     controller.dispose();
+    shellIntegration.dispose();
   }
 }
 
@@ -36,6 +41,13 @@ class TerminalSessionRegistry {
     if (entry == null) {
       final terminal = Terminal(maxLines: 5000);
       final controller = TerminalController();
+      final shellIntegration = ShellIntegrationController();
+
+      // Hook OSC 133 semantic shell integration
+      terminal.onPrivateOSC = (code, args) {
+        shellIntegration.handleOSC(code, args, terminal);
+      };
+
       final sub = session.outputStream.listen(
         (bytes) {
           final decoded = utf8.decode(bytes, allowMalformed: true);
@@ -52,6 +64,7 @@ class TerminalSessionRegistry {
         terminal: terminal,
         controller: controller,
         outputSubscription: sub,
+        shellIntegration: shellIntegration,
       );
       _entries[session.id] = entry;
     }

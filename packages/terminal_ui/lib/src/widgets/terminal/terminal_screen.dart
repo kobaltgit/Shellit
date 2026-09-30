@@ -12,6 +12,9 @@ import 'package:xterm/src/ui/render.dart';
 import 'package:flutter/gestures.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/theme_provider.dart';
+import '../../shell_integration/shell_command_markers_overlay.dart';
+import '../../shell_integration/shell_gutter_markers_overlay.dart';
+import '../../shell_integration/shell_integration_controller.dart';
 import '../../theme/shellit_theme.dart';
 import 'multiline_paste_dialog.dart';
 import 'prod_confirmation_dialog.dart';
@@ -56,6 +59,7 @@ class TerminalScreen extends ConsumerStatefulWidget {
 class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   late final Terminal _terminal;
   late final TerminalController _controller;
+  late final ShellIntegrationController _shellIntegration;
   late final FocusNode _focusNode;
   Timer? _blinkTimer;
   bool _cursorVisible = true;
@@ -63,6 +67,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   final StringBuffer _commandLineBuffer = StringBuffer();
   bool _isAwaitingConfirmation = false;
   double _fontSize = 13.0;
+  bool _showGutterMarkers = true;
 
   Timer? _recordTimer;
   int _recordDurationSeconds = 0;
@@ -82,10 +87,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final entry = TerminalSessionRegistry.instance.getOrCreate(widget.session);
     _terminal = entry.terminal;
     _controller = entry.controller;
+    _shellIntegration = entry.shellIntegration;
     _scrollController = ScrollController();
     _focusNode = FocusNode();
     _focusNode.addListener(_handleFocusChange);
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
+    _terminal.addListener(_onTerminalChanged);
 
     if (widget.session.recorder?.isRecording == true) {
       _syncRecordTimer();
@@ -147,8 +154,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     }
   }
 
+  bool _isDisposed = false;
+
   @override
   void dispose() {
+    _isDisposed = true;
+    _terminal.removeListener(_onTerminalChanged);
     HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _recordTimer?.cancel();
     _recordTimer = null;
@@ -157,6 +168,15 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onTerminalChanged() {
+    if (_isDisposed || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isDisposed && mounted) {
+        _shellIntegration.notifyUpdated();
+      }
+    });
   }
 
   void _handleFocusChange() {
@@ -553,8 +573,124 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   void _clearTerminalBuffer() {
     _terminal.buffer.clear();
     _terminal.setCursor(0, 0);
+    _shellIntegration.clear();
     _terminal.notifyListeners();
     _controller.clearSelection();
+  }
+
+  void _scrollToLine(int line) {
+    final lineHeight =
+        _terminalViewKey.currentState?.renderTerminal.lineHeight ??
+            (_fontSize * 1.4);
+    if (_scrollController.hasClients) {
+      final targetPixels = (line * lineHeight).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      _scrollController.animateTo(
+        targetPixels,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void _jumpToPreviousCommand() {
+    final lineHeight =
+        _terminalViewKey.currentState?.renderTerminal.lineHeight ??
+            (_fontSize * 1.4);
+    if (!_scrollController.hasClients || lineHeight <= 0) return;
+
+    final currentOffset = _scrollController.offset;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final blocks = _shellIntegration.blocks;
+    if (blocks.isEmpty) return;
+
+    ShellCommandBlock? targetBlock;
+    for (int i = blocks.length - 1; i >= 0; i--) {
+      final block = blocks[i];
+      final targetPixels =
+          (block.promptLine * lineHeight).clamp(0.0, maxScroll);
+      if (targetPixels < currentOffset - 1.0) {
+        targetBlock = block;
+        break;
+      }
+    }
+
+    if (targetBlock != null) {
+      _scrollToLine(targetBlock.promptLine);
+    } else if (currentOffset > 0.0) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void _jumpToNextCommand() {
+    final lineHeight =
+        _terminalViewKey.currentState?.renderTerminal.lineHeight ??
+            (_fontSize * 1.4);
+    if (!_scrollController.hasClients || lineHeight <= 0) return;
+
+    final currentOffset = _scrollController.offset;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final blocks = _shellIntegration.blocks;
+
+    if (blocks.isEmpty) {
+      if (currentOffset < maxScroll) {
+        _scrollController.animateTo(
+          maxScroll,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      }
+      return;
+    }
+
+    ShellCommandBlock? targetBlock;
+    for (int i = 0; i < blocks.length; i++) {
+      final block = blocks[i];
+      final targetPixels =
+          (block.promptLine * lineHeight).clamp(0.0, maxScroll);
+      if (targetPixels > currentOffset + 1.0) {
+        targetBlock = block;
+        break;
+      }
+    }
+
+    if (targetBlock != null) {
+      _scrollToLine(targetBlock.promptLine);
+    } else if (currentOffset < maxScroll) {
+      _scrollController.animateTo(
+        maxScroll,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  void _copyLastCommandOutput() {
+    final blocks = _shellIntegration.blocks;
+    if (blocks.isEmpty) return;
+    final lastBlock = blocks.last;
+    final output = _shellIntegration.getBlockOutput(_terminal, lastBlock);
+    if (output.isNotEmpty) {
+      _copyToClipboard(
+        output,
+        context.tr(
+          'terminal.command_output_copied_toast',
+          defaultText: 'Command output copied to clipboard',
+        ),
+      );
+    }
+  }
+
+  void _toggleGutterMarkers() {
+    setState(() {
+      _showGutterMarkers = !_showGutterMarkers;
+    });
   }
 
   void _showShortcutsHelp() {
@@ -597,6 +733,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                         defaultText: 'File path copied to clipboard'),
               )
           : null,
+      onCopyLastCommandOutput:
+          _shellIntegration.blocks.isNotEmpty ? _copyLastCommandOutput : null,
       onCopy: _copySelection,
       onPaste: _pasteFromClipboard,
       onSelectAll: _selectAll,
@@ -609,7 +747,13 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (event is KeyUpEvent) return KeyEventResult.ignored;
 
     final isCtrl = HardwareKeyboard.instance.isControlPressed;
-    final isAlt = HardwareKeyboard.instance.isAltPressed;
+    final isAlt = HardwareKeyboard.instance.isAltPressed ||
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.altLeft) ||
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.altRight) ||
+        HardwareKeyboard.instance.logicalKeysPressed
+            .contains(LogicalKeyboardKey.alt);
     final isShift = HardwareKeyboard.instance.isShiftPressed;
     final isMeta = HardwareKeyboard.instance.isMetaPressed;
     final isCmdOrCtrl = isCtrl || isMeta;
@@ -624,6 +768,33 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // 2. Escape: If text is selected, clear selection!
     if (key == LogicalKeyboardKey.escape && _controller.selection != null) {
       _controller.clearSelection();
+      return KeyEventResult.handled;
+    }
+
+    // 2.1 Command Hopping (OSC 133 Shell Integration):
+    // Cmd + Up, Alt + Up, or Ctrl + Shift + Up -> Jump to previous command
+    final isPrevCommandKey = key == LogicalKeyboardKey.arrowUp ||
+        event.physicalKey == PhysicalKeyboardKey.arrowUp ||
+        key == LogicalKeyboardKey.pageUp ||
+        event.physicalKey == PhysicalKeyboardKey.pageUp;
+    final isNextCommandKey = key == LogicalKeyboardKey.arrowDown ||
+        event.physicalKey == PhysicalKeyboardKey.arrowDown ||
+        key == LogicalKeyboardKey.pageDown ||
+        event.physicalKey == PhysicalKeyboardKey.pageDown;
+
+    if (isPrevCommandKey &&
+        ((isMeta && !isCtrl && !isAlt) ||
+            (isAlt && !isCmdOrCtrl) ||
+            (isCmdOrCtrl && isShift))) {
+      _jumpToPreviousCommand();
+      return KeyEventResult.handled;
+    }
+
+    if (isNextCommandKey &&
+        ((isMeta && !isCtrl && !isAlt) ||
+            (isAlt && !isCmdOrCtrl) ||
+            (isCmdOrCtrl && isShift))) {
+      _jumpToNextCommand();
       return KeyEventResult.handled;
     }
 
@@ -804,6 +975,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       final cmd = _commandLineBuffer.toString().trim();
       _commandLineBuffer.clear();
 
+      // Record command start time for duration calculation
+      _shellIntegration.notifyCommandStarted();
+
       // Check if terminal is in Alternate Screen Buffer (nano, vim, less, top)
       final isInTuiApp = _terminal.isUsingAltBuffer;
 
@@ -879,6 +1053,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   void writeFromExternal(String data) {
+    if (data.contains('\r') || data.contains('\n')) {
+      _shellIntegration.notifyCommandStarted();
+    }
     _sendToSession(data);
   }
 
@@ -942,7 +1119,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                         focusNode: _focusNode,
                         autofocus: widget.autoFocus,
                         hardwareKeyboardOnly: isDesktop,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.fromLTRB(22, 12, 12, 12),
                         onKeyEvent: _handleTerminalKeyEvent,
                         mouseCursor: _hoveredLink != null
                             ? SystemMouseCursors.click
@@ -963,6 +1140,52 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     },
                   ),
                 ),
+              ),
+            ),
+
+            // OSC 133 Shell Integration prompt gutter markers (VS Code / Warp style)
+            if (_showGutterMarkers)
+              Positioned(
+                top: showGuardBanner ? 24 : 0,
+                bottom: 0,
+                left: 0,
+                width: 22,
+                child: ShellGutterMarkersOverlay(
+                  controller: _shellIntegration,
+                  terminal: _terminal,
+                  scrollController: _scrollController,
+                  lineHeight: _terminalViewKey
+                          .currentState?.renderTerminal.lineHeight ??
+                      (_fontSize * 1.4),
+                  topPadding: 12.0,
+                  getRenderTerminal: () =>
+                      _terminalViewKey.currentState?.renderTerminal,
+                  onBlockTap: (block) {
+                    final output =
+                        _shellIntegration.getBlockOutput(_terminal, block);
+                    if (output.isNotEmpty) {
+                      _copyToClipboard(
+                        output,
+                        context.tr(
+                          'terminal.command_output_copied_toast',
+                          defaultText: 'Command output copied to clipboard',
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+
+            // OSC 133 Shell Integration command markers on scrollbar
+            Positioned(
+              top: showGuardBanner ? 24 : 0,
+              bottom: 0,
+              right: 0,
+              child: ShellCommandMarkersOverlay(
+                controller: _shellIntegration,
+                terminal: _terminal,
+                onScrollToLine: _scrollToLine,
+                checkScrollback: true,
               ),
             ),
 
@@ -1083,6 +1306,54 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                       Container(width: 1, height: 12, color: Colors.white24),
                       const SizedBox(width: 4),
                     ],
+                    Tooltip(
+                      message: _showGutterMarkers
+                          ? context.tr(
+                              'terminal.markers_hide_tooltip',
+                              defaultText: 'Hide command markers',
+                            )
+                          : context.tr(
+                              'terminal.markers_show_tooltip',
+                              defaultText: 'Show command markers',
+                            ),
+                      child: InkWell(
+                        onTap: _toggleGutterMarkers,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _showGutterMarkers
+                                    ? Icons.bolt
+                                    : Icons.bolt_outlined,
+                                size: 13,
+                                color: _showGutterMarkers
+                                    ? const Color(0xFF00E5FF)
+                                    : Colors.white38,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                context.tr('terminal.markers_btn',
+                                    defaultText: 'Markers'),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: _showGutterMarkers
+                                      ? const Color(0xFF00E5FF)
+                                      : Colors.white38,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(width: 1, height: 12, color: Colors.white24),
+                    const SizedBox(width: 4),
                     Tooltip(
                       message: context.tr('terminal.shortcuts_tooltip',
                           defaultText: 'Keyboard Shortcuts (F1)'),

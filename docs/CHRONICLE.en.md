@@ -2305,6 +2305,142 @@ We fixed the issue symmetrically at both layers — in the native C++ window run
 
 Keyboard layout switching is now completely seamless: every character appears instantaneously on the first keystroke across all language layouts.
 
+---
+
+## Entry 54. A Friendly Nod from Open Source: OSC 133 Shell Integration, Semantic Commands, and Effortless Terminal Navigation
+
+*Timestamp: September 30, 2026, 08:35 — 09:15 (~40 minutes)*
+
+### 1. The Spark: When a Fellow Developer Stars Your Repository
+
+One of the great pleasures of open-source development is when the author of another compelling project drops by your repository and leaves a star. That recently happened with `terminale` (a modern terminal emulator built with Flutter and Rust). I visited the author's profile to explore their work and studied the ergonomics and design decisions of their application with genuine appreciation.
+
+Reviewing adjacent projects with an objective architectural mindset is always enlightening:
+- Shellit already provided an integrated native Model Context Protocol (MCP) server with real tools for AI agents (`shellit_exec_command`, `shellit_read_remote_file`, plus `EnvironmentProtectionService`), alongside workspace session persistence across restarts.
+- However, one area where we lacked native capability was semantic shell integration via the FinalTerm / OSC 133 standard.
+
+In traditional terminals, all console output is a flat, unstructured byte stream. The terminal emulator cannot distinguish where the prompt ended, where user input began, or whether a process finished with exit code 0 or failed with code 127. If a build tool emits 600 lines of compiler errors, the user is forced to scroll manually and drag the mouse across hundreds of lines to grab the relevant output.
+
+We cataloged three high-value ergonomic ideas inspired by this peer exchange in our backlog (OSC 133 integration, interactive file paths leading directly to SFTP, and Quake-style drop-down tray mode) and immediately set to work implementing the OSC 133 protocol.
+
+---
+
+### 2. Under the Hood: OSC 133 and Non-Intrusive Terminal Escapes
+
+The FinalTerm (OSC 133) specification, adopted by modern emulators like iTerm2, VS Code, and Kitty, addresses command awareness without invasive system modifications:
+1. **In-Band Semantic Control Sequences:**
+   Supported shells emit invisible escape sequences alongside their prompt:
+   - `OSC 133 ; A ST` — Prompt start.
+   - `OSC 133 ; B ST` — Command line start.
+   - `OSC 133 ; C ST` — Command output start.
+   - `OSC 133 ; D ; <exit_code> ST` — Command execution finished with an explicit exit status code.
+2. **Zero Remote Footprint:**
+   We strictly avoided requiring background daemons or host-side agents. The protocol operates in-band: if the shell on a remote server or local machine emits OSC 133 sequences, Shellit detects them transparently. For shells without out-of-the-box configuration, we prepared lightweight, in-memory bootstrap scripts (Bash, Zsh, Fish).
+3. **Encrypted PTY Stream Decoding:**
+   Because `dartssh2` encrypts the raw PTY stream, control sequences pass naturally through the SSH connection. The `xterm.dart` terminal core exposes an `onPrivateOSC` callback, allowing us to capture OSC 133 sequences cleanly without polluting display buffers or disrupting ANSI styling.
+
+---
+
+### 3. Architectural Implementation: From State Controllers to Visual Overlays
+
+We designed the solution in distinct modular layers:
+
+1. **Domain Models & Reactive Controller (`ShellIntegrationController`):**
+   Within `packages/terminal_ui`, we introduced a dedicated controller tracking command blocks: start/end line coordinates, execution timestamps, duration calculation, and status flags (`isSuccess`, `isFailure`, `isRunning`). OSC 7 directory reporting is also captured to maintain the current working directory (`cwd`).
+2. **Session Persistence via `TerminalSessionRegistry`:**
+   The controller is bound directly to the persistent `TerminalSession`. When users reorganize matrix splits (2x2), undock panes, or switch tabs, command block history and execution metrics remain preserved.
+3. **Scrollbar Command Markers Overlay (`ShellCommandMarkersOverlay`):**
+   Adjacent to the terminal scrollbar, we introduced a non-intrusive visual indicator track:
+   - Green dots indicate commands that exited with code 0;
+   - Red dots highlight failures (non-zero exit codes);
+   - Cyan pulsing dots mark running commands.
+   Hovering over any dot displays an informative tooltip with the command string, duration, and exit status, while clicking on a dot immediately scrolls the terminal viewport to the command's invocation line.
+4. **Command Hopping & Output Extraction:**
+   - Dedicated keyboard shortcuts (`Cmd + ↑ / ↓`, `Alt + ↑ / ↓`, `Ctrl + Shift + ↑ / ↓`) allow users to jump backward and forward between executed commands.
+   - The right-click context menu now features a *"Copy Last Command Output"* action (`terminal.copyLastCommandOutput`), eliminating repetitive scroll-and-drag mouse selections.
+
+---
+
+### 4. Verification & Summary
+
+- Completed full OSC 133 Shell Integration across both local terminal sessions and remote SSH connections.
+- Authored 15 unit and widget tests in `shell_integration_test.dart` covering parser states, edge cases, hopping navigation, and UI overlay rendering.
+- Expanded the `terminal_ui` test suite to **143** tests (100% pass) and total workspace tests past **285+**.
+- Verified zero static analysis issues across the entire workspace via `flutter analyze`.
+
+The open-source ecosystem thrives on thoughtful peer interaction. Thanks to this friendly connection, Shellit has become significantly more ergonomic and capable for daily terminal workflows.
+
+---
+
+## Entry 55. Fine-Tuning Interactive Markers: Coordinate Precision via RenderTerminal, PowerShell Status Resilience, and Gutter Visibility Toggling
+
+*Timestamp: September 30, 2026, 12:15 — 12:40 (~25 minutes)*
+
+### 1. Motivation: Live Feedback Unveiling Subtle Real-World Edge Cases
+
+Following our initial rollout of interactive command markers (OSC 133), testing in the live desktop runner provided invaluable ergonomic feedback that escaped synthetic unit tests:
+1. **False Success on Failed Commands:** Non-terminating cmdlet errors (`Get-Item NonExistentFile123`) incorrectly presented a green success indicator instead of red.
+2. **Short Buffer Layout Artifacts:** When the terminal contained only a few lines without scrolling, floating scrollbar marker blocks hovered awkwardly along the right border, while a subtle border line appeared in front of the side rail.
+3. **Toolbar Button Interaction:** Clicking the `[ ⚡ Markers ]` button inadvertently pasted raw configuration script into the active shell input prompt, causing multiline `>>` prompts in PowerShell.
+
+### 2. Technical Findings: PowerShell Variable Scoping & Terminal Viewport
+
+Investigation revealed a clear sequence of underlying mechanics:
+- **PowerShell `$?` Variable Scoping:** In the custom prompt function, the assignment `$e = [char]27;` evaluated successfully and immediately reset `$?` to `$True`. Consequently, the subsequent expression `$code = if ($?) { 0 } else { 1 }` unconditionally produced `0`.
+- **Toolbar Action Inversion:** The toolbar action was originally configured to inject the initialization hook into the PTY stream. However, in local sessions, integration is already active at launch. Sending script commands directly into the interactive stream typed them straight into the user's active prompt.
+- **Scrollbar Marker Extent:** Relative line calculations positioned scrollbar markers even when the terminal buffer was completely contained within the viewport and no physical scrollbar existed.
+
+### 3. Engineering Decisions & Refinements
+
+1. **Robust Error Status Capture:** Following the VS Code terminal integration standard, the exit code is captured as the very first expression before any variable assignments: `$c = if (-not $global:?) { 1 } elseif ($LASTEXITCODE) { $LASTEXITCODE } else { 0 };`. Failed commands now reliably trigger a vibrant red marker 🔴.
+2. **Atomic Prompt Concatenation:** Eliminated intermediate `Write-Host` calls. Control sequences are now returned directly within the prompt string, ensuring seamless rendering without stray indicators appearing inside error stack traces.
+3. **Toolbar Button as an Intuitive Visibility Toggle:** The `[ ⚡ Markers ]` button now functions as an interactive toggle (`_showGutterMarkers`), updating the icon and color state without touching terminal input or typing unwanted characters.
+4. **Adaptive Scrollbar Minimap:** The right-side command markers overlay now renders only when the buffer actually exceeds the visible viewport (`lines.length > viewHeight`), leaving short outputs completely clean.
+
+### 4. Summary & Verification
+
+- Erroneous commands render a red dot 🔴, while successful commands render green 🟢.
+- All 145 tests across `terminal_ui` pass cleanly.
+- Visual clutter is eliminated, delivering an intuitive, professional terminal experience.
+
+---
+
+## Entry 56. Step-by-Step Command History Navigation: Physical Viewport Scrolling Between Markers & Execution Duration Tracking
+
+*Timestamp: September 30, 2026, 13:10 (~20 minutes)*
+
+### 1. Motivation: When History Exceeds the Viewport
+
+During real-world workflows with long command outputs (directory listings, test suites, container logs), users frequently navigate through command boundaries using navigation shortcuts (`Alt + ↑` / `Alt + ↓` on Windows/Linux, `⌘ + ↑` / `⌘ + ↓` on macOS, `Ctrl + Shift + ↑` / `Ctrl + Shift + ↓`). In our initial prototype, real-device testing revealed two ergonomic issues:
+1. **Scroll Sticking at the Bottom Margin:** When positioned at the very bottom of the terminal window, pressing `Alt + ↑` failed to jump to earlier commands. The scroll position remained frozen.
+2. **Missing Execution Duration in Marker Tooltips:** The tooltip displayed command exit status (`Success (exit 0)` or `Failed (exit 1)`), but the duration segment `[Xs]` was completely absent.
+
+### 2. Technical Findings: maxScrollExtent Clamping & Prompt Lifecycle
+
+Detailed analysis of the scrolling and shell integration pipeline uncovered two root causes:
+- **Pixel Clamping to maxScrollExtent:** The previous implementation calculated target scroll pixels as `block.promptLine * lineHeight` and clamped the value within `0.0` to `maxScrollExtent`. For command blocks located within the bottom viewport height of the buffer, this clamped target matched the current scroll offset exactly (0-pixel differential). Calling `animateTo` with the current position produced zero movement, trapping subsequent keypresses in an unescapable loop.
+- **Timestamp Lifecycle in Shell Prompts:** Under the OSC 133 specification, command launch is signaled via `OSC 133;B`. However, shell `prompt` functions (both in PowerShell and remote Bash) execute *after* the command finishes. Without intercepting the input carriage return, `startTime` remained `null`, preventing duration calculation (`endTime.difference(startTime)`).
+
+### 3. Engineering Decisions & Refinements
+
+1. **Guaranteed Step-by-Step Viewport Hopping (`_jumpToPreviousCommand` / `_jumpToNextCommand`):**
+   - Refactored the target block selector to find the nearest marker whose rendered pixel position is strictly less than the current viewport offset (`targetPixels < currentOffset - 1.0`). This guarantees that each `Alt + ↑` press shifts the terminal viewport upward to the preceding command boundary.
+   - Symmetric logic applies to downward hopping (`targetPixels > currentOffset + 1.0`), smoothly animating to `maxScrollExtent` once the latest block is passed.
+   - Added support for intuitive alternate shortcuts (`Alt + PageUp` / `Alt + PageDown`), alongside robust `physicalKey` checks to guarantee reliable trigger across all international keyboard layouts.
+2. **Precision Command Duration Recording (`notifyCommandStarted`):**
+   - When the user presses Enter (`\r` or `\n`) or submits a command line, the controller immediately stamps the starting time (`_currentBlock.startTime = DateTime.now()`).
+   - While the command is active, the gutter dot reflects an animated cyan state (`Running...`).
+   - When `OSC 133;D` reports completion, `endTime` is recorded and the tooltip displays formatted duration: `Command #3: Success (exit 0) [1.4s]`.
+
+### 4. Summary & Verification
+
+- Resolved issue `BUG-048`.
+- Step-by-step command navigation (`Alt + ↑` / `Alt + ↓`) reliably jumps between command blocks regardless of output length.
+- Hovering over gutter markers displays precise command execution durations.
+- All 146 tests across `packages/terminal_ui` pass cleanly.
+
+
+
 
 
 
