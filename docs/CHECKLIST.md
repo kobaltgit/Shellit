@@ -721,4 +721,26 @@
   - [x] Создание описания релиза в `docs/releases/v0.8.8.md`.
   - [x] Повышение версии до `0.8.8` в `pubspec.yaml`, `AboutSettingsCard`, `.well-known/mcp.json` и `github-releases.ts`.
 
+---
+
+## Фаза 21: Устранение потери первого символа при переключении раскладки (BUG-045)
+- [x] Исправление системного поведения Windows Runner (`apps/shellit/windows/runner/win32_window.cpp`):
+  - [x] Перехват `WM_SYSCOMMAND` с параметром `SC_KEYMENU` (`return 0`) для блокировки входа Windows в модальный цикл меню по нажатию `Alt`.
+- [x] Приоритизация печатных символов над фантомными модификаторами (`packages/terminal_ui/lib/src/widgets/terminal/terminal_screen.dart`):
+  - [x] Прямая передача печатных символов (руны $\ge 32$ и $\ne 127$) в `_terminal.textInput` при залипшем `isAlt` (после `Alt+Shift`) и `isCtrl` (для не-ASCII символов, таких как кириллица после `Ctrl+Shift`).
+  - [x] Полное сохранение работоспособности управляющих терминальных шорткатов (`Ctrl+C`, `Ctrl+D`, `Ctrl+Z`, `Ctrl+V`, `Ctrl+K`) и европейских символов AltGr (`@`, `€`, `~`).
+  - [x] Сброс флага зажатого Ctrl (`_isCtrlPressed = false`) при наборе текста.
+- [x] Регрессионное тестирование и верификация:
+  - [x] Добавление тестов залипшего Alt (`Alt+Shift` + латиница 'a' и кириллица 'п') в `packages/terminal_ui/test/terminal_screen_test.dart`.
+  - [x] Добавление тестов залипшего Ctrl (`Ctrl+Shift` + кириллица 'ф') в `packages/terminal_ui/test/terminal_screen_test.dart`.
+- [x] Веб-портал и публикация Хроники:
+  - [x] Публикация Акта XI: «Тайна проглоченной клавиши / The Mystery of the Swallowed Key» (`ru` и `en`).
+  - [x] Интерактивные компоненты `<DialogueSnippet />` и `<CodeDiffViewer />` для Акта XI.
+  - [x] Актуализация `StatsHUD.astro`: 45+ разобранных багов, статус `v0.8.9 Alpha Preview`.
+  - [x] 100% успешная сборка веб-сайта (`npm run build`) — 57 страниц без ошибок.
+- [x] Релиз v0.8.9:
+  - [x] Создание описания релиза в `docs/releases/v0.8.9.md`.
+  - [x] Повышение версии до `0.8.9+24` в `pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json` и `github-releases.ts`.
+
+
 

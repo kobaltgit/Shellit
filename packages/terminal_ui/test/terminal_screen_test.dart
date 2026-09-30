@@ -632,6 +632,112 @@ void main() {
       await gesture.removePointer();
       await tester.pump(const Duration(milliseconds: 350));
     });
+
+    testWidgets(
+        'BUG-045: TerminalScreen receives typed characters immediately when Alt modifier is stuck (Alt+Shift layout switch)',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Simulate Alt+Shift layout switch:
+      // In Windows, Alt and Shift go down, but the KeyUp for Alt is consumed by the OS
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+
+      // Verify that Alt is currently marked pressed in HardwareKeyboard
+      expect(HardwareKeyboard.instance.isAltPressed, isTrue);
+
+      // Now type the FIRST letter immediately after layout switch (e.g., 'a')
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyA, character: 'a');
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyA);
+      await tester.pump();
+
+      // Now type a Cyrillic character with Alt still stuck (e.g., 'п')
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyG, character: 'п');
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyG);
+      await tester.pump();
+
+      // Clean up the stuck Alt key
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+      await tester.pump();
+
+      // Verify that both characters reached the session input stream with the first press!
+      final combinedInput =
+          session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
+
+      expect(combinedInput, contains('a'),
+          reason: 'First Latin character after layout switch must not be lost');
+      expect(combinedInput, contains('п'),
+          reason:
+              'First Cyrillic character after layout switch must not be lost');
+    });
+
+    testWidgets(
+        'BUG-045: TerminalScreen receives typed characters immediately when Ctrl modifier is stuck (Ctrl+Shift layout switch)',
+        (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                height: 600,
+                child: TerminalScreen(
+                  session: session,
+                  autoFocus: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Simulate Ctrl+Shift layout switch where KeyUp for Ctrl was not received
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+
+      expect(HardwareKeyboard.instance.isControlPressed, isTrue);
+
+      // Type first letter after switching to Russian (e.g., 'ф')
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.keyA, character: 'ф');
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.keyA);
+      await tester.pump();
+
+      // Clean up Ctrl key
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+
+      final combinedInput =
+          session.receivedInputs.map((bytes) => utf8.decode(bytes)).join();
+
+      expect(combinedInput, contains('ф'),
+          reason:
+              'First Cyrillic character after Ctrl+Shift layout switch must not be lost');
+    });
   });
 }
 

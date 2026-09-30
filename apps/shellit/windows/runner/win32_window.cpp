@@ -216,6 +216,15 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
+
+    case WM_SYSCOMMAND:
+      // Prevent Alt tap from entering Windows system menu modal loop (SC_KEYMENU),
+      // which would otherwise swallow or delay subsequent keyboard character input
+      // after switching keyboard layouts (e.g. Alt+Shift).
+      if (wparam == SC_KEYMENU) {
+        return 0;
+      }
+      break;
   }
 
   return DefWindowProc(window_handle_, message, wparam, lparam);

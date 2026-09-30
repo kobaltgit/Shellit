@@ -720,11 +720,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       return KeyEventResult.handled;
     }
 
-    // Let Ctrl and Alt combinations be handled by xterm shortcuts and keyInput
-    if (isCtrl || isAlt) {
-      return KeyEventResult.ignored;
-    }
-
     // Let special navigation/editing keys be handled by xterm keytab
     final specialKeys = {
       LogicalKeyboardKey.enter,
@@ -747,14 +742,47 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       return KeyEventResult.ignored;
     }
 
-    // Direct emission of printable characters (Latin, Cyrillic, symbols, space)
-    if (event.character != null && event.character!.isNotEmpty) {
-      if (_isReadOnly) {
-        _showReadOnlyWarning();
-        return KeyEventResult.handled;
+    // Direct emission of printable characters (Latin, Cyrillic, symbols, space, AltGr).
+    // Note: When switching keyboard layouts (Alt+Shift, Ctrl+Shift, Win+Space),
+    // the OS may swallow the KeyUpEvent for modifier keys, leaving HardwareKeyboard
+    // with ghost/stuck isAlt or isCtrl flags.
+    //
+    // Rules:
+    // 1. If no modifiers: all printable characters (runes >= 32 and != 127) are text input.
+    // 2. If isAlt && isCtrl: AltGr sequence -> printable characters are text input.
+    // 3. If isAlt && !isCtrl: Alt alone never produces printable characters on Windows,
+    //    so any printable character means Alt was released during Alt+Shift layout switch.
+    // 4. If isCtrl && !isAlt: Genuine Ctrl+letter (e.g. Ctrl+C, Ctrl+D) must be handled by
+    //    xterm keyInput. However, non-ASCII characters (e.g. Cyrillic runes > 127) have no
+    //    terminal control codes and are guaranteed to be text input after Ctrl+Shift switch.
+    final char = event.character;
+    if (char != null && char.isNotEmpty) {
+      final isPrintable = char.runes.every((rune) => rune >= 32 && rune != 127);
+      if (isPrintable) {
+        final isCtrlOnly = isCtrl && !isAlt;
+        final isNonAscii = char.runes.any((rune) => rune > 127);
+        final shouldEmitText = !isCtrlOnly || isNonAscii;
+
+        if (shouldEmitText) {
+          if (_isReadOnly) {
+            _showReadOnlyWarning();
+            return KeyEventResult.handled;
+          }
+          if (_isCtrlPressed && mounted) {
+            setState(() {
+              _isCtrlPressed = false;
+            });
+          }
+          _terminal.textInput(char);
+          return KeyEventResult.handled;
+        }
       }
-      _terminal.textInput(event.character!);
-      return KeyEventResult.handled;
+    }
+
+    // Let genuine Ctrl and Alt combinations (without printable characters, e.g. Ctrl+C,
+    // Ctrl+D, Ctrl+Z, Alt+F) be handled by xterm shortcuts and keyInput
+    if (isCtrl || isAlt) {
+      return KeyEventResult.ignored;
     }
 
     return KeyEventResult.ignored;

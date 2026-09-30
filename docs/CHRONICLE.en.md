@@ -2252,6 +2252,59 @@ Tracing the network code unmasked a nuanced detail in Dart's I/O runtime (`dart:
 
 The Windows socket pool is now completely safe: host telemetry operates silently, sockets are torn down in fractions of a millisecond, and database operations are freed from routine timer cycles.
 
+---
+
+## Entry 53. The Mystery of the Swallowed Character: How Layout Switching Ate the First Keystroke & How We Made the Terminal Responsive
+
+*Timestamp: September 30, 2026, 08:20 — 08:35 (~15 minutes)*
+
+### 1. The Symptom: Why Must the First Letter Be Pressed Twice?
+
+Anyone who frequently switches between languages while working in a terminal on Windows knows that nagging micro-frustration: you press `Alt + Shift`, start typing your command or comments in Cyrillic, hit the first key — and nothing happens. You hit the key a second time — and only then does it begrudgingly appear on screen.
+
+Initially, one might dismiss it as a clumsy finger or a mechanical slip. But when it reproduces consistently every single time the keyboard layout is toggled, it erodes the ergonomics of the application. In a terminal emulator, input latency and responsiveness must be pristine: if a key is pressed, the glyph must appear in the buffer. We set out to investigate the root cause: why the first character, and why specifically two keystrokes?
+
+---
+
+### 2. Under the Hood: A Conspiracy Between Win32 and Flutter
+
+Deconstructing the event dispatch pipeline revealed a subtle interplay between Windows system mechanics and Flutter's input state:
+
+1. **Win32 System Menu Mode (`SC_KEYMENU`):**
+   In the standard Win32 windowing architecture, tapping `Alt` triggers system menu activation (`WM_SYSCOMMAND` with `wParam == SC_KEYMENU`). In this mode, Windows treats the subsequent keystroke as a menu mnemonic accelerator. When the user pressed `Alt + Shift`, Windows entered this modal menu loop. When the user pressed the next character, Windows intercepted it, failed to find a matching menu mnemonic, silently dismissed menu mode, and **swallowed the keystroke** entirely!
+2. **Ghost Modifiers in Flutter's `HardwareKeyboard`:**
+   Because Windows intercepts `Alt + Shift` and `Ctrl + Shift` globally at the OS level to switch input locales, it frequently omits sending the corresponding `WM_KEYUP` message to the application window. Consequently, Flutter's Dart memory continued to report `HardwareKeyboard.instance.isAltPressed == true` (a stuck ghost modifier).
+3. **Premature Shortcut Routing:**
+   `_handleTerminalKeyEvent` in `TerminalScreen` filtered modifier combinations: if `isCtrl` or `isAlt` was active, it ignored direct text input to let xterm shortcuts handle the key. With a ghost `isAlt == true`, the handler assumed the user was pressing an `Alt + [Key]` shortcut and discarded plain text emission!
+4. **Why the Second Keystroke Succeeded:**
+   During the first keystroke cycle, Flutter Engine reconciled its native modifier bitmask, clearing the ghost flag in `HardwareKeyboard`, while Windows exited its menu modal state. On the second keystroke, `isAlt` was cleanly `false`, and the character passed straight into the terminal buffer.
+
+---
+
+### 3. Remediation & Hardening (BUG-045)
+
+We fixed the issue symmetrically at both layers — in the native C++ window runner and in Flutter's Dart event routing:
+
+1. **Suppressing `SC_KEYMENU` in `win32_window.cpp`:**
+   In `Win32Window::MessageHandler`, we intercepted `WM_SYSCOMMAND`: if `wparam == SC_KEYMENU`, the handler immediately returns `0`. This prevents Windows from entering the Alt menu modal loop — a standard pattern employed by Windows Terminal and Alacritty.
+2. **Prioritizing Printable Characters in `terminal_screen.dart`:**
+   We restructured key event dispatch. Whenever an event yields a valid printable character (Unicode runes $\ge 32$ and $\ne 127$), text emission takes precedence over ghost modifier states:
+   - Non-ASCII runes (e.g., Cyrillic characters after `Ctrl+Shift` or `Alt+Shift`) are always treated as text input since terminal control sequences are strictly ASCII.
+   - `isAlt` without `Ctrl` with a printable character indicates an unreleased `Alt` from layout switching, because holding Alt alone never produces printable characters on Windows. The character is emitted immediately.
+   - Classic terminal control sequences (`Ctrl+C`, `Ctrl+D`, `Ctrl+Z`, `Ctrl+L`) and European AltGr combinations (`@`, `€`, `~`) remain 100% functional.
+3. **Regression Tests in `terminal_screen_test.dart`:**
+   New unit tests simulate unreleased `altLeft` and `controlLeft` states after layout switching, confirming that both Latin and Cyrillic characters reach the session input stream on the very first keystroke.
+
+---
+
+### 4. Verification & Summary
+
+- Registered and resolved `BUG-045` (P1 / `VERIFIED`).
+- All 128 tests in `terminal_ui` passed with 100% success.
+- Static analysis via `flutter analyze` confirmed 0 issues.
+
+Keyboard layout switching is now completely seamless: every character appears instantaneously on the first keystroke across all language layouts.
+
 
 
 

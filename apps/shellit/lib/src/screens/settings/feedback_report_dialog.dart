@@ -42,7 +42,7 @@ class _FeedbackReportDialogState extends State<FeedbackReportDialog> {
   bool _isSuccess = false;
   String? _errorMessage;
 
-  String _appVersion = '0.8.4';
+  String _appVersion = '0.8.9';
 
   @override
   void initState() {

@@ -338,6 +338,70 @@ try {
       </div>
     )}
 
+    <!-- Dynamic Interactive Widgets for Act 11 (Keyboard Layout & Swallowed Key) -->
+    {act.data.actNumber === 11 && (
+      <div class="space-y-6 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Incident Transcript: The Mystery of the Swallowed Key"
+          timestamp="September 30, 2026, 08:02 — 08:18"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'Tell me this: when switching language layout while working in the terminal, the first character typed is always lost — you have to press the first letter twice for it to appear in the terminal. Why is that? Analyze and report back.'
+            },
+            {
+              speaker: 'agent',
+              text: 'Investigation revealed a dual root cause: Win32 WM_SYSCOMMAND(SC_KEYMENU) entering a modal menu loop on Alt release, compounded by Flutter HardwareKeyboard retaining ghost modifier flags (isAlt/isCtrl) when OS intercepts hotkeys. The terminal event handler was dropping printable runes if ghost modifiers were active.'
+            },
+            {
+              speaker: 'architect',
+              text: '/plan'
+            },
+            {
+              speaker: 'agent',
+              text: 'Plan ready: 1) Block SC_KEYMENU in win32_window.cpp. 2) Prioritize printable runes (rune >= 32 && rune != 127) over ghost modifiers in TerminalScreen while preserving control shortcuts (Ctrl+C, Ctrl+D) and AltGr. 3) Add regression unit tests.'
+            },
+            {
+              speaker: 'architect',
+              text: 'implement it'
+            },
+            {
+              speaker: 'architect',
+              text: 'great! it works.'
+            }
+          ]}
+        />
+
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-045: Eliminating Lost Keystrokes — Blocking SC_KEYMENU and Prioritizing Printable Runes"
+          bugId="BUG-045"
+          vulnerableTitle="Character Swallowed (Before)"
+          fixedTitle="Instant Response (After)"
+          vulnerableCode={`// win32_window.cpp: Alt activates system menu
+// SC_KEYMENU was not intercepted -> keystroke consumed!
+return DefWindowProc(window_handle_, message, wparam, lparam);
+
+// terminal_screen.dart:
+if (isCtrl || isAlt) {
+  return KeyEventResult.ignored; // Ghost Alt dropped input!
+}`}
+          fixedCode={`// win32_window.cpp: Block modal Alt menu loop
+case WM_SYSCOMMAND:
+  if (wparam == SC_KEYMENU) return 0;
+  break;
+
+// terminal_screen.dart: Prioritize printable characters
+if (char != null && isPrintable) {
+  _terminal.textInput(char); // Immediate delivery of first letter!
+  return KeyEventResult.handled;
+}`}
+          explanation="Intercepting SC_KEYMENU in the window procedure stops Windows from trapping keystrokes for menu hotkeys, while prioritizing printable Unicode runes over ghost modifier flags ensures the first character after a layout toggle reaches the terminal immediately."
+        />
+      </div>
+    )}
+
     <!-- Main Markdown Body (Pagefind Indexed) -->
     <article data-pagefind-body class="chronicle-article max-w-none">
       <span data-pagefind-filter="type:Chronicle" class="hidden">Chronicle</span>

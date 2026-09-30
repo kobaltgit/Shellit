@@ -338,6 +338,66 @@ try {
       </div>
     )}
 
+    <!-- Dynamic Interactive Widgets for Act 11 (Keyboard Layout Engine & BUG-045) -->
+    {act.data.actNumber === 11 && (
+      <div class="space-y-8 my-8">
+        <DialogueSnippet
+          lang={lang}
+          title="Стенограмма расследования: Тайна проглоченной буквы и двойного нажатия"
+          timestamp="30 сентября 2026, 07:54 — 08:17"
+          messages={[
+            {
+              speaker: 'architect',
+              text: 'скажи мне вот что, при переключении языка при работе в терминале, всегда теряется первый символ при наборе текста, то есть первую букву надо нажать два раза, чтобы после переключения языка она отобразилась в терминале. В чем причина. Пока просто проведи анализ и дай отчет'
+            },
+            {
+              speaker: 'agent',
+              text: 'Диагностика вскрыла тройную причину: 1) Win32 DefWindowProc переводит окно в режим меню по Alt (SC_KEYMENU), поглощая следующее нажатие; 2) При потреблении хоткея переключения языка Windows не отправляет KeyUp для Alt/Ctrl, и HardwareKeyboard сохраняет фантомный флаг модификатора; 3) Терминальный обработчик преждевременно отбрасывал печатные символы из-за проверки isCtrl || isAlt.'
+            },
+            {
+              speaker: 'architect',
+              text: '/plan'
+            },
+            {
+              speaker: 'architect',
+              text: 'внедряй'
+            },
+            {
+              speaker: 'architect',
+              text: 'прекрасно! работает.'
+            }
+          ]}
+        />
+
+        <CodeDiffViewer
+          lang={lang}
+          title="BUG-045: Устранение потери первого символа — блокировка SC_KEYMENU и приоритет печатных рун"
+          bugId="BUG-045"
+          vulnerableTitle="Поглощение символа (Было)"
+          fixedTitle="Мгновенный отклик (Стало)"
+          vulnerableCode={`// win32_window.cpp: Alt активирует меню
+// SC_KEYMENU не перехватывался -> поглощение клавиши!
+return DefWindowProc(window_handle_, message, wparam, lparam);
+
+// terminal_screen.dart:
+if (isCtrl || isAlt) {
+  return KeyEventResult.ignored; // Фантомный Alt блокирует печать!
+}`}
+          fixedCode={`// win32_window.cpp: Блокировка модального меню Alt
+case WM_SYSCOMMAND:
+  if (wparam == SC_KEYMENU) return 0;
+  break;
+
+// terminal_screen.dart: Приоритет печатных символов
+if (char != null && isPrintable) {
+  _terminal.textInput(char); // Мгновенный вывод первой буквы!
+  return KeyEventResult.handled;
+}`}
+          explanation="Блокировка SC_KEYMENU в оконной процедуре защищает от перехвата клавиши самой Windows, а приоритизация печатных Unicode-рун над фантомными модификаторами гарантирует моментальную доставку первой буквы в сессию терминала."
+        />
+      </div>
+    )}
+
     <!-- Main Markdown Body (Pagefind Indexed) -->
     <article data-pagefind-body class="chronicle-article max-w-none">
       <span data-pagefind-filter="type:Хроника" class="hidden">Хроника</span>
