@@ -1,6 +1,6 @@
 {
-  "version": "1.0.0",
-  "lastUpdated": "2026-09-24",
+  "version": "1.1.0",
+  "lastUpdated": "2026-09-30",
   "columns": [
     {
       "status": "shipped",
@@ -29,145 +29,250 @@
   ],
   "items": [
     {
-      "id": "feat-matrix-splits",
+      "id": "feat-shell-integration",
       "status": "shipped",
       "tag": "Terminal",
       "order": 1,
+      "votes": 184,
+      "title": {
+        "en": "OSC 133 Shell Integration & Command Blocks",
+        "ru": "Семантическая интеграция шелла OSC 133"
+      },
+      "desc": {
+        "en": "Command block boundaries, success/error scrollbar markers, fast command hopping (Alt+Up/Down), and clean output extraction without prompt noise.",
+        "ru": "Разметка блоков команд, маркеры успехов/ошибок на скроллбаре, прыжки по командам (Alt+Вверх/Вниз) и копирование чистого вывода без промпта."
+      }
+    },
+    {
+      "id": "feat-tofu-randomart",
+      "status": "shipped",
+      "tag": "Security",
+      "order": 2,
+      "votes": 145,
+      "title": {
+        "en": "SSH TOFU & Drunken Bishop Randomart",
+        "ru": "SSH TOFU & Визуальный Randomart"
+      },
+      "desc": {
+        "en": "Strict Trust-On-First-Use verification, encrypted known_hosts storage, OpenSSH Drunken Bishop visual fingerprints, and instant MitM attack prevention.",
+        "ru": "Строгая верификация первого подключения (TOFU), зашифрованная база known_hosts, ASCII Randomart (Drunken Bishop) и пресечение атак перехвата MitM."
+      }
+    },
+    {
+      "id": "feat-matrix-splits",
+      "status": "shipped",
+      "tag": "Terminal",
+      "order": 3,
       "votes": 128,
       "title": {
         "en": "2x2 Matrix Splits & Broadcast",
         "ru": "Матричный сплит 2x2 & Broadcast"
       },
       "desc": {
-        "en": "Split window into 4 independent panes with concurrent command execution.",
-        "ru": "Разделение окна на 4 независимые панели с одновременным вводом команд."
+        "en": "Split window into 4 independent panes with concurrent command execution and drag-and-drop tab docking.",
+        "ru": "Разделение окна на 4 независимые панели с одновременным вводом команд и Drag-and-Drop вкладок."
       }
     },
     {
       "id": "feat-prod-guard",
       "status": "shipped",
       "tag": "Security",
-      "order": 2,
+      "order": 4,
       "votes": 95,
       "title": {
         "en": "Prod Guard & Contextual Security",
         "ru": "Prod Guard & Контекстная безопасность"
       },
       "desc": {
-        "en": "Environment color coding and interception of destructive commands (rm -rf, DROP).",
-        "ru": "Цветовая маркировка сред и перехват деструктивных команд (rm -rf, DROP)."
+        "en": "Environment color coding and interception of destructive commands (rm -rf, DROP, mkfs, dd).",
+        "ru": "Цветовая маркировка сред и перехват деструктивных команд (rm -rf, DROP, mkfs, dd)."
+      }
+    },
+    {
+      "id": "feat-sftp-pro",
+      "status": "shipped",
+      "tag": "SFTP",
+      "order": 5,
+      "votes": 138,
+      "title": {
+        "en": "Dual-Pane SFTP Pro Suite",
+        "ru": "Двухпанельный SFTP Pro Suite"
+      },
+      "desc": {
+        "en": "Dual-pane file manager with recursive folder transfers, smart conflict resolution, batch selection (Ctrl/Shift), and built-in text editor.",
+        "ru": "Двухпанельный менеджер с рекурсивным трансфером папок, разрешением конфликтов, мультивыбором (Ctrl/Shift) и встроенным редактором файлов."
+      }
+    },
+    {
+      "id": "feat-keychain-pro",
+      "status": "shipped",
+      "tag": "Security",
+      "order": 6,
+      "votes": 119,
+      "title": {
+        "en": "Keychain Pro & 1-Click ssh-copy-id",
+        "ru": "Keychain Pro & 1-Click ssh-copy-id"
+      },
+      "desc": {
+        "en": "Built-in Ed25519/RSA key generator, automatic ~/.ssh discovery, and one-click public key deployment to remote servers.",
+        "ru": "Встроенный генератор пар ключей Ed25519/RSA, автопоиск в ~/.ssh и деплой публичных ключей на сервер в 1 клик."
       }
     },
     {
       "id": "feat-sync-server",
       "status": "shipped",
       "tag": "Sync",
-      "order": 3,
+      "order": 7,
       "votes": 142,
       "title": {
         "en": "Self-Hosted E2EE Sync Server",
         "ru": "Self-Hosted E2EE Sync Server"
       },
       "desc": {
-        "en": "Autonomous sync server built with Dart/SQLite with <20 MB RAM footprint.",
-        "ru": "Автономный сервер синхронизации на Dart/SQLite с потреблением <20 МБ RAM."
+        "en": "Autonomous sync server built with Dart/SQLite with <20 MB RAM footprint and zero-knowledge encryption.",
+        "ru": "Автономный сервер синхронизации на Dart/SQLite с потреблением <20 МБ RAM и сквозным E2EE шифрованием."
       }
     },
     {
       "id": "feat-zk-vault",
       "status": "shipped",
       "tag": "Security",
-      "order": 4,
+      "order": 8,
       "votes": 88,
       "title": {
         "en": "Zero-Knowledge Vault (Argon2id)",
         "ru": "Zero-Knowledge Vault (Argon2id)"
       },
       "desc": {
-        "en": "Client-side encryption of passwords, keys, and settings with in-memory zeroization.",
-        "ru": "Локальное шифрование паролей, ключей и настроек с защитой в памяти."
+        "en": "Client-side SQLCipher database with Argon2id key derivation, in-memory zeroization, and auto-lock security.",
+        "ru": "Локальная база SQLCipher с деривацией ключа Argon2id, занулением памяти (zeroize) и автоблокировкой сейфа."
       }
     },
     {
       "id": "feat-mcp-server",
       "status": "shipped",
       "tag": "AI & MCP",
-      "order": 5,
+      "order": 9,
       "votes": 176,
       "title": {
         "en": "Native Model Context Protocol (MCP)",
         "ru": "Нативный Model Context Protocol (MCP)"
       },
       "desc": {
-        "en": "Embedded tool server for Claude Desktop, Cursor, and Antigravity.",
-        "ru": "Встроенный сервер инструментов для Claude Desktop, Cursor и Antigravity."
+        "en": "Embedded tool server exposing safe SSH execution and telemetry for Claude Desktop, Cursor, and Antigravity.",
+        "ru": "Встроенный сервер инструментов для Claude Desktop, Cursor и Antigravity с безопасным доступом к серверам."
       }
     },
     {
       "id": "feat-gemini-byok",
       "status": "shipped",
       "tag": "AI & MCP",
-      "order": 6,
+      "order": 10,
       "votes": 110,
       "title": {
         "en": "Gemini AI Snippets Chat (BYOK)",
         "ru": "Gemini AI Snippets Chat (BYOK)"
       },
       "desc": {
-        "en": "Shell command generator using Bring Your Own Key via Google AI Studio.",
-        "ru": "Генератор shell-команд по модели Bring Your Own Key через Google AI Studio."
+        "en": "Shell command generator using Bring Your Own Key via Google AI Studio with structured JSON execution.",
+        "ru": "Генератор shell-команд по модели Bring Your Own Key через Google AI Studio со структурированным запуском."
+      }
+    },
+    {
+      "id": "feat-paste-defense",
+      "status": "shipped",
+      "tag": "Terminal",
+      "order": 11,
+      "votes": 98,
+      "title": {
+        "en": "Multiline Paste Defense & Clickable Links",
+        "ru": "Защита от вставки скриптов и кликабельные ссылки"
+      },
+      "desc": {
+        "en": "Interactive preview dialog for multiline clipboard pastes to prevent accidental execution, plus clickable URLs and file paths.",
+        "ru": "Интерактивный диалог подтверждения многострочной вставки для предотвращения случайного запуска, плюс кликабельные URL и пути."
+      }
+    },
+    {
+      "id": "feat-color-themes",
+      "status": "shipped",
+      "tag": "UI",
+      "order": 12,
+      "votes": 114,
+      "title": {
+        "en": "Custom Themes (Obsidian, Dracula, Nord, OLED)",
+        "ru": "Палитра тем (Obsidian, Dracula, Nord, OLED)"
+      },
+      "desc": {
+        "en": "Built-in rich color schemes with TrueColor terminal rendering and contrast optimization.",
+        "ru": "Встроенные выверенные цветовые схемы с поддержкой TrueColor и высокой контрастностью."
+      }
+    },
+    {
+      "id": "feat-in-app-feedback",
+      "status": "shipped",
+      "tag": "UX & Cloud",
+      "order": 13,
+      "votes": 72,
+      "title": {
+        "en": "In-App Feedback & Bug Reporter",
+        "ru": "Встроенный репортер отзывов и багов"
+      },
+      "desc": {
+        "en": "Direct feedback and bug report submission from the application into the shellit.top portal control plane.",
+        "ru": "Отправка отзывов и сообщений об ошибках прямо из приложения в панель управления на портале shellit.top."
       }
     },
     {
       "id": "feat-rtt-ping",
       "status": "shipped",
       "tag": "Terminal",
-      "order": 7,
+      "order": 14,
       "votes": 64,
       "title": {
         "en": "Live Host RTT Ping",
         "ru": "Живой RTT-пинг хостов"
       },
       "desc": {
-        "en": "Continuous latency polling with real-time status indicators on cards.",
-        "ru": "Непрерывный замер задержки серверов с отображением статуса на карточках."
-      }
-    },
-    {
-      "id": "feat-sftp-tunnels",
-      "status": "shipped",
-      "tag": "SFTP",
-      "order": 8,
-      "votes": 83,
-      "title": {
-        "en": "Dual-Pane SFTP & Port Forwarding",
-        "ru": "Двухпанельный SFTP & Port Forwarding"
-      },
-      "desc": {
-        "en": "Remote file management and visual SSH tunnel configuration.",
-        "ru": "Управление удаленными файлами и визуальная настройка SSH-туннелей."
+        "en": "Continuous latency polling with real-time color dots (<50ms, <200ms, offline) on server cards.",
+        "ru": "Непрерывный замер задержки серверов с цветовой индикацией (<50ms, <200ms, оффлайн) на карточках."
       }
     },
     {
       "id": "feat-startup-snippets",
       "status": "in-progress",
       "tag": "Terminal",
-      "order": 9,
+      "order": 15,
       "votes": 135,
       "title": {
-        "en": "Startup Snippets (Auto-Run)",
+        "en": "Startup Snippets (Auto-Run on Connect)",
         "ru": "Startup-сниппеты (автовыполнение)"
       },
       "desc": {
-        "en": "Automatic execution of scripts and aliases immediately upon server connection.",
-        "ru": "Автоматический запуск набора скриптов и алиасов сразу после подключения к серверу."
+        "en": "Automatic execution of selected commands (tmux attach, cd /var/www) immediately after SSH handshake.",
+        "ru": "Автоматический запуск выбранного набора команд (tmux a, cd /var/www) сразу после подключения по SSH."
+      }
+    },
+    {
+      "id": "feat-portable-mode",
+      "status": "in-progress",
+      "tag": "Core",
+      "order": 16,
+      "votes": 104,
+      "title": {
+        "en": "Desktop Portable Mode",
+        "ru": "Портативный режим (Portable Mode)"
+      },
+      "desc": {
+        "en": "Run directly from a USB stick: store encrypted SQLCipher DB and configs strictly adjacent to the executable without touching %APPDATA%.",
+        "ru": "Запуск с флешки: хранение зашифрованной базы SQLCipher и конфигов строго рядом с .exe без следов в %APPDATA%."
       }
     },
     {
       "id": "feat-winget-scoop",
       "status": "in-progress",
       "tag": "Deploy",
-      "order": 10,
+      "order": 17,
       "votes": 92,
       "title": {
         "en": "Winget & Scoop Package Publishing",
@@ -182,7 +287,7 @@
       "id": "feat-history-sync",
       "status": "in-progress",
       "tag": "Sync",
-      "order": 11,
+      "order": 18,
       "votes": 78,
       "title": {
         "en": "Terminal History Sync",
@@ -194,25 +299,55 @@
       }
     },
     {
-      "id": "feat-color-themes",
-      "status": "in-progress",
-      "tag": "UI",
-      "order": 12,
-      "votes": 114,
+      "id": "feat-quake-mode",
+      "status": "planned",
+      "tag": "UX & Desktop",
+      "order": 19,
+      "votes": 165,
       "title": {
-        "en": "Custom Color Themes",
-        "ru": "Кастомные цветовые темы"
+        "en": "Desktop Quake Drop-Down Mode",
+        "ru": "Quake Drop-Down режим"
       },
       "desc": {
-        "en": "Support for custom UI styling themes via CSS/JSON configurations.",
-        "ru": "Поддержка пользовательских тем оформления через CSS/JSON конфиги."
+        "en": "Drop-down terminal summoned by a global hotkey (Ctrl+~ / F12) smoothly sliding from the top over all OS windows.",
+        "ru": "Выпадающий терминал по глобальной горячей клавише (Ctrl+~ / F12), плавно выезжающий сверху поверх всех окон ОС."
+      }
+    },
+    {
+      "id": "feat-sftp-quick-open",
+      "status": "planned",
+      "tag": "SFTP & Terminal",
+      "order": 20,
+      "votes": 148,
+      "title": {
+        "en": "Remote Paths (`file:line:col`) to SFTP",
+        "ru": "Переход из логов терминала в SFTP-редактор"
+      },
+      "desc": {
+        "en": "Ctrl+Click on file paths in stacktraces and logs (/var/log/..., app.py:42) to instantly open the remote file in SFTP editor on that exact line.",
+        "ru": "Ctrl+Click по путям файлов в стектрейсах и логах (/var/log/..., app.py:42) с мгновенным открытием удаленного файла в редакторе SFTP на нужной строке."
+      }
+    },
+    {
+      "id": "feat-local-llm",
+      "status": "planned",
+      "tag": "AI",
+      "order": 21,
+      "votes": 156,
+      "title": {
+        "en": "Local LLM Support (Ollama / LM Studio)",
+        "ru": "Поддержка локальных нейросетей (Ollama / LM Studio)"
+      },
+      "desc": {
+        "en": "Offline AI snippet generation and error analysis via local OpenAI-compatible endpoints without external cloud requests.",
+        "ru": "Офлайн-генерация команд и разбор ошибок через локальный OpenAI-совместимый API (Qwen, Llama 3, DeepSeek) без интернета."
       }
     },
     {
       "id": "feat-jump-hosts",
       "status": "planned",
       "tag": "Network",
-      "order": 13,
+      "order": 22,
       "votes": 160,
       "title": {
         "en": "Jump Hosts & ProxyJump Graph",
@@ -224,10 +359,70 @@
       }
     },
     {
+      "id": "feat-cloud-discovery",
+      "status": "planned",
+      "tag": "Cloud",
+      "order": 23,
+      "votes": 138,
+      "title": {
+        "en": "Cloud Discovery & Auto-Sync",
+        "ru": "Облачное обнаружение и автосинхронизация"
+      },
+      "desc": {
+        "en": "1-Click import and smart-folders for cloud servers via read-only APIs of Hetzner, Timeweb, Selectel, DigitalOcean, and AWS.",
+        "ru": "1-Click импорт и смарт-папки серверов по Read-Only API облачных провайдеров (Hetzner, Timeweb, Selectel, DigitalOcean, AWS)."
+      }
+    },
+    {
+      "id": "feat-db-explorer",
+      "status": "planned",
+      "tag": "Database",
+      "order": 24,
+      "votes": 129,
+      "title": {
+        "en": "Zero-Config DB & Redis Explorer",
+        "ru": "Встроенный GUI для PostgreSQL, Redis и SQLite"
+      },
+      "desc": {
+        "en": "Lightweight built-in browser for PostgreSQL, Redis, MySQL, and SQLite over automatic SSH tunnels without heavy external tools.",
+        "ru": "Встроенный легковесный просмотрщик PostgreSQL, Redis, MySQL и SQLite через авто-туннели без сторонних DBeaver."
+      }
+    },
+    {
+      "id": "feat-clipboard-clear",
+      "status": "planned",
+      "tag": "Security",
+      "order": 25,
+      "votes": 84,
+      "title": {
+        "en": "Clipboard Auto-Clear",
+        "ru": "Автоочистка буфера обмена"
+      },
+      "desc": {
+        "en": "Automatically erase copied passwords and private keys from the operating system clipboard after 30 seconds.",
+        "ru": "Автоматическое стирание скопированных паролей и ключей из буфера обмена ОС через 30 секунд."
+      }
+    },
+    {
+      "id": "feat-web-client",
+      "status": "planned",
+      "tag": "Web",
+      "order": 26,
+      "votes": 122,
+      "title": {
+        "en": "Web Client (Self-Hosted)",
+        "ru": "Web-версия клиента (Self-Hosted)"
+      },
+      "desc": {
+        "en": "Connect to your servers via a secure browser-based interface.",
+        "ru": "Возможность подключиться к своим серверам через защищенный браузерный интерфейс."
+      }
+    },
+    {
       "id": "feat-prometheus",
       "status": "planned",
       "tag": "DevOps",
-      "order": 14,
+      "order": 27,
       "votes": 55,
       "title": {
         "en": "Prometheus Metrics Exporter",
@@ -242,30 +437,15 @@
       "id": "feat-mosh",
       "status": "planned",
       "tag": "Terminal",
-      "order": 15,
+      "order": 28,
       "votes": 89,
       "title": {
         "en": "Mosh Protocol Support",
         "ru": "Поддержка сессий Mosh"
       },
       "desc": {
-        "en": "Drop-tolerant mobile connectivity for high-latency or unstable networks.",
-        "ru": "Устойчивое к обрывам связи мобильное подключение для нестабильных сетей."
-      }
-    },
-    {
-      "id": "feat-web-client",
-      "status": "planned",
-      "tag": "Web",
-      "order": 16,
-      "votes": 122,
-      "title": {
-        "en": "Web Client (Self-Hosted)",
-        "ru": "Web-версия клиента (Self-Hosted)"
-      },
-      "desc": {
-        "en": "Connect to your servers via a secure browser-based interface.",
-        "ru": "Возможность подключиться к своим серверам через защищенный браузерный интерфейс."
+        "en": "Drop-tolerant mobile connectivity for high-latency or unstable networks (post-1.0).",
+        "ru": "Устойчивое к обрывам связи мобильное подключение для нестабильных сетей (после 1.0)."
       }
     }
   ]
