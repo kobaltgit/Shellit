@@ -414,6 +414,62 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
     }
   }
 
+  /// Spawns and attaches a local pseudo-terminal session for an existing tab.
+  Future<void> launchLocalTerminalForTab({
+    required String tabId,
+    LocalShellProfile? profile,
+    TerminalDimensions initialDimensions =
+        const TerminalDimensions(cols: 80, rows: 24),
+    String? customWorkingDirectory,
+  }) async {
+    final tabIndex = state.tabs.indexWhere((t) => t.id == tabId);
+    if (tabIndex == -1) return;
+    final existingTab = state.tabs[tabIndex];
+    final effectiveProfile = profile ?? existingTab.localShellProfile;
+    if (effectiveProfile == null) return;
+
+    setTabConnecting(
+      tabId: tabId,
+      initialStatus: 'Launching ${effectiveProfile.name}...',
+    );
+
+    try {
+      final session = await LocalTerminalSession.start(
+        profile: effectiveProfile,
+        initialDimensions: initialDimensions,
+        customWorkingDirectory: customWorkingDirectory,
+        onExit: (exitCode) {
+          if (exitCode == 0) {
+            closeTab(tabId);
+          } else {
+            setTabConnectionError(
+              tabId: tabId,
+              errorMessage: 'Process exited with code $exitCode',
+            );
+          }
+        },
+      );
+
+      final updatedTab = existingTab.copyWith(
+        terminalSession: session,
+        splitSessions: [session],
+        localShellProfile: effectiveProfile,
+        isConnecting: false,
+        clearConnectionStatus: true,
+        clearConnectionError: true,
+      );
+
+      final updatedTabs = [...state.tabs];
+      updatedTabs[tabIndex] = updatedTab;
+      state = state.copyWith(tabs: updatedTabs);
+    } catch (e) {
+      setTabConnectionError(
+        tabId: tabId,
+        errorMessage: 'Failed to launch ${effectiveProfile.name}: $e',
+      );
+    }
+  }
+
   String openSplitTab({
     required HostEntity host,
     required List<ITerminalSession> sessions,
@@ -847,6 +903,8 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
   void restoreWorkspaceTabs(
     List<WorkspaceTabState> savedTabs,
     List<HostEntity> allHosts, {
+    List<LocalShellProfile>? localShellProfiles,
+    LocalShellProfile? defaultShellProfile,
     bool autoReconnect = false,
   }) {
     if (savedTabs.isEmpty) return;
@@ -864,12 +922,22 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
       }
 
       TabType tabType = TabType.terminal;
+      LocalShellProfile? shellProfile;
       if (saved.type == 'sftp') {
         tabType = TabType.sftp;
       } else if (saved.type == 'splitTerminal') {
         tabType = TabType.splitTerminal;
       } else if (saved.type == 'localTerminal') {
         tabType = TabType.localTerminal;
+        if (saved.localShellId != null && localShellProfiles != null) {
+          for (final p in localShellProfiles) {
+            if (p.id == saved.localShellId) {
+              shellProfile = p;
+              break;
+            }
+          }
+        }
+        shellProfile ??= defaultShellProfile ?? localShellProfiles?.firstOrNull;
       }
 
       SplitLayoutType layoutType = SplitLayoutType.single;
@@ -892,6 +960,7 @@ class SessionManagerNotifier extends StateNotifier<SessionManagerState> {
         splitLayout: layoutType,
         isConnecting: autoReconnect,
         connectionStatus: autoReconnect ? 'Connecting...' : null,
+        localShellProfile: shellProfile,
       );
       restored.add(restoredTab);
     }

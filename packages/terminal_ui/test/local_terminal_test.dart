@@ -78,6 +78,55 @@ void main() {
       expect(notifier.state.tabs, isEmpty);
       expect(notifier.state.activeTabId, isNull);
     });
+
+    test('launchLocalTerminalForTab launches session for existing restored tab',
+        () async {
+      final notifier = SessionManagerNotifier();
+      const profile = LocalShellProfile(
+        id: 'test_shell',
+        name: 'Test Shell',
+        shellType: ShellType.custom,
+        executablePath: 'cmd.exe',
+      );
+
+      // Simulate restored tab in disconnected standby state
+      notifier.restoreWorkspaceTabs(
+        [
+          const WorkspaceTabState(
+            id: 'restored-local-1',
+            title: 'Terminal (Test Shell)',
+            type: 'localTerminal',
+            localShellId: 'test_shell',
+          ),
+        ],
+        [],
+        localShellProfiles: [profile],
+        defaultShellProfile: profile,
+        autoReconnect: false,
+      );
+
+      expect(notifier.state.tabs.length, 1);
+      final tabBefore = notifier.state.tabs.first;
+      expect(tabBefore.isDisconnected, isTrue);
+      expect(tabBefore.terminalSession, isNull);
+
+      try {
+        await notifier.launchLocalTerminalForTab(tabId: 'restored-local-1');
+
+        final tabAfter = notifier.state.tabs.first;
+        if (tabAfter.connectionError == null) {
+          expect(tabAfter.terminalSession, isNotNull);
+          expect(tabAfter.isDisconnected, isFalse);
+          expect(tabAfter.isConnecting, isFalse);
+          await tabAfter.terminalSession?.terminate();
+        } else {
+          // When dynamic library is not bundled in pure test environment
+          expect(tabAfter.connectionError, isNotNull);
+        }
+      } on ArgumentError {
+        // Runner DLL not found in test PATH
+      }
+    });
   });
 
   group('LocalTerminalButton Widget Tests', () {

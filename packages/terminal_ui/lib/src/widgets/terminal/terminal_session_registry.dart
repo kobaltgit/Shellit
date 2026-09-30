@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../shell_integration/shell_integration_bootstrap.dart';
 import '../../shell_integration/shell_integration_controller.dart';
 
 /// Entry holding the live [Terminal], [TerminalController], and stream subscription
@@ -13,12 +15,14 @@ class TerminalSessionEntry {
   final TerminalController controller;
   final StreamSubscription<dynamic> outputSubscription;
   final ShellIntegrationController shellIntegration;
+  bool isShellIntegrationInjected;
 
   TerminalSessionEntry({
     required this.terminal,
     required this.controller,
     required this.outputSubscription,
     required this.shellIntegration,
+    this.isShellIntegrationInjected = false,
   });
 
   void dispose() {
@@ -35,6 +39,19 @@ class TerminalSessionRegistry {
   TerminalSessionRegistry._();
 
   final Map<String, TerminalSessionEntry> _entries = {};
+
+  /// Injects OSC 133 semantic shell integration hook into [session].
+  void injectShellIntegration(
+    ITerminalSession session,
+    TerminalSessionEntry entry, {
+    bool permanent = false,
+  }) {
+    entry.isShellIntegrationInjected = true;
+    final snippet = permanent
+        ? ShellIntegrationBootstrap.permanentSnippet
+        : ShellIntegrationBootstrap.sessionSnippet;
+    session.inputStream.add(Uint8List.fromList(utf8.encode(snippet)));
+  }
 
   TerminalSessionEntry getOrCreate(ITerminalSession session) {
     var entry = _entries[session.id];

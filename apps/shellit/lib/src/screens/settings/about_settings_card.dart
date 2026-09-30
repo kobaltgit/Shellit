@@ -15,7 +15,7 @@ import 'feedback_report_dialog.dart';
 class AboutSettingsCard extends ConsumerStatefulWidget {
   const AboutSettingsCard({super.key});
 
-  static const String defaultAppVersion = '0.9.0';
+  static const String defaultAppVersion = '0.9.1';
   static String appVersion = defaultAppVersion;
   static const String appReleaseChannel = 'α';
   static const String githubRepoUrl = 'https://github.com/kobaltgit/Shellit';

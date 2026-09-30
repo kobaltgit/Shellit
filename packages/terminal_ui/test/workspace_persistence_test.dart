@@ -103,5 +103,65 @@ void main() {
       expect(restoredTab2.type, TabType.sftp);
       expect(restoredTab2.isDisconnected, isTrue);
     });
+
+    test(
+        'restoreWorkspaceTabs restores localTerminal tabs with matching LocalShellProfile and fallback',
+        () {
+      final notifier = SessionManagerNotifier();
+      const psProfile = LocalShellProfile(
+        id: 'powershell',
+        name: 'PowerShell',
+        shellType: ShellType.powershell,
+        executablePath: 'powershell.exe',
+        isDefault: true,
+      );
+      const cmdProfile = LocalShellProfile(
+        id: 'cmd',
+        name: 'Command Prompt',
+        shellType: ShellType.cmd,
+        executablePath: 'cmd.exe',
+      );
+
+      final savedStates = [
+        const WorkspaceTabState(
+          id: 'local-tab-1',
+          title: 'Terminal (Command Prompt)',
+          type: 'localTerminal',
+          localShellId: 'cmd',
+        ),
+        const WorkspaceTabState(
+          id: 'local-tab-2',
+          title: 'Terminal (Custom Old)',
+          type: 'localTerminal',
+          localShellId: 'non_existent_shell',
+        ),
+      ];
+
+      notifier.restoreWorkspaceTabs(
+        savedStates,
+        [],
+        localShellProfiles: [psProfile, cmdProfile],
+        defaultShellProfile: psProfile,
+        autoReconnect: false,
+      );
+
+      expect(notifier.state.tabs.length, 2);
+
+      // 1. Matches cmd profile
+      final tab1 = notifier.state.tabs[0];
+      expect(tab1.id, 'local-tab-1');
+      expect(tab1.type, TabType.localTerminal);
+      expect(tab1.isDisconnected, isTrue);
+      expect(tab1.localShellProfile?.id, 'cmd');
+      expect(tab1.localShellProfile?.name, 'Command Prompt');
+
+      // 2. Falls back to default psProfile when non_existent_shell
+      final tab2 = notifier.state.tabs[1];
+      expect(tab2.id, 'local-tab-2');
+      expect(tab2.type, TabType.localTerminal);
+      expect(tab2.isDisconnected, isTrue);
+      expect(tab2.localShellProfile?.id, 'powershell');
+      expect(tab2.localShellProfile?.name, 'PowerShell');
+    });
   });
 }

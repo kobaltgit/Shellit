@@ -88,11 +88,14 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
         final tabStates = WorkspaceTabState.decodeList(savedJson);
         if (tabStates.isNotEmpty && mounted) {
           _hasRestoredWorkspace = true;
+          final shellsState = ref.read(localShellsProvider);
           ref
               .read(sessionManagerProvider.notifier)
               .restoreWorkspaceTabs(
                 tabStates,
                 hosts,
+                localShellProfiles: shellsState.profiles,
+                defaultShellProfile: shellsState.defaultProfile,
                 autoReconnect: settings.autoReconnectOnRestore,
               );
         }
@@ -135,13 +138,10 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
       ref.watch(mcpServerServiceProvider);
     }
 
-    // Attempt workspace restoration once vault is unlocked and hosts are loaded (Desktop only)
+    // Attempt workspace restoration once vault is unlocked (Desktop only)
     final vaultState = ref.watch(vaultProvider);
     final hosts = ref.watch(hostsProvider);
-    if (!isMobilePlatform &&
-        !_hasRestoredWorkspace &&
-        vaultState.isUnlocked &&
-        hosts.isNotEmpty) {
+    if (!isMobilePlatform && !_hasRestoredWorkspace && vaultState.isUnlocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_hasRestoredWorkspace) {
           _tryRestoreWorkspace(hosts);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/folders_provider.dart';
 import '../../providers/hosts_provider.dart';
+import '../../providers/local_terminal_provider.dart';
 import '../../providers/ping_monitor_provider.dart';
 import '../../providers/session_manager_provider.dart';
 import '../../providers/vault_provider.dart';
@@ -64,6 +65,17 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
   }
 
   void _handleRetryConnection(SessionTab tab) {
+    if (tab.type == TabType.localTerminal) {
+      final shellsState = ref.read(localShellsProvider);
+      final profile = tab.localShellProfile ?? shellsState.defaultProfile;
+      if (profile != null) {
+        ref.read(sessionManagerProvider.notifier).launchLocalTerminalForTab(
+              tabId: tab.id,
+              profile: profile,
+            );
+      }
+      return;
+    }
     if (tab.host == null) return;
     ref.read(sessionManagerProvider.notifier).setTabConnecting(tabId: tab.id);
     _connectTerminalWithStatus(tab.id, tab.host!);
@@ -305,17 +317,23 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
     // If there is an active session or connecting tab, render full-screen terminal
     if (activeTab != null) {
       if (activeTab.isConnecting || activeTab.connectionError != null) {
+        final isLocal = activeTab.type == TabType.localTerminal;
         return Scaffold(
           backgroundColor: ShellitColors.obsidianBackground,
           body: SafeArea(
             child: TerminalConnectingView(
               host: activeTab.host,
-              statusMessage: activeTab.connectionStatus ?? 'Connecting...',
+              title: activeTab.title,
+              isLocalShell: isLocal,
+              localShellProfile: activeTab.localShellProfile,
+              statusMessage: activeTab.connectionStatus ??
+                  (isLocal ? 'Launching...' : 'Connecting...'),
               errorMessage: activeTab.connectionError,
               isConnecting: activeTab.isConnecting,
               onCancel: () => _handleCancelConnection(activeTab.id),
               onRetry: () => _handleRetryConnection(activeTab),
-              onUnlockVault: () => _handleUnlockVaultForTab(activeTab),
+              onUnlockVault:
+                  isLocal ? null : () => _handleUnlockVaultForTab(activeTab),
               onClose: () => ref
                   .read(sessionManagerProvider.notifier)
                   .closeTab(activeTab.id),

@@ -43,7 +43,7 @@ export function resolveLocalAppVersion(): string {
       }
     }
   } catch {}
-  return 'v0.9.0';
+  return 'v0.9.1';
 }
 
 export function createFallbackRelease(tag: string = resolveLocalAppVersion()): ReleaseInfo {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -233,6 +234,12 @@ void main() {
 
       expect(ShellIntegrationBootstrap.fishSnippet, contains('fish_prompt'));
       expect(ShellIntegrationBootstrap.fishSnippet, contains('133;D'));
+
+      expect(
+          ShellIntegrationBootstrap.sessionSnippet, contains('BASH_VERSION'));
+      expect(ShellIntegrationBootstrap.sessionSnippet, contains('ZSH_VERSION'));
+      expect(ShellIntegrationBootstrap.sessionSnippet, contains('clear'));
+      expect(ShellIntegrationBootstrap.permanentSnippet, contains('.bashrc'));
     });
   });
 
@@ -254,6 +261,26 @@ void main() {
       expect(entry.shellIntegration.blocks.first.isSuccess, isTrue);
 
       TerminalSessionRegistry.instance.remove('s-osc-1');
+    });
+
+    test(
+        'injectShellIntegration writes autoInjectSnippet into session input stream',
+        () async {
+      final session = FakeTerminalSession(id: 's-inject-test', hostId: 'h-1');
+      final entry = TerminalSessionRegistry.instance.getOrCreate(session);
+
+      expect(entry.isShellIntegrationInjected, isFalse);
+
+      TerminalSessionRegistry.instance.injectShellIntegration(session, entry);
+
+      expect(entry.isShellIntegrationInjected, isTrue);
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      expect(session.receivedInputs, isNotEmpty);
+      final decoded = utf8.decode(session.receivedInputs.first);
+      expect(decoded, contains('BASH_VERSION'));
+
+      TerminalSessionRegistry.instance.remove('s-inject-test');
     });
   });
 
@@ -368,7 +395,7 @@ void main() {
 
   group('TerminalScreen with Shell Integration integration tests', () {
     testWidgets(
-        'TerminalScreen renders without errors with ShellIntegrationController',
+        'TerminalScreen renders with markers off by default and opens setup dialog on tap',
         (tester) async {
       final session = FakeTerminalSession(id: 'test-si-screen', hostId: 'h-1');
 
@@ -387,8 +414,17 @@ void main() {
 
       await tester.pumpAndSettle();
       expect(find.byType(TerminalScreen), findsOneWidget);
-      expect(find.byType(ShellGutterMarkersOverlay), findsOneWidget);
-      expect(find.byType(ShellCommandMarkersOverlay), findsOneWidget);
+      // Off by default
+      expect(find.byType(ShellGutterMarkersOverlay), findsNothing);
+      expect(find.byType(ShellCommandMarkersOverlay), findsNothing);
+
+      // Tap on Markers button (when no markers are active, opens setup dialog)
+      await tester.tap(find.text('Markers'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ShellIntegrationSetupDialog), findsOneWidget);
+      expect(find.text('Activate in Current Session'), findsOneWidget);
+      expect(find.text('Install Permanently (~/.bashrc)'), findsOneWidget);
 
       TerminalSessionRegistry.instance.remove('test-si-screen');
     });

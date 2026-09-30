@@ -164,6 +164,53 @@ void main() {
       await tester.pump();
       expect(closeCalled, isTrue);
     });
+
+    testWidgets(
+        'renders local shell standby state with terminal icon and Start Terminal button',
+        (tester) async {
+      bool startCalled = false;
+      bool closeCalled = false;
+      const shellProfile = LocalShellProfile(
+        id: 'powershell',
+        name: 'PowerShell',
+        shellType: ShellType.powershell,
+        executablePath: 'powershell.exe',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ShellitTheme.obsidianDarkTheme,
+          home: Scaffold(
+            body: TerminalConnectingView(
+              isLocalShell: true,
+              localShellProfile: shellProfile,
+              title: 'Terminal (PowerShell)',
+              isConnecting: false,
+              isDisconnected: true,
+              statusMessage: 'Local Terminal Standby',
+              onRetry: () => startCalled = true,
+              onClose: () => closeCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Terminal (PowerShell)'), findsOneWidget);
+      expect(find.text('powershell.exe'), findsOneWidget);
+      expect(find.text('Local Terminal Standby'), findsOneWidget);
+      expect(find.byIcon(Icons.terminal_rounded), findsOneWidget);
+      expect(find.text('Start Terminal'), findsOneWidget);
+      expect(find.text('Close Tab'), findsOneWidget);
+      expect(find.text('Resolving endpoint...'), findsNothing);
+
+      await tester.tap(find.text('Start Terminal'));
+      await tester.pump();
+      expect(startCalled, isTrue);
+
+      await tester.tap(find.text('Close Tab'));
+      await tester.pump();
+      expect(closeCalled, isTrue);
+    });
   });
 
   group('SessionManagerNotifier Connecting Lifecycle Tests', () {

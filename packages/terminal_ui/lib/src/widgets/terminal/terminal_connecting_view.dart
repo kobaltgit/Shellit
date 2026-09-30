@@ -17,6 +17,10 @@ class TerminalConnectingView extends StatelessWidget {
   final VoidCallback? onRetry;
   final VoidCallback? onClose;
   final VoidCallback? onUnlockVault;
+  final String? title;
+  final String? subtitle;
+  final bool isLocalShell;
+  final LocalShellProfile? localShellProfile;
 
   const TerminalConnectingView({
     super.key,
@@ -29,6 +33,10 @@ class TerminalConnectingView extends StatelessWidget {
     this.onRetry,
     this.onClose,
     this.onUnlockVault,
+    this.title,
+    this.subtitle,
+    this.isLocalShell = false,
+    this.localShellProfile,
   });
 
   bool get _isVaultLockedError {
@@ -100,11 +108,34 @@ class TerminalConnectingView extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          OsIconBadge(
-                            os: host?.osType ?? OsType.genericServer,
-                            size: 32,
-                            padding: 8,
-                          ),
+                          if (isLocalShell)
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: ShellitColors.accentCyan
+                                    .withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: ShellitColors.accentCyan
+                                      .withValues(alpha: 0.3),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.terminal_rounded,
+                                  size: 18,
+                                  color: ShellitColors.accentCyan,
+                                ),
+                              ),
+                            )
+                          else
+                            OsIconBadge(
+                              os: host?.osType ?? OsType.genericServer,
+                              size: 32,
+                              padding: 8,
+                            ),
                           const SizedBox(width: 14),
                           Expanded(
                             child: Column(
@@ -114,10 +145,19 @@ class TerminalConnectingView extends StatelessWidget {
                                   children: [
                                     Flexible(
                                       child: Text(
-                                        host?.label ??
-                                            context.tr(
-                                                'connecting.connecting_host',
-                                                defaultText: 'Connecting Host'),
+                                        title ??
+                                            (isLocalShell
+                                                ? (localShellProfile != null
+                                                    ? 'Terminal (${localShellProfile!.name})'
+                                                    : context.tr(
+                                                        'connecting.local_terminal',
+                                                        defaultText:
+                                                            'Local Terminal'))
+                                                : (host?.label ??
+                                                    context.tr(
+                                                        'connecting.connecting_host',
+                                                        defaultText:
+                                                            'Connecting Host'))),
                                         style: const TextStyle(
                                           color: ShellitColors.textPrimary,
                                           fontSize: 16,
@@ -126,64 +166,75 @@ class TerminalConnectingView extends StatelessWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    if (isProd) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: ShellitColors.envProdBg,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: ShellitColors.envProdText,
-                                            width: 0.5,
+                                    if (!isLocalShell) ...[
+                                      if (isProd) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: ShellitColors.envProdBg,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: ShellitColors.envProdText,
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            context.tr('hosts.card.env_prod',
+                                                defaultText: 'PROD'),
+                                            style: const TextStyle(
+                                              color: ShellitColors.envProdText,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                        child: Text(
-                                          context.tr('hosts.card.env_prod',
-                                              defaultText: 'PROD'),
-                                          style: const TextStyle(
-                                            color: ShellitColors.envProdText,
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
+                                      ] else if (isStage) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: ShellitColors.envStageBg,
+                                            borderRadius:
+                                                BorderRadius.circular(4),
+                                            border: Border.all(
+                                              color: ShellitColors.envStageText,
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            context.tr('hosts.card.env_stage',
+                                                defaultText: 'STAGE'),
+                                            style: const TextStyle(
+                                              color: ShellitColors.envStageText,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ] else if (isStage) ...[
-                                      const SizedBox(width: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: ShellitColors.envStageBg,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          border: Border.all(
-                                            color: ShellitColors.envStageText,
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          context.tr('hosts.card.env_stage',
-                                              defaultText: 'STAGE'),
-                                          style: const TextStyle(
-                                            color: ShellitColors.envStageText,
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
+                                      ],
                                     ],
                                   ],
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  host != null
-                                      ? '${host!.username}@${host!.hostname}:${host!.port}'
-                                      : context.tr(
-                                          'connecting.resolving_endpoint',
-                                          defaultText: 'Resolving endpoint...'),
+                                  subtitle ??
+                                      (isLocalShell
+                                          ? (localShellProfile
+                                                  ?.executablePath ??
+                                              context.tr(
+                                                  'connecting.local_shell_ready',
+                                                  defaultText:
+                                                      'Local shell session'))
+                                          : (host != null
+                                              ? '${host!.username}@${host!.hostname}:${host!.port}'
+                                              : context.tr(
+                                                  'connecting.resolving_endpoint',
+                                                  defaultText:
+                                                      'Resolving endpoint...'))),
                                   style: const TextStyle(
                                     color: ShellitColors.textSecondary,
                                     fontSize: 12,
@@ -248,10 +299,15 @@ class TerminalConnectingView extends StatelessWidget {
         Text(
           statusMessage.isNotEmpty
               ? statusMessage
-              : context.tr(
-                  'connecting.session_restored',
-                  defaultText: 'Session Restored (Disconnected)',
-                ),
+              : (isLocalShell
+                  ? context.tr(
+                      'connecting.local_session_restored',
+                      defaultText: 'Local Terminal Standby',
+                    )
+                  : context.tr(
+                      'connecting.session_restored',
+                      defaultText: 'Session Restored (Disconnected)',
+                    )),
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: ShellitColors.textPrimary,
@@ -261,10 +317,16 @@ class TerminalConnectingView extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          context.tr(
-            'connecting.session_restored_subtitle',
-            defaultText: 'Previous session tab was restored in standby mode.',
-          ),
+          isLocalShell
+              ? context.tr(
+                  'connecting.local_session_restored_subtitle',
+                  defaultText: 'Local shell was restored in standby mode.',
+                )
+              : context.tr(
+                  'connecting.session_restored_subtitle',
+                  defaultText:
+                      'Previous session tab was restored in standby mode.',
+                ),
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: ShellitColors.textSecondary,
@@ -273,27 +335,36 @@ class TerminalConnectingView extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // Action Buttons: [ ⏻ Connect ] & [ Close Tab ]
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // Action Buttons: [ ⏻ Start Terminal / Connect ] & [ Close Tab ]
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
           children: [
             ElevatedButton.icon(
               onPressed: onRetry,
-              icon: const Icon(
-                Icons.power_settings_new_rounded,
+              icon: Icon(
+                isLocalShell
+                    ? Icons.play_arrow_rounded
+                    : Icons.power_settings_new_rounded,
                 size: 16,
               ),
               label: Text(
-                context.tr(
-                  'connecting.connect_btn',
-                  defaultText: 'Connect',
-                ),
+                isLocalShell
+                    ? context.tr(
+                        'connecting.start_terminal_btn',
+                        defaultText: 'Start Terminal',
+                      )
+                    : context.tr(
+                        'connecting.connect_btn',
+                        defaultText: 'Connect',
+                      ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ShellitColors.accentCyan,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
+                  horizontal: 18,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
@@ -305,8 +376,7 @@ class TerminalConnectingView extends StatelessWidget {
                 ),
               ),
             ),
-            if (onClose != null) ...[
-              const SizedBox(width: 12),
+            if (onClose != null)
               OutlinedButton.icon(
                 onPressed: onClose,
                 icon: const Icon(Icons.close_rounded, size: 15),
@@ -329,7 +399,6 @@ class TerminalConnectingView extends StatelessWidget {
                   textStyle: const TextStyle(fontSize: 13),
                 ),
               ),
-            ],
           ],
         ),
       ],
@@ -385,65 +454,97 @@ class TerminalConnectingView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // Multi-step connection pipeline timeline
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: ShellitColors.obsidianBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: ShellitColors.border, width: 0.8),
+        if (isLocalShell)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: ShellitColors.obsidianBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: ShellitColors.border, width: 0.8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.terminal_rounded,
+                  size: 16,
+                  color: ShellitColors.accentCyan,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  localShellProfile != null
+                      ? 'Spawning ${localShellProfile!.name} process...'
+                      : context.tr('connecting.spawning_local_shell',
+                          defaultText: 'Spawning local shell process...'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: ShellitColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          // Multi-step connection pipeline timeline
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: ShellitColors.obsidianBackground,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: ShellitColors.border, width: 0.8),
+            ),
+            child: Column(
+              children: [
+                _buildStepItem(
+                  label: context.tr('connecting.step_decrypt',
+                      defaultText: 'Decrypt credentials & keys'),
+                  isActive: statusMessage.contains('credentials') ||
+                      statusMessage.contains('key'),
+                  isDone: !statusMessage.contains('credentials') &&
+                      !statusMessage.contains('key') &&
+                      !statusMessage.startsWith('Connecting...'),
+                ),
+                const SizedBox(height: 8),
+                _buildStepItem(
+                  label: context.tr('connecting.step_tcp',
+                      defaultText: 'Connect TCP socket'),
+                  isActive: statusMessage.contains('socket') ||
+                      statusMessage.startsWith('Connecting...'),
+                  isDone: statusMessage.contains('handshake') ||
+                      statusMessage.contains('Authenticating') ||
+                      statusMessage.contains('shell') ||
+                      statusMessage.contains('SFTP'),
+                ),
+                const SizedBox(height: 8),
+                _buildStepItem(
+                  label: context.tr('connecting.step_handshake',
+                      defaultText: 'SSH protocol handshake'),
+                  isActive: statusMessage.contains('handshake'),
+                  isDone: statusMessage.contains('Authenticating') ||
+                      statusMessage.contains('shell') ||
+                      statusMessage.contains('SFTP'),
+                ),
+                const SizedBox(height: 8),
+                _buildStepItem(
+                  label: context.tr('connecting.step_auth',
+                      defaultText: 'User authentication'),
+                  isActive: statusMessage.contains('Authenticating'),
+                  isDone: statusMessage.contains('shell') ||
+                      statusMessage.contains('SFTP'),
+                ),
+                const SizedBox(height: 8),
+                _buildStepItem(
+                  label: context.tr('connecting.step_subsystem',
+                      defaultText: 'Allocate remote shell / subsystem'),
+                  isActive: statusMessage.contains('shell') ||
+                      statusMessage.contains('SFTP') ||
+                      statusMessage.contains('subsystem'),
+                  isDone: false,
+                ),
+              ],
+            ),
           ),
-          child: Column(
-            children: [
-              _buildStepItem(
-                label: context.tr('connecting.step_decrypt',
-                    defaultText: 'Decrypt credentials & keys'),
-                isActive: statusMessage.contains('credentials') ||
-                    statusMessage.contains('key'),
-                isDone: !statusMessage.contains('credentials') &&
-                    !statusMessage.contains('key') &&
-                    !statusMessage.startsWith('Connecting...'),
-              ),
-              const SizedBox(height: 8),
-              _buildStepItem(
-                label: context.tr('connecting.step_tcp',
-                    defaultText: 'Connect TCP socket'),
-                isActive: statusMessage.contains('socket') ||
-                    statusMessage.startsWith('Connecting...'),
-                isDone: statusMessage.contains('handshake') ||
-                    statusMessage.contains('Authenticating') ||
-                    statusMessage.contains('shell') ||
-                    statusMessage.contains('SFTP'),
-              ),
-              const SizedBox(height: 8),
-              _buildStepItem(
-                label: context.tr('connecting.step_handshake',
-                    defaultText: 'SSH protocol handshake'),
-                isActive: statusMessage.contains('handshake'),
-                isDone: statusMessage.contains('Authenticating') ||
-                    statusMessage.contains('shell') ||
-                    statusMessage.contains('SFTP'),
-              ),
-              const SizedBox(height: 8),
-              _buildStepItem(
-                label: context.tr('connecting.step_auth',
-                    defaultText: 'User authentication'),
-                isActive: statusMessage.contains('Authenticating'),
-                isDone: statusMessage.contains('shell') ||
-                    statusMessage.contains('SFTP'),
-              ),
-              const SizedBox(height: 8),
-              _buildStepItem(
-                label: context.tr('connecting.step_subsystem',
-                    defaultText: 'Allocate remote shell / subsystem'),
-                isActive: statusMessage.contains('shell') ||
-                    statusMessage.contains('SFTP') ||
-                    statusMessage.contains('subsystem'),
-                isDone: false,
-              ),
-            ],
-          ),
-        ),
         const SizedBox(height: 24),
 
         // Cancel Button

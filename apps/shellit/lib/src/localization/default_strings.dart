@@ -526,8 +526,42 @@ const Map<String, String> defaultEnglishStrings = {
   'terminal.context_menu_open_file': 'Open File: {path}',
   'terminal.context_menu_copy_url': 'Copy Link Address',
   'terminal.context_menu_copy_path': 'Copy File Path',
-  'terminal.link_copied_toast': 'Link copied to clipboard',
   'terminal.path_copied_toast': 'File path copied to clipboard',
+  'terminal.markers_btn': 'Markers',
+  'terminal.markers_activate_tooltip':
+      'No markers detected yet. Click to activate shell integration.',
+  'terminal.markers_hide_tooltip': 'Hide command markers',
+  'terminal.markers_show_tooltip': 'Show command markers',
+  'terminal.markers_injected':
+      '⚡ Shell integration activated! Command markers are now active.',
+  'terminal.markers_reinjected': '⚡ Shell integration re-injected.',
+  'terminal.context_menu_copy_command_output': 'Copy Last Command Output',
+  'terminal.context_menu_inject_markers': 'Activate Shell Integration',
+  'terminal.markers_setup_tooltip':
+      'Command Markers: Click to enable or configure',
+  'shell_integration.dialog_title': 'Shell Integration & Markers (OSC 133)',
+  'shell_integration.dialog_subtitle':
+      'Command markers, exit status tracking, and hopping navigation',
+  'shell_integration.dialog_desc':
+      'To display command markers (green/red dots) and jump between commands with Alt+↑/↓, the remote shell requires lightweight OSC 133 hooks.',
+  'shell_integration.option_session_title': 'Activate in Current Session',
+  'shell_integration.option_session_desc':
+      'Enables markers in memory only and clears the screen. Automatically resets when the tab is closed.',
+  'shell_integration.btn_session': 'Activate',
+  'shell_integration.option_permanent_title': 'Install Permanently (~/.bashrc)',
+  'shell_integration.option_permanent_desc':
+      'Appends hook to ~/.bashrc on the server. Markers will be active automatically on every SSH login.',
+  'shell_integration.btn_permanent': 'Install to Host',
+  'shell_integration.option_copy_title': 'Copy Hook Script',
+  'shell_integration.option_copy_desc':
+      'Copy the shell script to clipboard to inspect or run manually.',
+  'shell_integration.btn_copy': 'Copy Script',
+  'shell_integration.activated_session_toast':
+      '⚡ Shell integration activated for current session.',
+  'shell_integration.installed_permanent_toast':
+      '💾 Shell integration installed to ~/.bashrc on remote host!',
+  'shell_integration.script_copied_toast':
+      '📋 Hook script copied to clipboard.',
 
   // Prod Guard & Connecting View
   'prod_guard.dialog_title': 'PROD GUARD: Destructive Command',
@@ -556,6 +590,13 @@ const Map<String, String> defaultEnglishStrings = {
   'connecting.session_restored_subtitle':
       'Previous session tab was restored in standby mode.',
   'connecting.connect_btn': 'Connect',
+  'connecting.local_terminal': 'Local Terminal',
+  'connecting.local_shell_ready': 'Local shell session',
+  'connecting.local_session_restored': 'Local Terminal Standby',
+  'connecting.local_session_restored_subtitle':
+      'Local shell was restored in standby mode.',
+  'connecting.start_terminal_btn': 'Start Terminal',
+  'connecting.spawning_local_shell': 'Spawning local shell process...',
 
   // Splits & Broadcast
   'splits.single': 'Single Terminal',

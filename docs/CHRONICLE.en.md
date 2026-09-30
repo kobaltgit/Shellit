@@ -2439,6 +2439,95 @@ Detailed analysis of the scrolling and shell integration pipeline uncovered two 
 - Hovering over gutter markers displays precise command execution durations.
 - All 146 tests across `packages/terminal_ui` pass cleanly.
 
+---
+
+## Entry 57. Reviving Local Terminals: How Workspace Session Restore Embraced PowerShell, CMD, and WSL
+
+*Timestamp: September 30, 2026, 14:00 (~25 minutes)*
+
+### 1. Motivation: When "Sleeping" Tabs Refuse to Wake Up
+
+In release v0.8.6, we introduced workspace session persistence: close Shellit, relaunch, and all your previously open tabs are neatly restored in an idle, battery-friendly state ("lazy disconnected"). Clicking connect immediately revives the session.
+
+For remote SSH hosts and SFTP, this workflow functioned flawlessly. However, whenever a user restarted the app with an open local terminal tab (PowerShell, Command Prompt, or WSL), things broke down:
+1. The restored tab showed an idle connecting screen, but clicking the "Connect" button produced zero reaction: no shell process started, and the console remained blank.
+2. The waiting screen displayed misplaced remote SSH messages: "Resolving endpoint...", vault credential decryption, and SSH handshake stages — for a local PowerShell session on the user's own machine!
+3. The tab context menu's "Reconnect" option also completely ignored local terminals.
+
+### 2. Technical Findings: Lost Profiles & Hidden `host == null` Guards
+
+A deep dive into session serialization uncovered a sequence of subtle architectural mismatches:
+- **Missing Shell Profile Resolution:** While the tab's `localShellId` was properly persisted to the SQLite database, `restoreWorkspaceTabs` only accepted a list of remote SSH hosts (`allHosts`). Local profiles were never passed into the restore routine! The tab restored with `localShellProfile == null`, forgetting whether it belonged to PowerShell 7, CMD, or Ubuntu WSL.
+- **Remote Host Assumption (`if (tab.host == null) return;`):** The reconnection handler `_handleRetryConnection` was originally written solely for remote SSH hosts. For local terminals, `tab.host` is naturally `null`. Encountering `null`, the handler silently aborted without logging any diagnostic warning.
+- **Absence of PTY Injection for Existing Tabs:** In `SessionManagerNotifier`, `openLocalTerminalTab` always created a *new* tab. There was no API contract to launch a PTY process and mount it directly into an already restored, waiting tab.
+
+### 3. Engineering Decisions (BUG-049)
+
+We resolved the entire local terminal restoration lifecycle:
+
+1. **Local Shell Profile Resolution on Restore:**
+   `restoreWorkspaceTabs` now accepts `localShellProfiles` and the default system shell `defaultShellProfile`. The engine resolves the exact profile via `saved.localShellId`. If a profile is no longer available on the PC (e.g. an uninstalled WSL distro), it cleanly falls back to the default OS shell without errors.
+2. **Mounting PTY Into Existing Tabs (`launchLocalTerminalForTab`):**
+   Implemented a dedicated controller method that spawns `LocalTerminalSession.start` and attaches the live pseudo-terminal stream directly into the existing restored tab, clearing errors and connecting state.
+3. **Unblocking Reconnect Handlers:**
+   In `_handleRetryConnection`, `TopBarTabs.onReconnectTab`, and background auto-connect (`_checkAutoConnectingTabs`), host validation now distinguishes between SSH and local terminals. When `tab.type == TabType.localTerminal`, the local PTY starts immediately.
+4. **Tailored Local Shell Connecting View (`TerminalConnectingView`):**
+   The idle screen for local terminals was stripped of SSH-specific network steps. It features a crisp terminal glyph (`>_`), the shell profile name and binary path, and an explicit **"Start Terminal"** action button (`Icons.play_arrow_rounded`). Button layouts use `Wrap` to eliminate any potential `RenderFlex overflow`.
+
+### 4. Summary & Verification
+
+- Resolved and verified issue `BUG-049`.
+- Restored local terminals reliably preserve their shell identity and launch on demand with 1 click.
+- Covered by unit and widget tests in `workspace_persistence_test.dart`, `local_terminal_test.dart`, and `terminal_connecting_view_test.dart` (149 tests in `terminal_ui` and 61 tests in `apps/shellit` passing cleanly).
+
+---
+
+## Entry 58. The Architecture of Non-Interference: Why a Terminal Must Never Type Without Asking and How We Reached True Shell Integration
+
+*Timestamp: September 30, 2026, 15:40 (~25 minutes)*
+
+### 1. Motivation: The Pitfall of "Doing Everything Automatically"
+
+When developing advanced developer tooling like semantic command markers (OSC 133), there is an enticing temptation to automate everything. The initial idea seems intuitive: the user connects to a remote SSH server, and the client automatically injects the necessary prompt hook in the background so that gutter markers and command hopping work out of the box.
+
+Testing this in real production sessions proved humbling.
+
+In an interactive SSH session, the remote pseudo-terminal operates with character echoing (`ECHO`) enabled. When the client streams a multi-line script into the input pipe, the remote host faithfully echoes every character back. If the terminal width or shell wrapping differs, code text fragments across multiple rows. Escapes like `\033[1A\033[2K` only clear the final line, leaving trailing code fragments on screen instead of a pristine remote shell prompt.
+
+Worse yet, silently typing commands into a user's remote shell violates the core tenets of systems engineering and trust. No tool should ever type commands into a server without explicit user intent.
+
+### 2. Technical Findings: PTY Streams, Remote Echo, and Sovereignty
+
+A deep dive into pseudo-terminal stream handling highlighted three key realities:
+1. **Interactive PTY Echo:** Unlike local processes where bootstrap parameters can be passed as CLI arguments (`pwsh -NoExit -Command ...`), remote SSH sessions connect directly to an existing remote shell daemon. Streaming script bytes inevitably enters the visible scrollback buffer.
+2. **Respect for Existing Configurations:** Many engineers rely on bespoke prompt configurations (Starship, Powerlevel10k, Oh My Posh). Unconditional injection risks disrupting complex multi-segment prompts.
+3. **Predictability by Default:** A terminal session should always open in its purest state. All auxiliary overlays should remain disabled until the engineer explicitly opts in.
+
+### 3. Engineering Decisions & Refinements
+
+We redesigned the entire integration lifecycle around explicit user choice:
+
+1. **Complete Removal of Background Injections:**
+   All background timers and automated input stream writes were stripped from `TerminalSessionRegistry`. Sessions connect cleanly without a single unsolicited byte sent over the wire.
+2. **Disabled by Default:**
+   Gutter indicators and scrollbar overlays are disabled by default (`_showGutterMarkers = false`). The `[⚡ Markers]` button in the terminal header rests in a subtle, muted state.
+3. **Transparent Setup Dialog (`ShellIntegrationSetupDialog`):**
+   Clicking `[⚡ Markers]` or selecting the action from the context menu presents a focused modal dialog with three transparent choices:
+   - **Activate in Current Session:** Executes a lightweight memory hook followed immediately by `; clear\n`. The screen is wiped crystal-clean, and subsequent commands gain full semantic markers.
+   - **Install Permanently (`~/.bashrc`):** Appends the hook to `~/.bashrc` on the remote host and sources it cleanly, enabling markers automatically for all future SSH logins.
+   - **Copy Script:** Copies the script to clipboard for manual inspection or execution.
+4. **Adaptive Viewport Safety:**
+   The dialog layout is wrapped in `SingleChildScrollView`, preventing layout overflow on constrained displays or widget test environments.
+
+### 4. Summary & Verification
+
+- Resolved and verified issue `BUG-050`.
+- The terminal guarantees zero background tampering with input streams.
+- All 150 tests across `packages/terminal_ui` pass cleanly.
+- `flutter analyze` reports 0 issues.
+- Debug executable built successfully (`shellit.exe`).
+
+
 
 
 

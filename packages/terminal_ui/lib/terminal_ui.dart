@@ -52,6 +52,7 @@ export 'src/shell_integration/shell_integration_controller.dart';
 export 'src/shell_integration/shell_command_markers_overlay.dart';
 export 'src/shell_integration/shell_gutter_markers_overlay.dart';
 export 'src/shell_integration/shell_integration_bootstrap.dart';
+export 'src/shell_integration/shell_integration_setup_dialog.dart';
 
 // Local Terminal Services & Providers
 export 'src/services/local_terminal_session.dart';

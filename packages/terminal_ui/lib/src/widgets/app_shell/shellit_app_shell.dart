@@ -153,19 +153,27 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
           tab.terminalSession == null &&
           tab.sftpSession == null &&
           tab.connectionError == null &&
-          tab.host != null &&
           !_inFlightTabIds.contains(tab.id) &&
           !_cancelledTabIds.contains(tab.id)) {
-        _inFlightTabIds.add(tab.id);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            if (tab.type == TabType.terminal) {
-              _connectTerminalWithStatus(tab.id, tab.host!);
-            } else if (tab.type == TabType.sftp) {
-              _connectSftpWithStatus(tab.id, tab.host!);
+        if (tab.type == TabType.localTerminal) {
+          _inFlightTabIds.add(tab.id);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _launchLocalTerminalForTab(tab);
             }
-          }
-        });
+          });
+        } else if (tab.host != null) {
+          _inFlightTabIds.add(tab.id);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              if (tab.type == TabType.terminal) {
+                _connectTerminalWithStatus(tab.id, tab.host!);
+              } else if (tab.type == TabType.sftp) {
+                _connectSftpWithStatus(tab.id, tab.host!);
+              }
+            }
+          });
+        }
       }
     }
   }
@@ -177,12 +185,38 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   }
 
   void _handleRetryConnection(SessionTab tab) {
+    if (tab.type == TabType.localTerminal) {
+      _launchLocalTerminalForTab(tab);
+      return;
+    }
     if (tab.host == null) return;
     ref.read(sessionManagerProvider.notifier).setTabConnecting(tabId: tab.id);
     if (tab.type == TabType.terminal) {
       _connectTerminalWithStatus(tab.id, tab.host!);
     } else if (tab.type == TabType.sftp) {
       _connectSftpWithStatus(tab.id, tab.host!);
+    }
+  }
+
+  Future<void> _launchLocalTerminalForTab(SessionTab tab) async {
+    _cancelledTabIds.remove(tab.id);
+    _inFlightTabIds.add(tab.id);
+    try {
+      final shellsState = ref.read(localShellsProvider);
+      final profile = tab.localShellProfile ?? shellsState.defaultProfile;
+      if (profile == null) {
+        ref.read(sessionManagerProvider.notifier).setTabConnectionError(
+              tabId: tab.id,
+              errorMessage: 'No local shell profile found',
+            );
+        return;
+      }
+      await ref.read(sessionManagerProvider.notifier).launchLocalTerminalForTab(
+            tabId: tab.id,
+            profile: profile,
+          );
+    } finally {
+      _inFlightTabIds.remove(tab.id);
     }
   }
 
@@ -494,7 +528,9 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
                                 await _handleOpenSftp(host);
                               },
                               onReconnectTab: (tab) async {
-                                if (tab.host != null) {
+                                if (tab.type == TabType.localTerminal) {
+                                  await _launchLocalTerminalForTab(tab);
+                                } else if (tab.host != null) {
                                   ref
                                       .read(sessionManagerProvider.notifier)
                                       .closeTab(tab.id);
@@ -580,16 +616,21 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
   }
 
   Widget _buildSessionTabWidget(SessionTab tab) {
+    final isLocal = tab.type == TabType.localTerminal;
     if (tab.isConnecting || tab.connectionError != null) {
       return TerminalConnectingView(
         key: ValueKey('conn-${tab.id}'),
         host: tab.host,
-        statusMessage: tab.connectionStatus ?? 'Connecting...',
+        title: tab.title,
+        isLocalShell: isLocal,
+        localShellProfile: tab.localShellProfile,
+        statusMessage: tab.connectionStatus ??
+            (isLocal ? 'Launching...' : 'Connecting...'),
         errorMessage: tab.connectionError,
         isConnecting: tab.isConnecting,
         onCancel: () => _handleCancelConnection(tab.id),
         onRetry: () => _handleRetryConnection(tab),
-        onUnlockVault: () => _handleUnlockVaultForTab(tab),
+        onUnlockVault: isLocal ? null : () => _handleUnlockVaultForTab(tab),
         onClose: () =>
             ref.read(sessionManagerProvider.notifier).closeTab(tab.id),
       );
@@ -603,9 +644,16 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
           return TerminalConnectingView(
             key: ValueKey('conn-init-${tab.id}'),
             host: tab.host,
+            title: tab.title,
+            isLocalShell: isLocal,
+            localShellProfile: tab.localShellProfile,
             statusMessage: isRestored
-                ? 'Session restored (Disconnected)'
-                : 'Initializing terminal...',
+                ? (isLocal
+                    ? 'Local session restored (Disconnected)'
+                    : 'Session restored (Disconnected)')
+                : (isLocal
+                    ? 'Initializing local terminal...'
+                    : 'Initializing terminal...'),
             isConnecting: tab.isConnecting,
             isDisconnected: isRestored,
             onRetry: isRestored ? () => _handleRetryConnection(tab) : null,

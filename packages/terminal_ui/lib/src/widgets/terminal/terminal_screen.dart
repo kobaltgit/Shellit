@@ -14,7 +14,9 @@ import '../../localization/localization_scope.dart';
 import '../../providers/theme_provider.dart';
 import '../../shell_integration/shell_command_markers_overlay.dart';
 import '../../shell_integration/shell_gutter_markers_overlay.dart';
+import '../../shell_integration/shell_integration_bootstrap.dart';
 import '../../shell_integration/shell_integration_controller.dart';
+import '../../shell_integration/shell_integration_setup_dialog.dart';
 import '../../theme/shellit_theme.dart';
 import 'multiline_paste_dialog.dart';
 import 'prod_confirmation_dialog.dart';
@@ -67,7 +69,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   final StringBuffer _commandLineBuffer = StringBuffer();
   bool _isAwaitingConfirmation = false;
   double _fontSize = 13.0;
-  bool _showGutterMarkers = true;
+  bool _showGutterMarkers = false;
 
   Timer? _recordTimer;
   int _recordDurationSeconds = 0;
@@ -93,6 +95,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _focusNode.addListener(_handleFocusChange);
     HardwareKeyboard.instance.addHandler(_handleHardwareKey);
     _terminal.addListener(_onTerminalChanged);
+    _shellIntegration.addListener(_onShellIntegrationChanged);
 
     if (widget.session.recorder?.isRecording == true) {
       _syncRecordTimer();
@@ -160,6 +163,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   void dispose() {
     _isDisposed = true;
     _terminal.removeListener(_onTerminalChanged);
+    _shellIntegration.removeListener(_onShellIntegrationChanged);
     HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
     _recordTimer?.cancel();
     _recordTimer = null;
@@ -168,6 +172,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onShellIntegrationChanged() {
+    if (_isDisposed || !mounted) return;
+    setState(() {});
   }
 
   void _onTerminalChanged() {
@@ -693,6 +702,95 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     });
   }
 
+  void _showShellIntegrationDialog() {
+    ShellIntegrationSetupDialog.show(
+      context: context,
+      onActivateSession: () {
+        final entry =
+            TerminalSessionRegistry.instance.getOrCreate(widget.session);
+        TerminalSessionRegistry.instance
+            .injectShellIntegration(widget.session, entry, permanent: false);
+        setState(() {
+          _showGutterMarkers = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.bolt_rounded,
+                    color: Color(0xFF00E5FF), size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.tr(
+                      'shell_integration.activated_session_toast',
+                      defaultText:
+                          '⚡ Shell integration activated for current session.',
+                    ),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 3),
+            backgroundColor: const Color(0xFF1E2430),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      onInstallPermanent: () {
+        final entry =
+            TerminalSessionRegistry.instance.getOrCreate(widget.session);
+        TerminalSessionRegistry.instance
+            .injectShellIntegration(widget.session, entry, permanent: true);
+        setState(() {
+          _showGutterMarkers = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.save_outlined,
+                    color: Color(0xFF10B981), size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.tr(
+                      'shell_integration.installed_permanent_toast',
+                      defaultText:
+                          '💾 Shell integration installed to ~/.bashrc on remote host!',
+                    ),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 3),
+            backgroundColor: const Color(0xFF1E2430),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      onCopyScript: () {
+        _copyToClipboard(
+          ShellIntegrationBootstrap.bashSnippet,
+          context.tr(
+            'shell_integration.script_copied_toast',
+            defaultText: '📋 Hook script copied to clipboard.',
+          ),
+        );
+      },
+    );
+  }
+
+  void _handleMarkersButtonTap() {
+    if (_shellIntegration.blocks.isEmpty) {
+      _showShellIntegrationDialog();
+    } else {
+      _toggleGutterMarkers();
+    }
+  }
+
   void _showShortcutsHelp() {
     TerminalShortcutsDialog.show(context);
   }
@@ -735,6 +833,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           : null,
       onCopyLastCommandOutput:
           _shellIntegration.blocks.isNotEmpty ? _copyLastCommandOutput : null,
+      onInjectShellIntegration:
+          _shellIntegration.blocks.isEmpty ? _showShellIntegrationDialog : null,
       onCopy: _copySelection,
       onPaste: _pasteFromClipboard,
       onSelectAll: _selectAll,
@@ -1064,6 +1164,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final terminalTheme = ref.watch(activeTerminalThemeProvider);
     final isProd = widget.host?.isProduction ?? false;
     final hasProtection = widget.host?.dangerousCommandProtection ?? false;
+    final hasMarkers = _shellIntegration.blocks.isNotEmpty;
     final showGuardBanner = isProd || hasProtection;
     final isDesktop = defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux ||
@@ -1177,17 +1278,18 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               ),
 
             // OSC 133 Shell Integration command markers on scrollbar
-            Positioned(
-              top: showGuardBanner ? 24 : 0,
-              bottom: 0,
-              right: 0,
-              child: ShellCommandMarkersOverlay(
-                controller: _shellIntegration,
-                terminal: _terminal,
-                onScrollToLine: _scrollToLine,
-                checkScrollback: true,
+            if (_showGutterMarkers)
+              Positioned(
+                top: showGuardBanner ? 24 : 0,
+                bottom: 0,
+                right: 0,
+                child: ShellCommandMarkersOverlay(
+                  controller: _shellIntegration,
+                  terminal: _terminal,
+                  onScrollToLine: _scrollToLine,
+                  checkScrollback: true,
+                ),
               ),
-            ),
 
             if (_hoveredLink != null && _hoveredPosition != null) ...[
               Positioned(
@@ -1307,17 +1409,24 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                       const SizedBox(width: 4),
                     ],
                     Tooltip(
-                      message: _showGutterMarkers
+                      message: !hasMarkers
                           ? context.tr(
-                              'terminal.markers_hide_tooltip',
-                              defaultText: 'Hide command markers',
+                              'terminal.markers_setup_tooltip',
+                              defaultText:
+                                  'Command Markers: Click to enable or configure',
                             )
-                          : context.tr(
-                              'terminal.markers_show_tooltip',
-                              defaultText: 'Show command markers',
-                            ),
+                          : _showGutterMarkers
+                              ? context.tr(
+                                  'terminal.markers_hide_tooltip',
+                                  defaultText: 'Hide command markers',
+                                )
+                              : context.tr(
+                                  'terminal.markers_show_tooltip',
+                                  defaultText: 'Show command markers',
+                                ),
                       child: InkWell(
-                        onTap: _toggleGutterMarkers,
+                        onTap: _handleMarkersButtonTap,
+                        onLongPress: _showShellIntegrationDialog,
                         borderRadius: BorderRadius.circular(4),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
@@ -1326,22 +1435,24 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _showGutterMarkers
+                                hasMarkers && _showGutterMarkers
                                     ? Icons.bolt
                                     : Icons.bolt_outlined,
                                 size: 13,
-                                color: _showGutterMarkers
+                                color: hasMarkers && _showGutterMarkers
                                     ? const Color(0xFF00E5FF)
                                     : Colors.white38,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                context.tr('terminal.markers_btn',
-                                    defaultText: 'Markers'),
+                                hasMarkers
+                                    ? '${context.tr('terminal.markers_btn', defaultText: 'Markers')} (${_shellIntegration.blocks.length})'
+                                    : context.tr('terminal.markers_btn',
+                                        defaultText: 'Markers'),
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: _showGutterMarkers
+                                  color: hasMarkers && _showGutterMarkers
                                       ? const Color(0xFF00E5FF)
                                       : Colors.white38,
                                 ),

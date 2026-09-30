@@ -1,18 +1,18 @@
 ---
 title: "Act XII: The Living Terminal Canvas — How Command Markers Transformed an Endless Log into an Interactive Map, and Paying Tribute to Open Source Roots"
-description: "The story behind OSC 133 semantic terminal integration in Shellit: colored exit status badges, execution timing, 1-click output copy, sequential Alt+Up/Down navigation, and honest attribution to Fabrizio La Rosa (fbrzlarosa/terminale) and the uxiew fork."
+description: "The story behind OSC 133 semantic terminal integration in Shellit: colored exit status badges, execution timing, 1-click output copy, sequential Alt+Up/Down navigation, user-controlled opt-in activation without background injections, and honest attribution to Fabrizio La Rosa (fbrzlarosa/terminale) and the uxiew fork."
 actNumber: 12
-period: "September 30, 2026, 09:00 — 13:15"
+period: "September 30, 2026, 09:00 — 16:00"
 pubDate: 2026-09-30
-readingTime: "8 min"
-stage: "v0.9.0 Semantic Shell Integration & Command Navigation"
-relatedBugs: ["BUG-046", "BUG-047", "BUG-048"]
-tags: ["osc-133", "shell-integration", "xterm", "flutter", "terminal", "powershell", "open-source", "fbrzlarosa", "terminale", "v0.9.0"]
+readingTime: "12 min"
+stage: "v0.9.1 Semantic Shell Integration & Workspace Resilience"
+relatedBugs: ["BUG-046", "BUG-047", "BUG-048", "BUG-049", "BUG-050"]
+tags: ["osc-133", "shell-integration", "xterm", "flutter", "terminal", "powershell", "open-source", "fbrzlarosa", "terminale", "v0.9.1"]
 lang: "en"
 ---
 
 <div class="p-4 rounded-xl bg-obsidian-bg/80 border border-cyber-lime/30 text-slate-300 text-sm leading-relaxed mb-8 not-prose">
-  <strong class="text-white font-mono">Act Context:</strong> Traditional terminals suffer from the "endless stream" syndrome: in a long flow of logs, it is difficult to spot where a command started, whether it failed midway, or how to cleanly copy only its output. Inspired by modern open-source terminal ergonomics, we implemented OSC 133 semantic shell integration. Real-world testing tackled PowerShell variable scoping traps, eliminated scroll navigation deadlocks, and allowed us to extend genuine gratitude to the original creators of the Terminale open-source ecosystem.
+  <strong class="text-white font-mono">Act Context:</strong> Traditional terminals suffer from the "endless stream" syndrome: in a long flow of logs, it is difficult to spot where a command started, whether it failed midway, or how to cleanly copy only its output. Inspired by modern open-source terminal ergonomics, we implemented OSC 133 semantic shell integration. Real-world testing tackled PowerShell variable scoping traps, eliminated scroll navigation deadlocks, rescued local terminal session restoration across restarts, and rejected invasive background injections in favor of explicit user dialog setup, while extending genuine gratitude to the original creators of the Terminale open-source ecosystem.
 </div>
 
 ## Entry 54. From Endless Stream to Interactive Map: OSC 133 Semantic Shell Integration
@@ -102,9 +102,81 @@ Two subtle issues emerged during desktop testing:
 
 ---
 
+## Entry 57. Reviving Local Terminals: How Workspace Session Restore Embraced PowerShell, CMD, and WSL
+
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 my-2">
+  ⏱️ Timestamp: September 30, 2026, 14:00 (~25 minutes)
+</span>
+
+### 1. Motivation: When "Sleeping" Tabs Refuse to Wake Up
+
+In release v0.8.6, we introduced workspace session persistence: close Shellit, relaunch, and all your previously open tabs are neatly restored in an idle, battery-friendly state ("lazy disconnected"). Clicking connect immediately revives the session.
+
+For remote SSH hosts and SFTP, this workflow functioned flawlessly. However, whenever a user restarted the app with an open local terminal tab (PowerShell, Command Prompt, or WSL), things broke down:
+1. The restored tab showed an idle connecting screen, but clicking the "Connect" button produced zero reaction: no shell process started, and the console remained blank.
+2. The waiting screen displayed misplaced remote SSH messages: "Resolving endpoint...", vault credential decryption, and SSH handshake stages — for a local PowerShell session on the user's own machine!
+3. The tab context menu's "Reconnect" option also completely ignored local terminals.
+
+### 2. Technical Findings: Lost Profiles & Hidden `host == null` Guards
+
+A deep dive into session serialization uncovered a sequence of subtle architectural mismatches:
+- **Missing Shell Profile Resolution:** While the tab's `localShellId` was properly persisted to the SQLite database, `restoreWorkspaceTabs` only accepted a list of remote SSH hosts (`allHosts`). Local profiles were never passed into the restore routine! The tab restored with `localShellProfile == null`, forgetting whether it belonged to PowerShell 7, CMD, or Ubuntu WSL.
+- **Remote Host Assumption (`if (tab.host == null) return;`):** The reconnection handler `_handleRetryConnection` was originally written solely for remote SSH hosts. For local terminals, `tab.host` is naturally `null`. Encountering `null`, the handler silently aborted without logging any diagnostic warning.
+- **Absence of PTY Injection for Existing Tabs:** In `SessionManagerNotifier`, `openLocalTerminalTab` always created a *new* tab. There was no API contract to launch a PTY process and mount it directly into an already restored, waiting tab.
+
+### 3. Engineering Decisions (BUG-049)
+
+We resolved the entire local terminal restoration lifecycle:
+
+1. **Local Shell Profile Resolution on Restore:**
+   `restoreWorkspaceTabs` now accepts `localShellProfiles` and the default system shell `defaultShellProfile`. The engine resolves the exact profile via `saved.localShellId`. If a profile is no longer available on the PC (e.g. an uninstalled WSL distro), it cleanly falls back to the default OS shell without errors.
+2. **Mounting PTY Into Existing Tabs (`launchLocalTerminalForTab`):**
+   Implemented a dedicated controller method that spawns `LocalTerminalSession.start` and attaches the live pseudo-terminal stream directly into the existing restored tab, clearing errors and connecting state.
+3. **Unblocking Reconnect Handlers:**
+   In `_handleRetryConnection`, `TopBarTabs.onReconnectTab`, and background auto-connect (`_checkAutoConnectingTabs`), host validation now distinguishes between SSH and local terminals. When `tab.type == TabType.localTerminal`, the local PTY starts immediately.
+4. **Tailored Local Shell Connecting View (`TerminalConnectingView`):**
+   The idle screen for local terminals was stripped of SSH-specific network steps. It features a crisp terminal glyph (`>_`), the shell profile name and binary path, and an explicit **"Start Terminal"** action button (`Icons.play_arrow_rounded`). Button layouts use `Wrap` to eliminate any potential `RenderFlex overflow`.
+
+---
+
+## Entry 58. The Architecture of Non-Interference: Why a Terminal Must Never Type Without Asking and How We Reached True Shell Integration
+
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-cyber-lime/15 text-cyber-lime border border-cyber-lime/30 my-2">
+  ⏱️ Timestamp: September 30, 2026, 15:40 (~25 minutes)
+</span>
+
+### 1. The Temptation of Background Automation: The PTY Echo Trap
+
+Once the basic OSC 133 parsing worked, there was an enticing temptation to make it 100% automatic. The concept sounded neat: when opening an SSH tab to a remote server, the client waits 600ms and silently sends a compact prompt hook into the shell stream. The user simply connects, and gutter markers appear immediately.
+
+Testing this on real production servers provided a humbling lesson in systems engineering.
+
+In an interactive SSH session, the remote pseudo-terminal operates with character echoing (`ECHO`) enabled: every byte typed or streamed is sent right back to the display. When the client streamed a multi-line script into the input pipe, the code wrapped across multiple rows. Escape sequences like `\033[1A\033[2K` only cleared the final line, leaving fragments of shell code scattered across the screen instead of a pristine remote shell prompt.
+
+Worse yet, silently typing commands into a user's remote shell violates the core tenets of systems engineering and trust. No tool should ever type commands into a server without explicit user intent.
+
+### 2. Engineering Decisions (BUG-050)
+
+We overhauled the entire integration lifecycle around explicit user choice:
+
+1. **Complete Removal of Background Injections:**
+   All background timers and automated input stream writes were stripped from `TerminalSessionRegistry`. Sessions connect cleanly without a single unsolicited byte sent over the wire.
+2. **Disabled by Default:**
+   Gutter indicators and scrollbar overlays are disabled by default (`_showGutterMarkers = false`). The `[⚡ Markers]` button in the terminal header rests in a subtle, muted state.
+3. **Transparent Setup Dialog (`ShellIntegrationSetupDialog`):**
+   Clicking `[⚡ Markers]` or selecting the action from the context menu presents a focused modal dialog with three transparent choices:
+   - **Activate in Current Session:** Executes a lightweight memory hook followed immediately by `; clear\n`. The screen is wiped crystal-clean, and subsequent commands gain full semantic markers.
+   - **Install Permanently (`~/.bashrc`):** Appends the hook to `~/.bashrc` on the remote host and sources it cleanly, enabling markers automatically for all future SSH logins.
+   - **Copy Script:** Copies the script to clipboard for manual inspection or execution.
+4. **Adaptive Viewport Safety:**
+   The dialog layout is wrapped in `SingleChildScrollView`, preventing layout overflow on constrained displays or widget test environments.
+
+---
+
 ### Act Summary
 
 - The Shellit terminal canvas is now a structured, interactive map rather than an unmanageable stream of text.
 - Commands feature live status dots, step-by-step keyboard navigation, and 1-click output copying.
-- All 146 unit and widget tests in `packages/terminal_ui` pass cleanly.
+- Shell integration follows the strict principle of non-interference: zero background noise, pristine connection buffers, and explicit user control.
+- All 150 unit and widget tests in `packages/terminal_ui` pass cleanly.
 - Clear, respectful open-source attribution is recorded for Fabrizio La Rosa ([fbrzlarosa/terminale](https://github.com/fbrzlarosa/terminale)) and the [uxiew/terminale](https://github.com/uxiew/terminale) fork.

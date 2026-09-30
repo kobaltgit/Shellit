@@ -16,6 +16,7 @@ class TerminalContextMenu {
     VoidCallback? onOpenLink,
     VoidCallback? onCopyLink,
     VoidCallback? onCopyLastCommandOutput,
+    VoidCallback? onInjectShellIntegration,
     required VoidCallback onCopy,
     required VoidCallback onPaste,
     required VoidCallback onSelectAll,
@@ -138,6 +139,21 @@ class TerminalContextMenu {
           ),
         ),
       ],
+      if (onInjectShellIntegration != null) ...[
+        PopupMenuItem<String>(
+          value: 'injectShellIntegration',
+          enabled: true,
+          height: 38,
+          child: _buildMenuItem(
+            icon: Icons.bolt_rounded,
+            title: context.tr('terminal.context_menu_inject_markers',
+                defaultText: 'Activate Shell Integration'),
+            shortcut: '',
+            enabled: true,
+            highlightAccent: true,
+          ),
+        ),
+      ],
       const PopupMenuDivider(height: 8),
       PopupMenuItem<String>(
         value: 'clear',
@@ -193,6 +209,9 @@ class TerminalContextMenu {
         break;
       case 'copyCommandOutput':
         onCopyLastCommandOutput?.call();
+        break;
+      case 'injectShellIntegration':
+        onInjectShellIntegration?.call();
         break;
       case 'copy':
         onCopy();
