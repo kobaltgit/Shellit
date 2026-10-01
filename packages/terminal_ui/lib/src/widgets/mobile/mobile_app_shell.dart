@@ -48,7 +48,7 @@ class _MobileAppShellState extends ConsumerState<MobileAppShell> {
     super.initState();
     _pingNotifier = ref.read(pingMonitorProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _pingNotifier.startMonitoring();
+      _pingNotifier.pingAllHosts();
     });
   }
 

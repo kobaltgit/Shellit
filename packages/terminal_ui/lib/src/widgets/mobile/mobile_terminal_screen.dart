@@ -153,6 +153,9 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
             widget.host!.lastPingLatencyMs)
         : null;
 
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -166,8 +169,8 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
             children: [
               // Top compact Mobile Terminal Header
               Container(
-                height: 46,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                height: isLandscape ? 36 : 46,
+                padding: EdgeInsets.symmetric(horizontal: isLandscape ? 6 : 8),
                 decoration: const BoxDecoration(
                   color: ShellitColors.obsidianHeader,
                   border: Border(
@@ -177,8 +180,14 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back,
-                          color: ShellitColors.textPrimary, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints.tightFor(
+                        width: isLandscape ? 28 : 36,
+                        height: isLandscape ? 28 : 36,
+                      ),
+                      icon: Icon(Icons.arrow_back,
+                          color: ShellitColors.textPrimary,
+                          size: isLandscape ? 18 : 20),
                       onPressed: _handleBackPress,
                       tooltip: context.tr('common.back', defaultText: 'Back'),
                     ),
@@ -189,9 +198,9 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                           Flexible(
                             child: Text(
                               widget.host?.label ?? 'Terminal',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: ShellitColors.textPrimary,
-                                fontSize: 14,
+                                fontSize: isLandscape ? 12 : 14,
                                 fontWeight: FontWeight.w600,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -226,8 +235,8 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                     if (latency != null) ...[
                       Text(
                         '${latency}ms',
-                        style: const TextStyle(
-                          fontSize: 11,
+                        style: TextStyle(
+                          fontSize: isLandscape ? 10 : 11,
                           fontFamily: 'JetBrains Mono',
                           color: ShellitColors.textMuted,
                         ),
@@ -250,8 +259,14 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                       const SizedBox(width: 8),
                     ],
                     IconButton(
-                      icon: const Icon(Icons.power_settings_new,
-                          color: ShellitColors.statusRed, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints.tightFor(
+                        width: isLandscape ? 28 : 36,
+                        height: isLandscape ? 28 : 36,
+                      ),
+                      icon: Icon(Icons.power_settings_new,
+                          color: ShellitColors.statusRed,
+                          size: isLandscape ? 18 : 20),
                       onPressed: _handleBackPress,
                       tooltip: context.tr('terminal.disconnect_btn',
                           defaultText: 'Disconnect'),

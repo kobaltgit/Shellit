@@ -472,16 +472,18 @@ class SettingsScreen extends ConsumerWidget {
           const SyncSettingsCard(),
           const SizedBox(height: 24),
 
-          // Section: AI Assistant & Gemini
-          _buildSectionHeader(
-            context.tr(
-              'settings.ai.section_title',
-              defaultText: 'AI Assistant & Gemini',
+          if (!isMobile && !isMobilePlatform) ...[
+            // Section: AI Assistant & Gemini
+            _buildSectionHeader(
+              context.tr(
+                'settings.ai.section_title',
+                defaultText: 'AI Assistant & Gemini',
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const AiSettingsCard(),
-          const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            const AiSettingsCard(),
+            const SizedBox(height: 24),
+          ],
 
           if (showDesktopExtensions) ...[
             // Section: Language & Translation

@@ -800,3 +800,29 @@
 - [x] Релиз v0.9.1:
   - [x] Создание описания релиза в `docs/releases/v0.9.1.md`.
   - [x] Повышение версии до `0.9.1+26` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
+
+---
+
+## Фаза 24: Мобильная зрелость, чистота интерфейса и релиз v0.9.2 (Mobile Resilience & v0.9.2)
+- [x] Исправление сбоя дешифрования ключей на Android после E2EE-синхронизации (`BUG-051`):
+  - [x] Изоляция экспорта `encryptedPassphrase` в `SyncManager`: безопасный пропуск AES-GCM дешифрования пустых приватных ключей (`k.encryptedPrivateKey.isNotEmpty`), очистка оперативной памяти `rawPassBytes.fillRange(0, length, 0)`.
+  - [x] Защита от исключения `StateError: Too many elements` в `findKnownHost` через добавление `..limit(1)`.
+  - [x] Честная диагностика и понятные сообщения об ошибках дешифрования учетных данных в `SessionConnectController`.
+  - [x] Отключение 15-секундного фонового сокетного пинга на мобильных клиентах для предотвращения блокировок Fail2ban (заменен на единичный замер и Pull-to-refresh).
+- [x] Оптимизация эргономики и адаптивности мобильного клиента:
+  - [x] Скрытие десктопной секции AI и параметров Gemini в мобильном интерфейсе `SettingsScreen`.
+  - [x] Горизонтальная лента чипов-фильтров по средам (`All`, `Production`, `Staging`, `Development`) и папкам в `MobileHostsView`.
+  - [x] Нативный жест Pull-to-refresh (`RefreshIndicator`) для обновления задержки хостов по требованию.
+  - [x] Полноэкранный адаптивный диалог добавления и редактирования хоста `HostFormDialog` для экранов < 600dp.
+  - [x] Расширенная сенсорная панель терминала `MobileAccessoryBar` (Unix-символы `:`, `_`, `$`, `&`, `PgUp`, `PgDn`, `ENTER` и удобные стрелки).
+  - [x] Компактная высота шапки терминала (36dp) в горизонтальной ориентации `MobileTerminalScreen`.
+  - [x] Защита кнопок действий в `KeychainScreen` от переполнения (`Wrap`) на узких смартфонах.
+- [x] Документирование и Хроника:
+  - [x] Запись 59 («Мобильная зрелость и криптографическая гигиена») в `docs/CHRONICLE.md` и `docs/CHRONICLE.en.md`.
+  - [x] Создание Акта XIII на сайте (`apps/website/src/content/chronicle/` в `ru` и `en`).
+  - [x] Актуализация `StatsHUD.astro`: 51 разобранный баг, статус `v0.9.2 Alpha Preview`.
+- [x] Релиз v0.9.2:
+  - [x] Сборка тестового APK (`app-release.apk`, ~68.8 МБ).
+  - [x] Создание описания релиза в `docs/releases/v0.9.2.md`.
+  - [x] Повышение версии до `0.9.2+27` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
+

@@ -449,71 +449,83 @@ class KeychainScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.copy_rounded,
-                              size: 18,
-                              color: ShellitColors.textSecondary,
-                            ),
-                            tooltip: context.tr(
-                              'keychain.btn_copy_public_key',
-                              defaultText: 'Copy Public Key',
-                            ),
-                            onPressed: () {
-                              Clipboard.setData(
-                                ClipboardData(text: key.publicKey),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    context.tr(
-                                      'keychain.copied_snackbar',
-                                      defaultText:
-                                          'Public key copied to clipboard!',
-                                    ),
+                          Flexible(
+                            child: Wrap(
+                              alignment: WrapAlignment.end,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 2,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.copy_rounded,
+                                    size: 18,
+                                    color: ShellitColors.textSecondary,
                                   ),
-                                  duration: const Duration(seconds: 2),
+                                  tooltip: context.tr(
+                                    'keychain.btn_copy_public_key',
+                                    defaultText: 'Copy Public Key',
+                                  ),
+                                  onPressed: () {
+                                    Clipboard.setData(
+                                      ClipboardData(text: key.publicKey),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          context.tr(
+                                            'keychain.copied_snackbar',
+                                            defaultText:
+                                                'Public key copied to clipboard!',
+                                          ),
+                                        ),
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.cloud_upload_outlined,
-                              size: 18,
-                              color: ShellitColors.statusGreen,
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.cloud_upload_outlined,
+                                    size: 18,
+                                    color: ShellitColors.statusGreen,
+                                  ),
+                                  tooltip: context.tr(
+                                    'keychain.btn_deploy_key',
+                                    defaultText:
+                                        'Deploy Key to Server (ssh-copy-id)',
+                                  ),
+                                  onPressed: () async {
+                                    await DeployKeyDialog.show(context, key);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.visibility_outlined,
+                                    size: 18,
+                                    color: ShellitColors.textSecondary,
+                                  ),
+                                  tooltip: context.tr(
+                                    'keychain.btn_view_details',
+                                    defaultText: 'View Details',
+                                  ),
+                                  onPressed: () =>
+                                      _showKeyDetails(context, key),
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: ShellitColors.statusRed,
+                                  ),
+                                  tooltip: context.tr(
+                                    'keychain.btn_delete_key',
+                                    defaultText: 'Delete Key',
+                                  ),
+                                  onPressed: () =>
+                                      _confirmDelete(context, ref, key),
+                                ),
+                              ],
                             ),
-                            tooltip: context.tr(
-                              'keychain.btn_deploy_key',
-                              defaultText: 'Deploy Key to Server (ssh-copy-id)',
-                            ),
-                            onPressed: () async {
-                              await DeployKeyDialog.show(context, key);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.visibility_outlined,
-                              size: 18,
-                              color: ShellitColors.textSecondary,
-                            ),
-                            tooltip: context.tr(
-                              'keychain.btn_view_details',
-                              defaultText: 'View Details',
-                            ),
-                            onPressed: () => _showKeyDetails(context, key),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 18,
-                              color: ShellitColors.statusRed,
-                            ),
-                            tooltip: context.tr(
-                              'keychain.btn_delete_key',
-                              defaultText: 'Delete Key',
-                            ),
-                            onPressed: () => _confirmDelete(context, ref, key),
                           ),
                         ],
                       ),

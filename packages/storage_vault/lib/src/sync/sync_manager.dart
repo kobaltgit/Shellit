@@ -210,24 +210,31 @@ class SyncManager {
         String? clearPassphrase;
 
         if (activeKey != null) {
-          try {
-            final decryptedPriv = await _cryptoService.decryptBytes(
-              encryptedData: k.encryptedPrivateKey,
-              secretKey: activeKey,
-            );
-            clearPrivateKeyBase64 = base64Encode(decryptedPriv);
-            VaultCryptoService.zeroize(decryptedPriv);
+          if (k.encryptedPrivateKey.isNotEmpty) {
+            try {
+              final decryptedPriv = await _cryptoService.decryptBytes(
+                encryptedData: k.encryptedPrivateKey,
+                secretKey: activeKey,
+              );
+              clearPrivateKeyBase64 = base64Encode(decryptedPriv);
+              VaultCryptoService.zeroize(decryptedPriv);
+            } catch (_) {
+              // Non-fatal: ignore key decryption errors during export
+            }
+          }
 
-            if (k.encryptedPassphrase != null) {
+          if (k.encryptedPassphrase != null &&
+              k.encryptedPassphrase!.isNotEmpty) {
+            try {
               final decryptedPass = await _cryptoService.decryptBytes(
                 encryptedData: k.encryptedPassphrase!,
                 secretKey: activeKey,
               );
               clearPassphrase = utf8.decode(decryptedPass);
               VaultCryptoService.zeroize(decryptedPass);
+            } catch (_) {
+              // Non-fatal: ignore passphrase decryption errors during export
             }
-          } catch (_) {
-            // Non-fatal: ignore key decryption errors during export
           }
         }
 
@@ -489,12 +496,14 @@ class SyncManager {
               VaultCryptoService.zeroize(rawPrivBytes);
             }
             if (data['clearPassphrase'] != null) {
-              final rawPassBytes =
-                  utf8.encode(data['clearPassphrase'] as String);
+              final rawPassBytes = Uint8List.fromList(
+                utf8.encode(data['clearPassphrase'] as String),
+              );
               localEncryptedPassphrase = await _cryptoService.encryptBytes(
                 clearText: rawPassBytes,
                 secretKey: activeKey,
               );
+              VaultCryptoService.zeroize(rawPassBytes);
             }
           }
 

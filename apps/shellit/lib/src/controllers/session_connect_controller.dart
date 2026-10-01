@@ -186,8 +186,12 @@ class SessionConnectController {
               );
             }
             AppLogger.w('Failed to decrypt password: ${f.message}');
+            throw Exception('Failed to decrypt host password: ${f.message}');
           },
         );
+        if (password == null || password!.isEmpty) {
+          throw Exception('Host password is empty or could not be decrypted.');
+        }
       } else if (host.authType == HostAuthType.privateKey) {
         final keyRes = await _keyManager.getDecryptedPrivateKey(
           host.credentialRefId!,
@@ -201,8 +205,14 @@ class SessionConnectController {
               );
             }
             AppLogger.w('Failed to decrypt key: ${f.message}');
+            throw Exception('Failed to decrypt private key: ${f.message}');
           },
         );
+        if (keyBytes == null || keyBytes!.isEmpty) {
+          throw Exception(
+            'SSH private key is empty or could not be decrypted.',
+          );
+        }
       }
     }
 
@@ -274,8 +284,12 @@ class SessionConnectController {
               );
             }
             AppLogger.w('Failed to decrypt password: ${f.message}');
+            throw Exception('Failed to decrypt host password: ${f.message}');
           },
         );
+        if (password == null || password!.isEmpty) {
+          throw Exception('Host password is empty or could not be decrypted.');
+        }
       } else if (host.authType == HostAuthType.privateKey) {
         final keyRes = await _keyManager.getDecryptedPrivateKey(
           host.credentialRefId!,
@@ -289,8 +303,14 @@ class SessionConnectController {
               );
             }
             AppLogger.w('Failed to decrypt key: ${f.message}');
+            throw Exception('Failed to decrypt private key: ${f.message}');
           },
         );
+        if (keyBytes == null || keyBytes!.isEmpty) {
+          throw Exception(
+            'SSH private key is empty or could not be decrypted.',
+          );
+        }
       }
     }
 

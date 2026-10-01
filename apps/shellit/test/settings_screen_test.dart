@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shellit/src/di/app_providers.dart';
+import 'package:shellit/src/screens/settings/ai_settings_card.dart';
 import 'package:shellit/src/screens/settings/settings_screen.dart';
 import 'package:terminal_ui/terminal_ui.dart';
 
@@ -304,7 +305,7 @@ void main() {
     testWidgets('Renders Workspace & Sessions settings card on desktop', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.physicalSize = const Size(1200, 2200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
@@ -314,12 +315,13 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Restore Open Tabs on Startup'), findsOneWidget);
+        expect(find.byType(AiSettingsCard), findsOneWidget);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }
     });
 
-    testWidgets('Hides Workspace & Sessions settings card on mobile', (
+    testWidgets('Hides Workspace & Sessions and AI settings card on mobile', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(400, 800);
@@ -332,6 +334,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Restore Open Tabs on Startup'), findsNothing);
+        expect(find.byType(AiSettingsCard), findsNothing);
       } finally {
         debugDefaultTargetPlatformOverride = null;
       }

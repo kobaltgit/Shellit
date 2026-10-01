@@ -35,7 +35,8 @@ class KnownHostRepository implements IKnownHostRepository {
   @override
   Future<KnownHostEntity?> findKnownHost(String host, int port) async {
     final query = _db.select(_db.knownHostsTable)
-      ..where((t) => t.host.equals(host) & t.port.equals(port));
+      ..where((t) => t.host.equals(host) & t.port.equals(port))
+      ..limit(1);
     final record = await query.getSingleOrNull();
     if (record == null) return null;
     return record.toEntity().copyWith(

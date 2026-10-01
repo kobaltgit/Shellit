@@ -79,6 +79,7 @@
 | **IDEA-027** | **Native Dual-Pane SFTP Pro Suite**           | SFTP        | Фаза 5 & 12.3: Хлебные крошки, мультивыбор (Shift/Ctrl/Ctrl+A), рекурсивный трансфер папок, разрешение конфликтов, встроенный редактор, Drag & Drop |
 | **IDEA-029** | **Core Security Hardening & Zero-Trust Architecture** | Security & Core | Релиз v0.8.4: TOFU / `known_hosts` в Drift/SQLCipher, Randomart (Drunken Bishop), защита от MitM в `dartssh2`, Read-Only сессии, CSP заголовки плагинов, зануление ключей памяти `destroy()` и тесты векторов RFC 9106 Argon2id |
 | **IDEA-031** | **Shell Integration & Command Blocks (OSC 133)** | Terminal | Семантическая разметка FinalTerm/OSC 133 (A, B, C, D), маркеры успехов/ошибок на полосе прокрутки `ShellCommandMarkersOverlay`, хоппинг по командам (`Cmd/Alt+Up/Down`), копирование чистого вывода без шелл-промпта, Zero-Trace бутстрапы Bash/Zsh/Fish, осознанное включение через модальный диалог `ShellIntegrationSetupDialog` (сессия с `clear` / `~/.bashrc` / копирование) без спама в PTY. |
+| **IDEA-034** | **Mobile Resilience & Pure Touch UX** | Mobile & UX | Релиз v0.9.2: Изоляция экспорта E2EE-паролей при синхронизации (`BUG-051`), замена агрессивного TCP-пинга на Pull-to-refresh (`RefreshIndicator`), сокрытие AI-настроек на смартфонах, лента фильтров сред и папок, полноэкранный диалог добавления хоста, расширенная тач-панель `MobileAccessoryBar` (Unix-символы, Enter, стрелки) и компактная ландшафтная шапка. |
 
 ---
 

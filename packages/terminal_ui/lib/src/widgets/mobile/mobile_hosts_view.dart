@@ -266,12 +266,132 @@ class MobileHostsView extends ConsumerWidget {
     );
   }
 
+  Widget _buildFilterChips(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(hostFilterProvider);
+    final folders = ref.watch(foldersProvider);
+
+    final isAllSelected =
+        filter.selectedEnv == null && filter.selectedFolderId == null;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('All'),
+            selected: isAllSelected,
+            onSelected: (_) {
+              ref.read(hostFilterProvider.notifier).state = filter.copyWith(
+                selectedEnv: () => null,
+                selectedFolderId: () => null,
+              );
+            },
+            selectedColor: ShellitColors.accentBlue.withValues(alpha: 0.25),
+            checkmarkColor: ShellitColors.accentBlue,
+            labelStyle: TextStyle(
+              fontSize: 12,
+              color: isAllSelected
+                  ? ShellitColors.accentBlue
+                  : ShellitColors.textSecondary,
+              fontWeight: isAllSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+            backgroundColor: ShellitColors.obsidianCard,
+            side: BorderSide(
+              color: isAllSelected
+                  ? ShellitColors.accentBlue
+                  : ShellitColors.border,
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildEnvChip(ref, filter, HostEnvironment.production, 'Production',
+              ShellitColors.statusRed),
+          const SizedBox(width: 8),
+          _buildEnvChip(ref, filter, HostEnvironment.staging, 'Staging',
+              ShellitColors.statusYellow),
+          const SizedBox(width: 8),
+          _buildEnvChip(ref, filter, HostEnvironment.development, 'Development',
+              ShellitColors.accentCyan),
+          if (folders.isNotEmpty) ...[
+            const SizedBox(width: 8),
+            Container(width: 1, height: 18, color: ShellitColors.border),
+            const SizedBox(width: 8),
+            for (final folder in folders) ...[
+              FilterChip(
+                avatar: const Icon(Icons.folder_outlined,
+                    size: 14, color: ShellitColors.textMuted),
+                label: Text(folder.name),
+                selected: filter.selectedFolderId == folder.id,
+                onSelected: (selected) {
+                  ref.read(hostFilterProvider.notifier).state = filter.copyWith(
+                    selectedFolderId: () => selected ? folder.id : null,
+                    selectedEnv: () => null,
+                  );
+                },
+                selectedColor: ShellitColors.accentBlue.withValues(alpha: 0.25),
+                checkmarkColor: ShellitColors.accentBlue,
+                labelStyle: TextStyle(
+                  fontSize: 12,
+                  color: filter.selectedFolderId == folder.id
+                      ? ShellitColors.accentBlue
+                      : ShellitColors.textSecondary,
+                  fontWeight: filter.selectedFolderId == folder.id
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+                backgroundColor: ShellitColors.obsidianCard,
+                side: BorderSide(
+                  color: filter.selectedFolderId == folder.id
+                      ? ShellitColors.accentBlue
+                      : ShellitColors.border,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnvChip(
+    WidgetRef ref,
+    HostFilterState filter,
+    HostEnvironment env,
+    String label,
+    Color color,
+  ) {
+    final isSelected = filter.selectedEnv == env;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        ref.read(hostFilterProvider.notifier).state = filter.copyWith(
+          selectedEnv: () => selected ? env : null,
+          selectedFolderId: () => null,
+        );
+      },
+      selectedColor: color.withValues(alpha: 0.2),
+      checkmarkColor: color,
+      labelStyle: TextStyle(
+        fontSize: 11,
+        color: isSelected ? color : ShellitColors.textSecondary,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+      ),
+      backgroundColor: ShellitColors.obsidianCard,
+      side: BorderSide(
+        color: isSelected ? color : ShellitColors.border,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final allHosts = ref.watch(hostsProvider);
     final hosts = ref.watch(filteredHostsProvider);
     final pingState = ref.watch(pingMonitorProvider);
 
-    if (hosts.isEmpty) {
+    if (allHosts.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -318,86 +438,125 @@ class MobileHostsView extends ConsumerWidget {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 80),
-      itemCount: hosts.length,
-      itemBuilder: (context, index) {
-        final host = hosts[index];
-        final latency = pingState.latencyFor(host.id) ?? host.lastPingLatencyMs;
-        final pingStatus = latency.pingStatus;
+    return Column(
+      children: [
+        _buildFilterChips(context, ref),
+        Expanded(
+          child: RefreshIndicator(
+            color: ShellitColors.accentBlue,
+            backgroundColor: ShellitColors.obsidianCard,
+            onRefresh: () async {
+              await ref.read(pingMonitorProvider.notifier).pingAllHosts();
+            },
+            child: hosts.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      const SizedBox(height: 60),
+                      Center(
+                        child: Text(
+                          context.tr('hosts.empty_desc',
+                              defaultText: 'No hosts match current filter.'),
+                          style: const TextStyle(
+                              color: ShellitColors.textSecondary),
+                        ),
+                      ),
+                    ],
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 80),
+                    itemCount: hosts.length,
+                    itemBuilder: (context, index) {
+                      final host = hosts[index];
+                      final latency = pingState.latencyFor(host.id) ??
+                          host.lastPingLatencyMs;
+                      final pingStatus = latency.pingStatus;
 
-        return Card(
-          color: ShellitColors.obsidianCard,
-          margin: const EdgeInsets.only(bottom: 10),
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            side: const BorderSide(color: ShellitColors.border, width: 1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: InkWell(
-            onTap: () => onConnect?.call(host),
-            onLongPress: () => _showHostOptionsBottomSheet(context, ref, host),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  OsIconBadge(os: host.osType, size: 36),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                host.label,
-                                style: const TextStyle(
-                                  color: ShellitColors.textPrimary,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (host.environment != HostEnvironment.production)
-                              _buildEnvBadge(host.environment),
-                            if (host.environment == HostEnvironment.production)
-                              _buildProdBadge(),
-                          ],
+                      return Card(
+                        color: ShellitColors.obsidianCard,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(
+                          side: const BorderSide(
+                              color: ShellitColors.border, width: 1),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${host.username}@${host.hostname}:${host.port}',
-                                style: const TextStyle(
-                                  fontFamily: 'JetBrains Mono',
-                                  color: ShellitColors.textMuted,
-                                  fontSize: 12,
+                        child: InkWell(
+                          onTap: () => onConnect?.call(host),
+                          onLongPress: () =>
+                              _showHostOptionsBottomSheet(context, ref, host),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Row(
+                              children: [
+                                OsIconBadge(os: host.osType, size: 36),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              host.label,
+                                              style: const TextStyle(
+                                                color:
+                                                    ShellitColors.textPrimary,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          if (host.environment !=
+                                              HostEnvironment.production)
+                                            _buildEnvBadge(host.environment),
+                                          if (host.environment ==
+                                              HostEnvironment.production)
+                                            _buildProdBadge(),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              '${host.username}@${host.hostname}:${host.port}',
+                                              style: const TextStyle(
+                                                fontFamily: 'JetBrains Mono',
+                                                color: ShellitColors.textMuted,
+                                                fontSize: 12,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          _buildPingIndicator(
+                                              latency, pingStatus),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                IconButton(
+                                  icon: const Icon(Icons.more_vert,
+                                      color: ShellitColors.textSecondary,
+                                      size: 20),
+                                  onPressed: () => _showHostOptionsBottomSheet(
+                                      context, ref, host),
+                                ),
+                              ],
                             ),
-                            _buildPingIndicator(latency, pingStatus),
-                          ],
+                          ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert,
-                        color: ShellitColors.textSecondary, size: 20),
-                    onPressed: () =>
-                        _showHostOptionsBottomSheet(context, ref, host),
-                  ),
-                ],
-              ),
-            ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 

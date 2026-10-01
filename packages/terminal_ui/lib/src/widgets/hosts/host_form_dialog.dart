@@ -200,8 +200,13 @@ class _HostFormDialogState extends State<HostFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initialHost != null;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return AlertDialog(
+      insetPadding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 16)
+          : const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0),
       title: Text(
         isEdit
             ? context.tr('hosts.form.title_edit', defaultText: 'Edit Host')
@@ -209,7 +214,7 @@ class _HostFormDialogState extends State<HostFormDialog> {
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       ),
       content: SizedBox(
-        width: 500,
+        width: isMobile ? double.infinity : 500,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(

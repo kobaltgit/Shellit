@@ -1,5 +1,6 @@
 import 'package:core_foundation/core_foundation.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:storage_vault/storage_vault.dart';
 import 'package:test/test.dart';
 
@@ -287,6 +288,37 @@ void main() {
           ),
           isFalse,
         );
+      });
+
+      test(
+          'findKnownHost does not throw StateError when duplicate records exist (BUG-051)',
+          () async {
+        await db.into(db.knownHostsTable).insert(
+              KnownHostsTableCompanion.insert(
+                id: 'kh-dup-1',
+                host: 'example.com',
+                port: const Value(22),
+                keyType: 'ssh-ed25519',
+                fingerprintSha256: 'SHA256:fingerprint1',
+                firstSeenAt: DateTime.now(),
+                lastSeenAt: DateTime.now(),
+              ),
+            );
+        await db.into(db.knownHostsTable).insert(
+              KnownHostsTableCompanion.insert(
+                id: 'kh-dup-2',
+                host: 'example.com',
+                port: const Value(22),
+                keyType: 'ssh-ed25519',
+                fingerprintSha256: 'SHA256:fingerprint2',
+                firstSeenAt: DateTime.now(),
+                lastSeenAt: DateTime.now(),
+              ),
+            );
+
+        final result = await repositoryOpen.findKnownHost('example.com', 22);
+        expect(result, isNotNull);
+        expect(result!.host, 'example.com');
       });
     });
   });
