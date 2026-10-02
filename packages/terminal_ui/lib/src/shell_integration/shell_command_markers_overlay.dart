@@ -29,10 +29,19 @@ class ShellCommandMarkersOverlay extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
+        final aliveBlocks =
+            blocks.where((b) => !b.isPendingPrompt && !b.isEvicted).toList();
+        final evictedCount = blocks.where((b) => b.isEvicted).length;
+
+        if (aliveBlocks.isEmpty && evictedCount == 0) {
+          return const SizedBox.shrink();
+        }
+
         // In active UI, only render scrollbar markers when terminal actually has scrollback history
         if (checkScrollback &&
             terminal.viewHeight > 0 &&
-            terminal.buffer.lines.length <= terminal.viewHeight) {
+            terminal.buffer.lines.length <= terminal.viewHeight &&
+            evictedCount == 0) {
           return const SizedBox.shrink();
         }
 
@@ -43,13 +52,23 @@ class ShellCommandMarkersOverlay extends StatelessWidget {
             final trackHeight = constraints.maxHeight;
             if (trackHeight <= 0) return const SizedBox.shrink();
 
+            final topOffset = evictedCount > 0 ? 12.0 : 0.0;
+
             return SizedBox(
               width: 12,
               height: trackHeight,
               child: Stack(
                 children: [
-                  for (final block in blocks)
-                    _buildMarker(context, block, totalLines, trackHeight),
+                  if (evictedCount > 0)
+                    _buildEvictedCounter(context, evictedCount),
+                  for (final block in aliveBlocks)
+                    _buildMarker(
+                      context,
+                      block,
+                      totalLines,
+                      trackHeight,
+                      topOffset: topOffset,
+                    ),
                 ],
               ),
             );
@@ -59,18 +78,52 @@ class ShellCommandMarkersOverlay extends StatelessWidget {
     );
   }
 
+  Widget _buildEvictedCounter(BuildContext context, int count) {
+    return Positioned(
+      top: 0,
+      right: 1,
+      child: Tooltip(
+        message:
+            '$count command(s) evicted from scrollback history (retaining last ${terminal.maxLines} lines)',
+        waitDuration: const Duration(milliseconds: 150),
+        child: Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(2),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 0.8,
+            ),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.arrow_drop_up,
+              size: 10,
+              color: Colors.white70,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMarker(
     BuildContext context,
     ShellCommandBlock block,
     int totalLines,
-    double trackHeight,
-  ) {
-    if (block.isPendingPrompt) {
+    double trackHeight, {
+    double topOffset = 0.0,
+  }) {
+    if (block.isPendingPrompt || block.isEvicted) {
       return const SizedBox.shrink();
     }
 
     final ratio = (block.promptLine / totalLines).clamp(0.0, 1.0);
-    final top = (ratio * (trackHeight - 10)).clamp(0.0, trackHeight - 10);
+    final availableHeight = max(1.0, trackHeight - 10 - topOffset);
+    final top = (topOffset + ratio * availableHeight)
+        .clamp(topOffset, trackHeight - 10);
 
     Color color;
     String tooltipMsg;

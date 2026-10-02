@@ -429,4 +429,167 @@ void main() {
       TerminalSessionRegistry.instance.remove('test-si-screen');
     });
   });
+
+  group('Scrollback eviction tracking tests', () {
+    test(
+        'dynamically updates promptLine and detects eviction when circular buffer trims lines',
+        () {
+      final terminal = Terminal(maxLines: 30);
+      final controller = ShellIntegrationController();
+
+      terminal.write('cmd-1: ');
+      controller.handleOSC('133', ['A'], terminal);
+
+      final block = controller.currentBlock!;
+      expect(block.isEvicted, isFalse);
+      expect(block.promptLine, 0);
+
+      // Write 40 lines to overflow the 30-line buffer completely
+      for (int i = 0; i < 40; i++) {
+        terminal.write('\r\nline $i');
+      }
+
+      // Initial prompt buffer line should now be evicted
+      expect(block.isEvicted, isTrue);
+
+      controller.dispose();
+    });
+
+    test('command hopping skips evicted command blocks', () {
+      final controller = ShellIntegrationController();
+
+      final b1 = ShellCommandBlock(
+        id: 1,
+        promptLine: 0,
+        isEvicted: true,
+        exitCode: 0,
+      );
+      final b2 = ShellCommandBlock(
+        id: 2,
+        promptLine: 10,
+        isEvicted: false,
+        exitCode: 0,
+      );
+      final b3 = ShellCommandBlock(
+        id: 3,
+        promptLine: 25,
+        isEvicted: false,
+        exitCode: 1,
+      );
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+      controller.addBlock(b3);
+
+      // When jumping back from 15, should hit b2 (10), and from 10 should return null (b1 is evicted)
+      expect(controller.getPreviousCommandPromptLine(15), 10);
+      expect(controller.getPreviousCommandPromptLine(10), isNull);
+
+      // When jumping forward from 0, should hit b2 (10), skipping evicted b1
+      expect(controller.getNextCommandPromptLine(0), 10);
+
+      controller.dispose();
+    });
+
+    testWidgets(
+        'ShellCommandMarkersOverlay renders evicted counter and hides evicted marker',
+        (tester) async {
+      final controller = ShellIntegrationController();
+      final terminal = Terminal(maxLines: 50);
+
+      final b1 = ShellCommandBlock(
+        id: 1,
+        promptLine: 2,
+        isEvicted: true,
+        exitCode: 0,
+        startTime: DateTime.now(),
+      );
+      final b2 = ShellCommandBlock(
+        id: 2,
+        promptLine: 20,
+        isEvicted: false,
+        exitCode: 0,
+        startTime: DateTime.now(),
+      );
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 12,
+              height: 200,
+              child: ShellCommandMarkersOverlay(
+                controller: controller,
+                terminal: terminal,
+                onScrollToLine: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Evicted counter icon should be rendered at the top
+      expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
+      // Tooltip should describe evicted count
+      expect(
+        find.byTooltip(
+            '1 command(s) evicted from scrollback history (retaining last 50 lines)'),
+        findsOneWidget,
+      );
+
+      controller.dispose();
+    });
+
+    testWidgets(
+        'ShellGutterMarkersOverlay hides gutter marker for evicted block',
+        (tester) async {
+      final controller = ShellIntegrationController();
+      final terminal = Terminal(maxLines: 50);
+      final scrollController = ScrollController();
+
+      final b1 = ShellCommandBlock(
+        id: 1,
+        promptLine: 2,
+        isEvicted: true,
+        exitCode: 0,
+        startTime: DateTime.now(),
+      );
+      final b2 = ShellCommandBlock(
+        id: 2,
+        promptLine: 5,
+        isEvicted: false,
+        exitCode: 0,
+        startTime: DateTime.now(),
+      );
+
+      controller.addBlock(b1);
+      controller.addBlock(b2);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 22,
+              height: 300,
+              child: ShellGutterMarkersOverlay(
+                controller: controller,
+                terminal: terminal,
+                scrollController: scrollController,
+                lineHeight: 18.0,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Only 1 gutter marker should be rendered (for b2), b1 should be skipped
+      expect(find.byType(Tooltip), findsOneWidget);
+
+      controller.dispose();
+      scrollController.dispose();
+    });
+  });
 }

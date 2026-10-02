@@ -45,6 +45,9 @@ export 'package:core_foundation/core_foundation.dart'
     show DangerousCommandChecker;
 export 'src/widgets/terminal/host_key_dialog.dart';
 export 'src/widgets/terminal/local_terminal_button.dart';
+export 'src/widgets/terminal/terminal_stream_coalescer.dart';
+export 'src/widgets/terminal/box_drawing_vector_renderer.dart';
+export 'src/widgets/terminal/terminal_cursor_overlay.dart';
 
 // OSC 133 Shell Integration
 export 'src/shell_integration/shell_command_block.dart';

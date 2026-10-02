@@ -1,7 +1,12 @@
+import 'package:xterm/xterm.dart';
+
 /// Represents a structured command execution block detected via OSC 133 sequences.
 class ShellCommandBlock {
   final int id;
-  final int promptLine;
+  final BufferLine? promptBufferLine;
+  final int _rawPromptLine;
+  bool _manualEvicted;
+
   int? commandLine;
   int? outputStartLine;
   int? endLine;
@@ -12,7 +17,9 @@ class ShellCommandBlock {
 
   ShellCommandBlock({
     required this.id,
-    required this.promptLine,
+    required int promptLine,
+    this.promptBufferLine,
+    bool isEvicted = false,
     this.commandLine,
     this.outputStartLine,
     this.endLine,
@@ -20,7 +27,30 @@ class ShellCommandBlock {
     this.exitCode,
     this.startTime,
     this.endTime,
-  });
+  })  : _rawPromptLine = promptLine,
+        _manualEvicted = isEvicted;
+
+  /// Dynamic line index of the prompt in the active terminal buffer.
+  /// Automatically updates as earlier lines are scrolled or trimmed.
+  int get promptLine {
+    if (promptBufferLine != null && promptBufferLine!.attached) {
+      return promptBufferLine!.index;
+    }
+    return _rawPromptLine;
+  }
+
+  /// True if the command's prompt line has been evicted from the scrollback memory buffer.
+  bool get isEvicted {
+    if (_manualEvicted) return true;
+    if (promptBufferLine != null) {
+      return !promptBufferLine!.attached;
+    }
+    return false;
+  }
+
+  set isEvicted(bool value) {
+    _manualEvicted = value;
+  }
 
   /// True if command completed with success status (code 0).
   bool get isSuccess => exitCode == 0;

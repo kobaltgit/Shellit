@@ -236,79 +236,83 @@ class _SplitMatrixViewState extends State<SplitMatrixView> {
     }
     paneHost ??= widget.host;
 
-    return GestureDetector(
-      onTap: () {
-        if (_focusedIndex != index) {
-          setState(() => _focusedIndex = index);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isFocused ? ShellitColors.accentBlue : ShellitColors.border,
-            width: isFocused ? 2 : 0.5,
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: () {
+          if (_focusedIndex != index) {
+            setState(() => _focusedIndex = index);
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color:
+                  isFocused ? ShellitColors.accentBlue : ShellitColors.border,
+              width: isFocused ? 2 : 0.5,
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: TerminalScreen(
-                key: ValueKey('terminal-pane-$index-${session.id}'),
-                session: session,
-                host: paneHost,
-                autoFocus: isFocused,
-                onBroadcastOutput: (data) => _handleBroadcast(data, index),
-              ),
-            ),
-            // Pane header actions: Undock & Close
-            Positioned(
-              top: 8,
-              right: 180, // Safe distance from SFTP & REC buttons
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: Colors.white12),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: TerminalScreen(
+                  key: ValueKey('terminal-pane-$index-${session.id}'),
+                  session: session,
+                  host: paneHost,
+                  autoFocus: isFocused,
+                  onBroadcastOutput: (data) => _handleBroadcast(data, index),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (widget.onUndockPane != null)
-                      Tooltip(
-                        message: 'Extract / Undock to standalone tab',
-                        child: InkWell(
-                          onTap: () => widget.onUndockPane!(index),
-                          borderRadius: BorderRadius.circular(3),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 2),
-                            child: Icon(Icons.open_in_new,
-                                size: 13, color: Colors.white70),
+              ),
+              // Pane header actions: Undock & Close
+              Positioned(
+                top: 8,
+                right: 180, // Safe distance from SFTP & REC buttons
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Colors.white12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (widget.onUndockPane != null)
+                        Tooltip(
+                          message: 'Extract / Undock to standalone tab',
+                          child: InkWell(
+                            onTap: () => widget.onUndockPane!(index),
+                            borderRadius: BorderRadius.circular(3),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 2),
+                              child: Icon(Icons.open_in_new,
+                                  size: 13, color: Colors.white70),
+                            ),
                           ),
                         ),
-                      ),
-                    if (widget.onClosePane != null) ...[
-                      const SizedBox(width: 2),
-                      Tooltip(
-                        message: 'Close this pane',
-                        child: InkWell(
-                          onTap: () => widget.onClosePane!(index),
-                          borderRadius: BorderRadius.circular(3),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 4, vertical: 2),
-                            child: Icon(Icons.close,
-                                size: 13, color: Colors.white70),
+                      if (widget.onClosePane != null) ...[
+                        const SizedBox(width: 2),
+                        Tooltip(
+                          message: 'Close this pane',
+                          child: InkWell(
+                            onTap: () => widget.onClosePane!(index),
+                            borderRadius: BorderRadius.circular(3),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 2),
+                              child: Icon(Icons.close,
+                                  size: 13, color: Colors.white70),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -54,7 +54,7 @@ class ShellGutterMarkersOverlay extends StatelessWidget {
             final visibleBlocks = <Widget>[];
 
             for (final block in blocks) {
-              if (block.isPendingPrompt) continue;
+              if (block.isPendingPrompt || block.isEvicted) continue;
 
               double y;
               if (render != null && render.hasSize) {

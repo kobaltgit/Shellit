@@ -76,9 +76,16 @@ class ShellIntegrationController extends ChangeNotifier {
     if (_currentBlock != null && _currentBlock!.endLine == null) {
       _currentBlock!.endLine = curY;
     }
+
+    BufferLine? lineRef;
+    if (curY >= 0 && curY < terminal.buffer.lines.length) {
+      lineRef = terminal.buffer.lines[curY];
+    }
+
     _currentBlock = ShellCommandBlock(
       id: ++_blockIdCounter,
       promptLine: curY,
+      promptBufferLine: lineRef,
     );
     _blocks.add(_currentBlock!);
     notifyListeners();
@@ -121,6 +128,9 @@ class ShellIntegrationController extends ChangeNotifier {
 
   /// Extracts clean standard output of a command block from the terminal buffer.
   String getBlockOutput(Terminal terminal, ShellCommandBlock block) {
+    if (block.isEvicted) {
+      return '';
+    }
     final start = block.outputStartLine ?? block.promptLine;
     final end = block.endLine ?? terminal.buffer.lines.length;
     final sb = StringBuffer();
@@ -134,6 +144,7 @@ class ShellIntegrationController extends ChangeNotifier {
   /// Finds the prompt line of the previous command block relative to [currentLine].
   int? getPreviousCommandPromptLine(int currentLine) {
     for (int i = _blocks.length - 1; i >= 0; i--) {
+      if (_blocks[i].isEvicted) continue;
       if (_blocks[i].promptLine < currentLine) {
         return _blocks[i].promptLine;
       }
@@ -144,6 +155,7 @@ class ShellIntegrationController extends ChangeNotifier {
   /// Finds the prompt line of the next command block relative to [currentLine].
   int? getNextCommandPromptLine(int currentLine) {
     for (int i = 0; i < _blocks.length; i++) {
+      if (_blocks[i].isEvicted) continue;
       if (_blocks[i].promptLine > currentLine) {
         return _blocks[i].promptLine;
       }

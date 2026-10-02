@@ -22,6 +22,7 @@ import 'multiline_paste_dialog.dart';
 import 'prod_confirmation_dialog.dart';
 import 'prod_guard_border.dart';
 import 'terminal_context_menu.dart';
+import 'terminal_cursor_overlay.dart';
 import 'terminal_link_detector.dart';
 import 'terminal_session_registry.dart';
 import 'terminal_shortcuts_dialog.dart';
@@ -64,7 +65,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   late final ShellIntegrationController _shellIntegration;
   late final FocusNode _focusNode;
   Timer? _blinkTimer;
-  bool _cursorVisible = true;
+  final ValueNotifier<bool> _cursorBlinkNotifier = ValueNotifier<bool>(true);
+  final ValueNotifier<int> _terminalChangeNotifier = ValueNotifier<int>(0);
 
   final StringBuffer _commandLineBuffer = StringBuffer();
   bool _isAwaitingConfirmation = false;
@@ -168,10 +170,18 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _recordTimer?.cancel();
     _recordTimer = null;
     _stopCursorBlink();
+    _cursorBlinkNotifier.dispose();
+    _terminalChangeNotifier.dispose();
     _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    _stopCursorBlink();
+    super.deactivate();
   }
 
   void _onShellIntegrationChanged() {
@@ -181,6 +191,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   void _onTerminalChanged() {
     if (_isDisposed || !mounted) return;
+    _terminalChangeNotifier.value++;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isDisposed && mounted) {
         _shellIntegration.notifyUpdated();
@@ -198,36 +209,61 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   void _startCursorBlink() {
     _blinkTimer?.cancel();
-    _cursorVisible = true;
-    _terminal.setCursorVisibleMode(true);
-    _terminal.notifyListeners();
+    _cursorBlinkNotifier.value = true;
+
+    if (!mounted || !_focusNode.hasFocus) {
+      return;
+    }
 
     _blinkTimer = Timer.periodic(const Duration(milliseconds: 550), (timer) {
       if (!mounted || !_focusNode.hasFocus) {
         timer.cancel();
+        _blinkTimer = null;
         return;
       }
-      _cursorVisible = !_cursorVisible;
-      _terminal.setCursorVisibleMode(_cursorVisible);
-      _terminal.notifyListeners();
+      _cursorBlinkNotifier.value = !_cursorBlinkNotifier.value;
     });
   }
 
   void _stopCursorBlink() {
     _blinkTimer?.cancel();
     _blinkTimer = null;
-    _cursorVisible = true;
-    _terminal.setCursorVisibleMode(true);
-    _terminal.notifyListeners();
+    _cursorBlinkNotifier.value = true;
   }
 
   void _resetCursorBlink() {
     if (_focusNode.hasFocus) {
-      _cursorVisible = true;
-      _terminal.setCursorVisibleMode(true);
-      _terminal.notifyListeners();
+      _cursorBlinkNotifier.value = true;
       _startCursorBlink();
     }
+  }
+
+  TerminalTheme _createThemeWithHiddenCursor(TerminalTheme theme) {
+    return TerminalTheme(
+      cursor: Colors.transparent,
+      selection: theme.selection,
+      foreground: theme.foreground,
+      background: theme.background,
+      black: theme.black,
+      white: theme.white,
+      red: theme.red,
+      green: theme.green,
+      yellow: theme.yellow,
+      blue: theme.blue,
+      magenta: theme.magenta,
+      cyan: theme.cyan,
+      brightBlack: theme.brightBlack,
+      brightRed: theme.brightRed,
+      brightGreen: theme.brightGreen,
+      brightYellow: theme.brightYellow,
+      brightBlue: theme.brightBlue,
+      brightMagenta: theme.brightMagenta,
+      brightCyan: theme.brightCyan,
+      brightWhite: theme.brightWhite,
+      searchHitBackground: theme.searchHitBackground,
+      searchHitBackgroundCurrent: theme.searchHitBackgroundCurrent,
+      searchHitForeground: theme.searchHitForeground,
+    );
   }
 
   bool get _isReadOnly =>
@@ -618,6 +654,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     ShellCommandBlock? targetBlock;
     for (int i = blocks.length - 1; i >= 0; i--) {
       final block = blocks[i];
+      if (block.isEvicted) continue;
       final targetPixels =
           (block.promptLine * lineHeight).clamp(0.0, maxScroll);
       if (targetPixels < currentOffset - 1.0) {
@@ -661,6 +698,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     ShellCommandBlock? targetBlock;
     for (int i = 0; i < blocks.length; i++) {
       final block = blocks[i];
+      if (block.isEvicted) continue;
       final targetPixels =
           (block.promptLine * lineHeight).clamp(0.0, maxScroll);
       if (targetPixels > currentOffset + 1.0) {
@@ -1212,31 +1250,80 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                           );
                         }
                       });
-                      return TerminalView(
-                        _terminal,
-                        key: _terminalViewKey,
-                        controller: _controller,
-                        scrollController: _scrollController,
-                        focusNode: _focusNode,
-                        autofocus: widget.autoFocus,
-                        hardwareKeyboardOnly: isDesktop,
-                        padding: const EdgeInsets.fromLTRB(22, 12, 12, 12),
-                        onKeyEvent: _handleTerminalKeyEvent,
-                        mouseCursor: _hoveredLink != null
-                            ? SystemMouseCursors.click
-                            : SystemMouseCursors.text,
-                        onTapUp: (details, offset) {
-                          _handleTerminalTapUp(details, offset);
-                        },
-                        onSecondaryTapUp: (details, offset) {
-                          _showContextMenu(details.globalPosition, offset);
-                        },
-                        theme: terminalTheme,
-                        textStyle: TerminalStyle(
-                          fontSize: _fontSize,
-                          fontFamily: 'JetBrains Mono',
-                        ),
-                        backgroundOpacity: 1.0,
+                      final themeWithHiddenCursor =
+                          _createThemeWithHiddenCursor(terminalTheme);
+
+                      return Stack(
+                        children: [
+                          TerminalView(
+                            _terminal,
+                            key: _terminalViewKey,
+                            controller: _controller,
+                            scrollController: _scrollController,
+                            focusNode: _focusNode,
+                            autofocus: widget.autoFocus,
+                            hardwareKeyboardOnly: isDesktop,
+                            padding: const EdgeInsets.fromLTRB(22, 12, 12, 12),
+                            onKeyEvent: _handleTerminalKeyEvent,
+                            mouseCursor: _hoveredLink != null
+                                ? SystemMouseCursors.click
+                                : SystemMouseCursors.text,
+                            onTapUp: (details, offset) {
+                              _handleTerminalTapUp(details, offset);
+                            },
+                            onSecondaryTapUp: (details, offset) {
+                              _showContextMenu(details.globalPosition, offset);
+                            },
+                            theme: themeWithHiddenCursor,
+                            textStyle: TerminalStyle(
+                              fontSize: _fontSize,
+                              fontFamily: 'JetBrains Mono',
+                            ),
+                            backgroundOpacity: 1.0,
+                          ),
+                          Positioned.fill(
+                            child: ClipRect(
+                              child: AnimatedBuilder(
+                                animation: Listenable.merge([
+                                  _terminalChangeNotifier,
+                                  _scrollController,
+                                  _focusNode,
+                                ]),
+                                builder: (context, _) {
+                                  final render = _terminalViewKey
+                                      .currentState?.renderTerminal;
+                                  final cellSize = (render != null &&
+                                          render.hasSize)
+                                      ? render.cellSize
+                                      : Size(_fontSize * 0.6, _fontSize * 1.4);
+
+                                  final scrollOffset =
+                                      _scrollController.hasClients
+                                          ? _scrollController.offset
+                                          : 0.0;
+
+                                  final cursorX = 22.0 +
+                                      (_terminal.buffer.cursorX *
+                                          cellSize.width);
+                                  final cursorY = 12.0 +
+                                      (_terminal.buffer.absoluteCursorY *
+                                          cellSize.height) -
+                                      scrollOffset;
+
+                                  return TerminalCursorOverlay(
+                                    cursorOffset: Offset(cursorX, cursorY),
+                                    cellSize: cellSize,
+                                    cursorType: TerminalCursorType.block,
+                                    cursorColor: terminalTheme.cursor,
+                                    blinkNotifier: _cursorBlinkNotifier,
+                                    hasFocus: _focusNode.hasFocus,
+                                    isVisible: _terminal.cursorVisibleMode,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),

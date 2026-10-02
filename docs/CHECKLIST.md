@@ -826,3 +826,34 @@
   - [x] Создание описания релиза в `docs/releases/v0.9.2.md`.
   - [x] Повышение версии до `0.9.2+27` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
 
+---
+
+---
+
+## Фаза 25: Высокопроизводительный кадровый рендеринг, VSync-коалесцинг и релиз v0.9.3 (High-Performance Rendering & v0.9.3)
+- [x] Независимый аудит кодовой базы в Google AI Studio с помощью Gemini 3.8 Flash:
+  - [x] Глубокий технический аудит узких мест конвейера рендеринга Flutter в терминале и телеметрии Shellit (`docs/TERMINAL_RENDERING_ARCHITECTURE.md`).
+  - [x] Регистрация дефектов и рисков в `docs/BUGS_AND_ISSUES.md`: `BUG-052` (P1, idle-жор каретки), `BUG-053` (P1, сокетный троттлинг и UTF-8), `BUG-054` (P2, векторные рамки).
+  - [x] Фиксация фичи `IDEA-036` (High-Performance Terminal Rendering Pipeline) в `docs/IDEAS_AND_BACKLOG.md`.
+  - [x] Дополнение инструкции Агента 3 (`docs/agents/AGENT_3_TERMINAL_UI.md`) 5 обязательными архитектурными инвариантами рендеринга.
+- [x] Модернизация графического конвейера терминала:
+  - [x] Реализация изолированного слоя курсора `TerminalCursorOverlay` через `RepaintBoundary` и пассивный `IgnorePointer`, перевод таймера на `ValueNotifier<bool>` без `notifyListeners()` для устранения 550 мс idle-жора (`BUG-052`).
+  - [x] Внедрение VSync Frame-Coalescing в `TerminalStreamCoalescer` (`SchedulerBinding.scheduleFrameCallback`, fallback-таймер 16 мс, OOM Guard >512 КБ, `_getIncompleteUtf8TrailingByteCount`) для сокета SSH (`BUG-053`).
+  - [x] Оборачивание панелей `SplitMatrixView` в `RepaintBoundary` и изоляция слотов сплитов от взаимной инвалидации.
+  - [x] Векторный рендеринг псевдографики Box-drawing (`BoxDrawingVectorRenderer`) через `canvas.drawLine` по субпиксельному центру знакоместа для всех 128 символов `U+2500..U+257F` (`BUG-054`).
+- [x] Целостность шелл-интеграции и динамическое вытеснение истории (OSC 133):
+  - [x] Привязка `ShellCommandBlock` к живой строке буфера `BufferLine with IndexedItem` с реактивным определением вытеснения `isEvicted`.
+  - [x] Синхронное сокрытие маркеров вытесненных команд на левом поле (`ShellGutterMarkersOverlay`) и на полосе прокрутки (`ShellCommandMarkersOverlay`).
+  - [x] Индикатор `[▲ N]` на скроллбаре с поясняющим тултипом о количестве вытесненных команд из истории.
+  - [x] Безопасная клавиатурная навигация `Alt+Up` / `Alt+Down` с пропуском вытесненных блоков.
+- [x] Документирование и Хроника:
+  - [x] Запись 60 («Глубокий аудит графического конвейера») и Запись 61 («Радикальная модернизация рендеринга терминала») в `docs/CHRONICLE.md` и `docs/CHRONICLE.en.md`.
+  - [x] Создание Акта XIV («Аудит в Google AI Studio и триумф кадрового конвейера») на сайте (`apps/website/src/content/chronicle/` в `ru` и `en`).
+  - [x] Актуализация `StatsHUD.astro`: 54 разобранных бага, статус `v0.9.3 Alpha Preview`, 460+ зеленых тестов.
+- [x] Релиз v0.9.3:
+  - [x] Создание описания релиза в `docs/releases/v0.9.3.md`.
+  - [x] Повышение версии до `0.9.3+28` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
+  - [x] Сборка и верификация: 202 теста `terminal_ui`, 63 теста `storage_vault`, 61 тест `shellit` (все 100% зеленые), чистый `dart analyze --fatal-infos`.
+
+
+

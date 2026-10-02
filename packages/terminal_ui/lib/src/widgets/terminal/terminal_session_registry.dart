@@ -6,15 +6,17 @@ import 'package:xterm/xterm.dart';
 
 import '../../shell_integration/shell_integration_bootstrap.dart';
 import '../../shell_integration/shell_integration_controller.dart';
+import 'terminal_stream_coalescer.dart';
 
-/// Entry holding the live [Terminal], [TerminalController], and stream subscription
-/// for an active [ITerminalSession], ensuring scrollback and state survive across
+/// Entry holding the live [Terminal], [TerminalController], [TerminalStreamCoalescer],
+/// and stream subscription for an active [ITerminalSession], ensuring scrollback and state survive across
 /// splits, tab switches, and undocking.
 class TerminalSessionEntry {
   final Terminal terminal;
   final TerminalController controller;
   final StreamSubscription<dynamic> outputSubscription;
   final ShellIntegrationController shellIntegration;
+  final TerminalStreamCoalescer coalescer;
   bool isShellIntegrationInjected;
 
   TerminalSessionEntry({
@@ -22,11 +24,14 @@ class TerminalSessionEntry {
     required this.controller,
     required this.outputSubscription,
     required this.shellIntegration,
+    TerminalStreamCoalescer? coalescer,
     this.isShellIntegrationInjected = false,
-  });
+  }) : coalescer = coalescer ?? TerminalStreamCoalescer(terminal: terminal);
 
   void dispose() {
     outputSubscription.cancel();
+    coalescer.flush();
+    coalescer.dispose();
     controller.dispose();
     shellIntegration.dispose();
   }
@@ -65,15 +70,18 @@ class TerminalSessionRegistry {
         shellIntegration.handleOSC(code, args, terminal);
       };
 
+      final coalescer = TerminalStreamCoalescer(terminal: terminal);
+
       final sub = session.outputStream.listen(
         (bytes) {
-          final decoded = utf8.decode(bytes, allowMalformed: true);
-          terminal.write(decoded);
+          coalescer.addChunk(bytes);
         },
         onError: (err) {
+          coalescer.flush();
           terminal.write('\r\n[Session Error: $err]\r\n');
         },
         onDone: () {
+          coalescer.flush();
           terminal.write('\r\n[Session disconnected]\r\n');
         },
       );
@@ -82,6 +90,7 @@ class TerminalSessionRegistry {
         controller: controller,
         outputSubscription: sub,
         shellIntegration: shellIntegration,
+        coalescer: coalescer,
       );
       _entries[session.id] = entry;
     }
