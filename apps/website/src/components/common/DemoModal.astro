@@ -1,0 +1,188 @@
+---
+import { X, Play, Download, ExternalLink, Sparkles } from 'lucide-astro';
+import type { Locale } from '../../i18n/translations';
+import { useTranslations } from '../../i18n/translations';
+
+interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = useTranslations(lang);
+
+const isRu = lang === 'ru';
+const videoSrcWebm = isRu ? '/videos/shellit_intro_ru.webm' : '/videos/shellit_intro_en.webm';
+const videoSrcMp4 = isRu ? '/videos/shellit_intro_ru.mp4' : '/videos/shellit_intro_en.mp4';
+---
+
+<!-- Demo Video Modal Backdrop -->
+<div
+  id="demo-modal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-obsidian-bg/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="demo-modal-title"
+>
+  <div class="relative w-full max-w-4xl rounded-2xl bg-obsidian-card border border-obsidian-border shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <!-- Top Neon Accent Gradient -->
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyber-cyan via-[#8AEB1A] to-emerald-400 z-10"></div>
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-obsidian-border bg-obsidian-surface/60">
+      <div class="flex items-center gap-3">
+        <!-- Terminal dots -->
+        <div class="flex items-center gap-1.5">
+          <span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+        </div>
+
+        <div class="h-4 w-px bg-obsidian-border"></div>
+
+        <div>
+          <h3 id="demo-modal-title" class="text-sm sm:text-base font-bold text-white tracking-wide flex items-center gap-2">
+            <span>{t.hero.demoModalTitle}</span>
+            <span class="px-2 py-0.5 rounded-full bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan text-[10px] font-mono">
+              0:40 HD
+            </span>
+          </h3>
+        </div>
+      </div>
+
+      <button
+        id="demo-modal-close-btn"
+        type="button"
+        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-obsidian-surface transition-colors cursor-pointer"
+        aria-label="Close"
+      >
+        <X class="w-5 h-5" />
+      </button>
+    </div>
+
+    <!-- Video Container -->
+    <div class="relative bg-black flex-grow flex items-center justify-center overflow-hidden aspect-video">
+      <video
+        id="demo-modal-video"
+        class="w-full h-full object-contain"
+        controls
+        playsinline
+        preload="metadata"
+        poster="/screenshots/01_hero_dashboard.png"
+      >
+        <source src={videoSrcWebm} type="video/webm" />
+        <source src={videoSrcMp4} type="video/mp4" />
+        Your browser does not support HTML5 video.
+      </video>
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div class="px-4 sm:px-6 py-3 border-t border-obsidian-border bg-obsidian-surface/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-xs text-slate-400 text-center sm:text-left">
+        {t.hero.demoModalSubtitle}
+      </p>
+
+      <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+        <button
+          type="button"
+          data-open-download-modal
+          class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#5FB300] to-[#8AEB1A] hover:from-[#549E00] hover:to-[#9EF832] text-slate-950 font-bold text-xs tracking-wide shadow-glow-cyan transition-all cursor-pointer w-full sm:w-auto"
+        >
+          <Download class="w-3.5 h-3.5 stroke-[2.5]" />
+          <span>{isRu ? 'Скачать Shellit' : 'Download Shellit'}</span>
+        </button>
+
+        <button
+          id="demo-modal-close-footer-btn"
+          type="button"
+          class="px-4 py-2 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-slate-500 text-slate-300 hover:text-white text-xs font-medium transition-all cursor-pointer"
+        >
+          {isRu ? 'Закрыть (Esc)' : 'Close (Esc)'}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setupDemoModal() {
+    const modal = document.getElementById('demo-modal');
+    const video = document.getElementById('demo-modal-video') as HTMLVideoElement | null;
+    const closeBtn = document.getElementById('demo-modal-close-btn');
+    const closeFooterBtn = document.getElementById('demo-modal-close-footer-btn');
+    const heroLoopVideo = document.getElementById('hero-loop-video') as HTMLVideoElement | null;
+
+    if (!modal) return;
+
+    function openModal() {
+      // Pause hero loop video if playing to save CPU and avoid sound conflict
+      if (heroLoopVideo && !heroLoopVideo.paused) {
+        heroLoopVideo.pause();
+      }
+
+      modal.classList.remove('hidden');
+      // Trigger reflow for smooth opacity transition
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      document.body.classList.add('overflow-hidden');
+
+      if (video) {
+        video.currentTime = 0;
+        video.muted = false;
+        video.play().catch((err) => {
+          console.warn('Autoplay with sound blocked or interrupted:', err);
+        });
+      }
+    }
+
+    function closeModal() {
+      modal.classList.add('opacity-0');
+      document.body.classList.remove('overflow-hidden');
+
+      if (video) {
+        video.pause();
+      }
+
+      // Resume hero loop video
+      if (heroLoopVideo && heroLoopVideo.paused) {
+        heroLoopVideo.play().catch(() => {});
+      }
+
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    // Attach click handlers to all triggers with data-open-demo-modal
+    document.querySelectorAll('[data-open-demo-modal]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
+      });
+    });
+
+    closeBtn?.addEventListener('click', closeModal);
+    closeFooterBtn?.addEventListener('click', closeModal);
+
+    // Close on backdrop click (click outside the inner card)
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    // Close on Esc key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+  }
+
+  // Initialize on load and on Astro view transitions
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupDemoModal);
+  } else {
+    setupDemoModal();
+  }
+  document.addEventListener('astro:page-load', setupDemoModal);
+</script>

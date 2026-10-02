@@ -6,6 +6,7 @@ import ScrollToTop from '../components/common/ScrollToTop.astro';
 import Tracker from '../components/analytics/Tracker.astro';
 import FeedbackModal from '../components/common/FeedbackModal.astro';
 import DownloadModal from '../components/common/DownloadModal.astro';
+import DemoModal from '../components/common/DemoModal.astro';
 import type { Locale } from '../i18n/translations';
 import { getLatestRelease } from '../lib/github-releases';
 
@@ -323,6 +324,7 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <ScrollToTop />
     <FeedbackModal lang={lang} />
     <DownloadModal lang={lang} />
+    <DemoModal lang={lang} />
     <Tracker />
 
     <!-- Dynamic Live Release Synchronization Script (Progressive Enhancement) -->
