@@ -55,8 +55,10 @@ const socialImageURL = new URL(image, Astro.site || 'https://shellit.top');
 // Determine alternate links
 const pathname = Astro.url.pathname;
 const isRu = pathname.startsWith('/ru');
-const enPath = isRu ? (pathname.replace(/^\/ru(\/|$)/, '/') || '/') : pathname;
-const ruPath = isRu ? pathname : ('/ru' + (pathname === '/' ? '' : pathname));
+let enPath = isRu ? (pathname.replace(/^\/ru(\/|$)/, '/') || '/') : pathname;
+let ruPath = isRu ? pathname : ('/ru' + (pathname === '/' ? '/' : pathname));
+if (!enPath.endsWith('/') && !enPath.includes('.')) enPath += '/';
+if (!ruPath.endsWith('/') && !ruPath.includes('.')) ruPath += '/';
 
 const enURL = new URL(enPath, Astro.site || 'https://shellit.top');
 const ruURL = new URL(ruPath, Astro.site || 'https://shellit.top');
@@ -89,17 +91,24 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
     <script is:inline>
       (function() {
         try {
+          var isBot = /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent);
+          if (isBot) return;
+
           var saved = localStorage.getItem('shellit_lang');
           var path = window.location.pathname;
           var isRuPath = path.startsWith('/ru/') || path === '/ru';
 
           if (saved === 'ru' && !isRuPath) {
-            var target = '/ru' + (path === '/' ? '' : path) + window.location.search + window.location.hash;
+            var target = '/ru' + (path === '/' ? '/' : path) + window.location.search + window.location.hash;
+            if (!target.startsWith('/ru/')) target = target.replace('/ru', '/ru/');
             window.location.replace(target);
           } else if (saved === 'en' && isRuPath) {
             var enTarget = (path.replace(/^\/ru(\/|$)/, '/') || '/') + window.location.search + window.location.hash;
+            if (!enTarget.endsWith('/') && !enTarget.includes('.') && !enTarget.includes('?') && !enTarget.includes('#')) {
+              enTarget += '/';
+            }
             window.location.replace(enTarget);
-          } else if (!saved && !isRuPath) {
+          } else if (!saved && !isRuPath && path === '/') {
             var langs = navigator.languages || [navigator.language || ''];
             var prefersRu = false;
             for (var i = 0; i < langs.length; i++) {
@@ -109,8 +118,7 @@ const pbDefaultUrl = import.meta.env.PUBLIC_POCKETBASE_URL || '';
               }
             }
             if (prefersRu) {
-              var targetRu = '/ru' + (path === '/' ? '' : path) + window.location.search + window.location.hash;
-              window.location.replace(targetRu);
+              window.location.replace('/ru/' + window.location.search + window.location.hash);
             }
           }
         } catch (e) {}

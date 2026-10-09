@@ -58,7 +58,7 @@ const nextSlug = nextAct ? nextAct.id.replace(/^en\//, '').replace(/\.md$/, '') 
     <!-- Breadcrumb -->
     <div class="mb-8">
       <a 
-        href="/chronicle" 
+        href="/chronicle/" 
         class="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-cyber-lime transition-colors"
       >
         <ArrowLeft class="w-3.5 h-3.5" />
@@ -433,7 +433,7 @@ if (char != null && isPrintable) {
     <nav class="mt-10 pt-8 border-t border-obsidian-border/70 flex flex-col sm:flex-row items-center justify-between gap-4">
       {prevAct ? (
         <a
-          href={`/chronicle/${prevSlug}`}
+          href={`/chronicle/${prevSlug}/`}
           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-start"
         >
           <ArrowLeft class="w-4 h-4 text-cyber-lime" />
@@ -447,7 +447,7 @@ if (char != null && isPrintable) {
       )}
 
       <a
-        href="/chronicle"
+        href="/chronicle/"
         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-obsidian-bg text-slate-400 hover:text-cyber-lime border border-obsidian-border text-xs font-mono transition-colors"
       >
         <Layers class="w-3.5 h-3.5" />
@@ -456,7 +456,7 @@ if (char != null && isPrintable) {
 
       {nextAct ? (
         <a
-          href={`/chronicle/${nextSlug}`}
+          href={`/chronicle/${nextSlug}/`}
           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-obsidian-card border border-obsidian-border hover:border-cyber-lime/40 text-slate-200 hover:text-white text-xs font-mono transition-all w-full sm:w-auto justify-end text-right"
         >
           <div>

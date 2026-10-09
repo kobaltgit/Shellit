@@ -40,7 +40,7 @@ const sortedActs = [...acts].sort((a, b) => a.data.actNumber - b.data.actNumber)
     {sortedActs.map((act, index) => {
       const isEven = index % 2 === 0;
       const slug = act.id.replace(/^(en|ru)\//, '').replace(/\.md$/, '');
-      const chapterUrl = `${basePath}/chronicle/${slug}`;
+      const chapterUrl = `${basePath}/chronicle/${slug}/`;
 
       return (
         <div class="relative flex flex-col sm:flex-row items-start group">

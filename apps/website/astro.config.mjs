@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://shellit.top',
+  trailingSlash: 'always',
   redirects: {
     '/docs': '/getting-started/quick-start/',
     '/ru/docs': '/ru/getting-started/quick-start/',

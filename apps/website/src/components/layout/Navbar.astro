@@ -33,7 +33,7 @@ const repoStars = await getRepoStars();
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
     <!-- Left: Logo + Version Tag -->
     <div class="flex items-center gap-6">
-      <a href={basePath || '/'} class="flex items-center gap-3 group">
+      <a href={basePath ? `${basePath}/` : '/'} class="flex items-center gap-3 group">
         <div class="relative w-9 h-9 rounded-xl bg-obsidian-card border border-obsidian-border flex items-center justify-center p-1.5 shadow-glow-cyan transition-transform group-hover:scale-105">
           <img src="/favicon.svg" alt="Shellit Logo" class="w-full h-full" />
         </div>
@@ -132,7 +132,7 @@ const repoStars = await getRepoStars();
 
       <!-- Roadmap -->
       <a
-        href={`${basePath}/roadmap`}
+        href={`${basePath}/roadmap/`}
         data-nav-target="roadmap"
         class="nav-item px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap"
       >
@@ -141,7 +141,7 @@ const repoStars = await getRepoStars();
 
       <!-- Chronicle -->
       <a
-        href={`${basePath}/chronicle`}
+        href={`${basePath}/chronicle/`}
         data-nav-target="chronicle"
         class="nav-item px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap"
       >
@@ -150,7 +150,7 @@ const repoStars = await getRepoStars();
 
       <!-- Docs -->
       <a
-        href={`${basePath}/getting-started/quick-start`}
+        href={`${basePath}/getting-started/quick-start/`}
         data-nav-target="docs"
         class="nav-item px-3.5 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-all whitespace-nowrap"
       >
@@ -281,15 +281,15 @@ const repoStars = await getRepoStars();
 
     <!-- General Links -->
     <div class="border-t border-obsidian-border/60 pt-2 space-y-1">
-      <a href={`${basePath}/roadmap`} data-nav-target="roadmap" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+      <a href={`${basePath}/roadmap/`} data-nav-target="roadmap" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
         <Map class="w-4 h-4 text-cyber-cyan" />
         <span>{t.nav.roadmap}</span>
       </a>
-      <a href={`${basePath}/chronicle`} data-nav-target="chronicle" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+      <a href={`${basePath}/chronicle/`} data-nav-target="chronicle" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
         <Sparkles class="w-4 h-4 text-cyber-lime" />
         <span>{t.nav.chronicle}</span>
       </a>
-      <a href={`${basePath}/getting-started/quick-start`} data-nav-target="docs" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+      <a href={`${basePath}/getting-started/quick-start/`} data-nav-target="docs" class="mobile-nav-item flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
         <BookOpen class="w-4 h-4 text-cyber-cyan" />
         <span>{t.nav.docs}</span>
       </a>
@@ -357,12 +357,16 @@ const repoStars = await getRepoStars();
 
       if (targetLang === 'ru') {
         if (!currentPath.startsWith('/ru')) {
-          newPath = '/ru' + (currentPath === '/' ? '' : currentPath);
+          newPath = '/ru' + (currentPath === '/' ? '/' : currentPath);
         }
       } else {
         if (currentPath.startsWith('/ru')) {
           newPath = currentPath.replace(/^\/ru(\/|$)/, '/') || '/';
         }
+      }
+
+      if (!newPath.endsWith('/') && !newPath.includes('.')) {
+        newPath += '/';
       }
 
       window.location.href = newPath + window.location.search + window.location.hash;
