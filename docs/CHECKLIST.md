@@ -855,5 +855,26 @@
   - [x] Повышение версии до `0.9.3+28` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
   - [x] Сборка и верификация: 202 теста `terminal_ui`, 63 теста `storage_vault`, 61 тест `shellit` (все 100% зеленые), чистый `dart analyze --fatal-infos`.
 
+---
+
+## Фаза 26: Исправление дефекта зависания сплит-экрана и рендеринга (Split Freeze & OpenGL Frame Timeout)
+- [x] Устранение инцидента `BUG-056` (GitHub Issue #1):
+  - [x] Внедрение однократного защитного шлюза (Single-shot guard / anti-spam) в `OmniSearchModal` при вводе с клавиатуры (Enter) и кликах.
+  - [x] Перенос вызова модификации состояния Riverpod (`setSplitLayout`, `setActiveTab` и др.) в `addPostFrameCallback` после завершения закрытия маршрута модалки (`Navigator.pop`).
+  - [x] Стабилизация ключа `SplitMatrixView` в `ShellitAppShell` (`ValueKey('split-${tab.id}')`) для предотвращения деструктивного пересоздания поддерева и обеспечения плавного перехода через `didUpdateWidget`.
+  - [x] Устранение холостого спама `session.resize` в `TerminalScreen` через мемоизацию `_lastCols` / `_lastRows`.
+  - [x] Дедупликация системных шеллов через `resolveSymbolicLinksSync()` в `LocalShellDetector`.
+  - [x] Написание регрессионных unit- и widget-тестов в `terminal_ui` (203/203 теста зеленые).
+- [x] Документирование и Хроника:
+  - [x] Запись 63 («Первый боевой краш-тест на Arch Linux, расследование зависания Omni-Search и интеграция GitHub MCP») в `docs/CHRONICLE.md` и `docs/CHRONICLE.en.md`.
+  - [x] Создание Акта XV на веб-портале (`apps/website/src/content/chronicle/` в `ru` и `en`).
+  - [x] Актуализация `StatsHUD.astro`: 56 разобранных багов, статус `v0.9.4 Alpha Preview`, 460+ зеленых тестов.
+- [x] Релиз v0.9.4:
+  - [x] Создание описания релиза в `docs/releases/v0.9.4.md`.
+  - [x] Повышение версии до `0.9.4+29` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
+  - [x] Верификация анализатора и тестов (`dart analyze --fatal-infos`, 203 теста `terminal_ui`, 61 тест `apps/shellit`).
+
+
+
 
 

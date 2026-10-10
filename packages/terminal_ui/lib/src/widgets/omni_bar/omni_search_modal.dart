@@ -82,6 +82,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _keyboardFocusNode = FocusNode();
   int _selectedIndex = 0;
+  bool _isExecutingAction = false;
 
   @override
   void initState() {
@@ -94,6 +95,15 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
     _searchController.dispose();
     _keyboardFocusNode.dispose();
     super.dispose();
+  }
+
+  void _executeCommandItem(OmniCommandItem item) {
+    if (_isExecutingAction) return;
+    _isExecutingAction = true;
+    Navigator.of(context).pop();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      item.onSelect();
+    });
   }
 
   List<OmniCommandItem> _buildItems(BuildContext context, String query) {
@@ -144,7 +154,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             icon: tabIcon,
             type: OmniItemType.action,
             onSelect: () {
-              Navigator.of(context).pop();
               ref.read(sessionManagerProvider.notifier).setActiveTab(tab.id);
             },
           ),
@@ -168,7 +177,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             icon: Icons.dns_outlined,
             type: OmniItemType.host,
             onSelect: () {
-              Navigator.of(context).pop();
               widget.onSelectHost?.call(host);
             },
           ),
@@ -188,7 +196,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           icon: Icons.view_column_outlined,
           type: OmniItemType.action,
           onSelect: () {
-            Navigator.of(context).pop();
             ref
                 .read(sessionManagerProvider.notifier)
                 .setSplitLayout(activeTab.id, SplitLayoutType.horizontal);
@@ -203,7 +210,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           icon: Icons.table_rows_outlined,
           type: OmniItemType.action,
           onSelect: () {
-            Navigator.of(context).pop();
             ref
                 .read(sessionManagerProvider.notifier)
                 .setSplitLayout(activeTab.id, SplitLayoutType.vertical);
@@ -217,7 +223,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           icon: Icons.grid_view_sharp,
           type: OmniItemType.action,
           onSelect: () {
-            Navigator.of(context).pop();
             ref
                 .read(sessionManagerProvider.notifier)
                 .setSplitLayout(activeTab.id, SplitLayoutType.grid2x2);
@@ -232,7 +237,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
         icon: Icons.lock_outline,
         type: OmniItemType.action,
         onSelect: () {
-          Navigator.of(context).pop();
           ref.read(vaultProvider.notifier).lock();
         },
       ),
@@ -248,7 +252,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           icon: Icons.terminal,
           type: OmniItemType.action,
           onSelect: () {
-            Navigator.of(context).pop();
             ref
                 .read(sessionManagerProvider.notifier)
                 .openLocalTerminalTab(profile: shell);
@@ -281,7 +284,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             icon: Icons.play_arrow_outlined,
             type: OmniItemType.snippet,
             onSelect: () {
-              Navigator.of(context).pop();
               widget.onExecuteSnippet?.call(snip);
             },
           ),
@@ -305,7 +307,6 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
             icon: Icons.palette_outlined,
             type: OmniItemType.theme,
             onSelect: () {
-              Navigator.of(context).pop();
               ref.read(terminalSchemeNameProvider.notifier).state = themeName;
             },
           ),
@@ -329,10 +330,13 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
           _selectedIndex = (_selectedIndex - 1 + items.length) % items.length);
     } else if (event.logicalKey == LogicalKeyboardKey.enter) {
       if (_selectedIndex < items.length) {
-        items[_selectedIndex].onSelect();
+        _executeCommandItem(items[_selectedIndex]);
       }
     } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-      Navigator.of(context).pop();
+      if (!_isExecutingAction) {
+        _isExecutingAction = true;
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -412,7 +416,7 @@ class _OmniSearchModalState extends ConsumerState<OmniSearchModal> {
                           final isSelected = index == _selectedIndex;
 
                           return InkWell(
-                            onTap: item.onSelect,
+                            onTap: () => _executeCommandItem(item),
                             onHover: (hovering) {
                               if (hovering) {
                                 setState(() => _selectedIndex = index);

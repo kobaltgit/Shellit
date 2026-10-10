@@ -676,7 +676,7 @@ class _ShellitAppShellState extends ConsumerState<ShellitAppShell> {
       case TabType.splitTerminal:
         final allHosts = ref.watch(hostsProvider);
         return SplitMatrixView(
-          key: ValueKey('${tab.id}-${tab.splitLayout.name}'),
+          key: ValueKey('split-${tab.id}'),
           sessions: tab.splitSessions,
           host: tab.host,
           hosts: allHosts,

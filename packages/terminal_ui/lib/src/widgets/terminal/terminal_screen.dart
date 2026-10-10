@@ -84,6 +84,16 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   bool _isCtrlPressed = false;
   Offset? _pointerDownPosition;
   bool _isPointerDownWithCtrl = false;
+  int? _lastSyncedCols;
+  int? _lastSyncedRows;
+
+  void _safeResizeTerminal(int cols, int rows) {
+    if (cols <= 0 || rows <= 0) return;
+    if (_lastSyncedCols == cols && _lastSyncedRows == rows) return;
+    _lastSyncedCols = cols;
+    _lastSyncedRows = rows;
+    widget.session.resize(TerminalDimensions(cols: cols, rows: rows));
+  }
 
   @override
   void initState() {
@@ -105,7 +115,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // Resize listener
     _terminal.onResize = (width, height, pixelWidth, pixelHeight) {
-      widget.session.resize(TerminalDimensions(cols: width, rows: height));
+      _safeResizeTerminal(width, height);
     };
 
     // User input listener
@@ -117,12 +127,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       }
       // Guarantee immediate terminal resize sync on mount/drop
       if (mounted && _terminal.viewWidth > 0 && _terminal.viewHeight > 0) {
-        widget.session.resize(
-          TerminalDimensions(
-            cols: _terminal.viewWidth,
-            rows: _terminal.viewHeight,
-          ),
-        );
+        _safeResizeTerminal(_terminal.viewWidth, _terminal.viewHeight);
       }
     });
   }
@@ -1242,11 +1247,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                         if (mounted &&
                             _terminal.viewWidth > 0 &&
                             _terminal.viewHeight > 0) {
-                          widget.session.resize(
-                            TerminalDimensions(
-                              cols: _terminal.viewWidth,
-                              rows: _terminal.viewHeight,
-                            ),
+                          _safeResizeTerminal(
+                            _terminal.viewWidth,
+                            _terminal.viewHeight,
                           );
                         }
                       });

@@ -34,21 +34,35 @@ class LocalShellDetector {
 
     // Apply default selection
     // 1. If preferredDefaultId matches an existing profile, mark it default
-    // 2. Otherwise: PowerShell 7 > Windows PowerShell > first profile
+    // 2. Otherwise on Windows: PowerShell 7 > Windows PowerShell > cmd > first
+    // 3. Otherwise on Unix: user_shell > zsh > bash > custom > sh > first
     var defaultIndex = -1;
     if (preferredDefaultId != null) {
       defaultIndex = profiles.indexWhere((p) => p.id == preferredDefaultId);
     }
 
     if (defaultIndex == -1) {
-      // Automatic priority: pwsh > powershell > cmd > first
-      defaultIndex = profiles.indexWhere((p) => p.shellType == ShellType.pwsh);
-      if (defaultIndex == -1) {
+      if (Platform.isWindows) {
         defaultIndex =
-            profiles.indexWhere((p) => p.shellType == ShellType.powershell);
-      }
-      if (defaultIndex == -1) {
-        defaultIndex = profiles.indexWhere((p) => p.shellType == ShellType.cmd);
+            profiles.indexWhere((p) => p.shellType == ShellType.pwsh);
+        if (defaultIndex == -1) {
+          defaultIndex =
+              profiles.indexWhere((p) => p.shellType == ShellType.powershell);
+        }
+        if (defaultIndex == -1) {
+          defaultIndex =
+              profiles.indexWhere((p) => p.shellType == ShellType.cmd);
+        }
+      } else {
+        defaultIndex = profiles.indexWhere((p) => p.id == 'user_shell');
+        if (defaultIndex == -1) {
+          defaultIndex =
+              profiles.indexWhere((p) => p.shellType == ShellType.zsh);
+        }
+        if (defaultIndex == -1) {
+          defaultIndex =
+              profiles.indexWhere((p) => p.shellType == ShellType.bash);
+        }
       }
       if (defaultIndex == -1) {
         defaultIndex = 0;
@@ -162,8 +176,39 @@ class LocalShellDetector {
   }
 
   void _detectUnixShells(List<LocalShellProfile> list) {
-    final envShell = Platform.environment['SHELL'];
+    String? envShell = Platform.environment['SHELL'];
+
+    // Fallback: in Wayland, Hyprland, or desktop GUI launchers, SHELL may not be set in the process environment.
+    // Try to extract user's login shell from /etc/passwd.
+    if (envShell == null || envShell.trim().isEmpty) {
+      try {
+        final user =
+            Platform.environment['USER'] ?? Platform.environment['LOGNAME'];
+        if (user != null && File('/etc/passwd').existsSync()) {
+          final lines = File('/etc/passwd').readAsLinesSync();
+          for (final line in lines) {
+            final parts = line.split(':');
+            if (parts.length >= 7 && parts[0] == user) {
+              final shell = parts[6].trim();
+              if (shell.isNotEmpty && File(shell).existsSync()) {
+                envShell = shell;
+                break;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Fallback silently if /etc/passwd is unreadable
+      }
+    }
+
+    final Set<String> registeredPaths = {};
+
     if (envShell != null && File(envShell).existsSync()) {
+      final canonical = _canonicalPath(envShell);
+      registeredPaths.add(canonical);
+      registeredPaths.add(envShell);
+
       final name = envShell.split('/').last;
       list.add(
         LocalShellProfile(
@@ -177,22 +222,45 @@ class LocalShellDetector {
       );
     }
 
-    final standardShells = ['/bin/zsh', '/bin/bash', '/bin/sh'];
-    for (final sh in standardShells) {
-      if (list.any((p) => p.executablePath == sh)) continue;
-      if (File(sh).existsSync()) {
-        final name = sh.split('/').last;
-        list.add(
-          LocalShellProfile(
-            id: name,
-            name: name.toUpperCase(),
-            shellType: name == 'zsh'
-                ? ShellType.zsh
-                : (name == 'bash' ? ShellType.bash : ShellType.custom),
-            executablePath: sh,
-          ),
-        );
+    final candidateShells = [
+      '/usr/bin/zsh',
+      '/bin/zsh',
+      '/usr/bin/bash',
+      '/bin/bash',
+      '/usr/bin/fish',
+      '/bin/fish',
+      '/usr/bin/sh',
+      '/bin/sh',
+    ];
+
+    for (final sh in candidateShells) {
+      if (!File(sh).existsSync()) continue;
+      final canonical = _canonicalPath(sh);
+      if (registeredPaths.contains(canonical) || registeredPaths.contains(sh)) {
+        continue;
       }
+      registeredPaths.add(canonical);
+      registeredPaths.add(sh);
+
+      final name = sh.split('/').last;
+      list.add(
+        LocalShellProfile(
+          id: name,
+          name: name.toUpperCase(),
+          shellType: name == 'zsh'
+              ? ShellType.zsh
+              : (name == 'bash' ? ShellType.bash : ShellType.custom),
+          executablePath: sh,
+        ),
+      );
+    }
+  }
+
+  String _canonicalPath(String path) {
+    try {
+      return File(path).resolveSymbolicLinksSync();
+    } catch (_) {
+      return path;
     }
   }
 }

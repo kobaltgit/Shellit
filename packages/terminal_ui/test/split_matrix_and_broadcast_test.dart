@@ -178,9 +178,9 @@ void main() {
       final now = DateTime.now();
       final hostA = HostEntity(
         id: 'h1',
-        label: 'Hetzner',
-        hostname: '65.108.57.255',
-        username: 'kobalt',
+        label: 'Node-Alpha',
+        hostname: '198.51.100.1',
+        username: 'devuser',
         authType: HostAuthType.password,
         createdAt: now,
         updatedAt: now,

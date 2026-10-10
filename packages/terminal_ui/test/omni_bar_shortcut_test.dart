@@ -100,5 +100,68 @@ void main() {
       // Verify OmniSearchModal is opened successfully via physical key
       expect(find.byType(OmniSearchModal), findsOneWidget);
     });
+
+    testWidgets(
+        'OmniSearchModal single-shot execution guard prevents repeated onSelect on rapid Enter spam (BUG-056)',
+        (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+
+      int executionCount = 0;
+      final dummySnippet = SnippetEntity(
+        id: 'snip-1',
+        title: 'Test Snippet',
+        command: 'echo hello',
+        tags: const ['test'],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: ShellitTheme.obsidianDarkTheme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () {
+                    OmniSearchModal.show(
+                      context,
+                      snippets: [dummySnippet],
+                      onExecuteSnippet: (_) {
+                        executionCount++;
+                      },
+                    );
+                  },
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Open modal
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OmniSearchModal), findsOneWidget);
+
+      // Search for the snippet so it becomes the selected item
+      await tester.enterText(find.byType(TextField), 'Test Snippet');
+      await tester.pumpAndSettle();
+
+      // Rapidly spam Enter multiple times
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+
+      await tester.pumpAndSettle();
+
+      // Verify modal is closed cleanly and action was executed exactly once
+      expect(find.byType(OmniSearchModal), findsNothing);
+      expect(executionCount, equals(1));
+    });
   });
 }
