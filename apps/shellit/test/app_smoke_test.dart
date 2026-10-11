@@ -50,7 +50,7 @@ void main() {
   testWidgets('ShellitApp switches to Keychain and Settings screens', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.physicalSize = const Size(1280, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
