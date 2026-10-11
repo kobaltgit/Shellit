@@ -874,6 +874,33 @@
   - [x] Повышение версии до `0.9.4+29` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
   - [x] Верификация анализатора и тестов (`dart analyze --fatal-infos`, 203 теста `terminal_ui`, 61 тест `apps/shellit`).
 
+---
+
+## Фаза 27: Поддержка пользовательских шрифтов, Nerd Fonts и протокола Kitty Graphics
+- [x] Пользовательский шрифт терминала и каскад Nerd Fonts:
+  - [x] Создание `terminalFontFamilyProvider` и каскада `kTerminalFontFallbacks` в `packages/terminal_ui`.
+  - [x] Поддержка автоподхвата глифов Nerd Font (`U+E000..U+F8FF`, иконки `yazi`, `eza`, `starship`, `powerline`).
+  - [x] Добавление селектора шрифтов (JetBrains Mono, JetBrainsMono Nerd Font, Fira Code, FiraCode Nerd Font, Cascadia Code, Custom...) в `TerminalSettingsCard`.
+  - [x] Интерактивный предпросмотр глифов и сохранение в зашифрованное хранилище `VaultSettingsEntity.terminalFontFamily`.
+- [x] Внутритерминальная графика Kitty Graphics Protocol:
+  - [x] Модели команд протокола `KittyAction`, `KittyFormat`, `KittyImageCommand` (`kitty_graphics_types.dart`).
+  - [x] Потоковый перехватчик `KittyGraphicsStreamFilter` для APC-последовательностей (`\x1b_G ... \x1b\`) с предотвращением вывода сырого base64 в буфер терминала.
+  - [x] Реестр `TerminalGraphicsRegistry` с поддержкой мульти-чанков (`m=1`/`m=0`), декодированием через `ui.instantiateImageCodec`, размещением по знакоместам и очисткой памяти.
+  - [x] Слой наложения `TerminalGraphicsOverlay` поверх текстового канваса `TerminalView` под слоем курсора `TerminalCursorOverlay`.
+  - [x] Обеспечение абсолютной совместимости с метками шелл-интеграции (OSC 133) и изолированным курсором (`BUG-052`).
+  - [x] Написание unit-тестов `kitty_graphics_test.dart` (7/7 тестов зеленые).
+  - [x] Полная верификация: `dart analyze --fatal-infos` (0 issues), 210 тестов `terminal_ui` (100% зеленые).
+- [x] Документирование и Хроника:
+  - [x] Запись 64 («Типографика для консольных эстетов, Nerd Fonts и протокол Kitty Graphics») в `docs/CHRONICLE.md` и `docs/CHRONICLE.en.md`.
+  - [x] Создание Акта XVI на веб-портале (`apps/website/src/content/chronicle/` в `ru` и `en`).
+  - [x] Регистрация дефекта `BUG-057` в `docs/BUGS_AND_ISSUES.md`.
+  - [x] Актуализация `StatsHUD.astro`: 57 разобранных багов, статус `v0.9.5 Alpha Preview`, 467+ зеленых тестов.
+- [x] Релиз v0.9.5:
+  - [x] Создание описания релиза в `docs/releases/v0.9.5.md`.
+  - [x] Повышение версии до `0.9.5+30` во всех ключевых конфигурациях проекта (`pubspec.yaml`, `AboutSettingsCard`, `FeedbackReportDialog`, `.well-known/mcp.json`, `server-card.json`, `github-releases.ts`).
+  - [x] Верификация анализатора и тестов (`dart analyze --fatal-infos`, 210 тестов `terminal_ui`, 61 тест `apps/shellit`).
+
+
 
 
 

@@ -8,6 +8,7 @@ import 'package:xterm/xterm.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/ping_monitor_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/terminal_settings_provider.dart';
 import '../../theme/shellit_theme.dart';
 import '../terminal/terminal_session_registry.dart';
 import 'mobile_accessory_bar.dart';
@@ -147,6 +148,7 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
   @override
   Widget build(BuildContext context) {
     final terminalTheme = ref.watch(activeTerminalThemeProvider);
+    final terminalFontFamily = ref.watch(terminalFontFamilyProvider);
     final pingState = ref.watch(pingMonitorProvider);
     final latency = widget.host != null
         ? (pingState.latencyFor(widget.host!.id) ??
@@ -350,7 +352,8 @@ class _MobileTerminalScreenState extends ConsumerState<MobileTerminalScreen> {
                     theme: terminalTheme,
                     textStyle: TerminalStyle(
                       fontSize: _fontSize,
-                      fontFamily: 'JetBrains Mono',
+                      fontFamily: terminalFontFamily,
+                      fontFamilyFallback: kTerminalFontFallbacks,
                     ),
                   ),
                 ),

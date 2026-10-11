@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:core_foundation/core_foundation.dart';
 import 'package:xterm/xterm.dart';
 
+import '../../graphics/kitty_graphics_parser.dart';
+import '../../graphics/terminal_graphics_registry.dart';
 import '../../shell_integration/shell_integration_bootstrap.dart';
 import '../../shell_integration/shell_integration_controller.dart';
 import 'terminal_stream_coalescer.dart';
@@ -17,6 +19,8 @@ class TerminalSessionEntry {
   final StreamSubscription<dynamic> outputSubscription;
   final ShellIntegrationController shellIntegration;
   final TerminalStreamCoalescer coalescer;
+  final TerminalGraphicsRegistry graphicsRegistry;
+  final KittyGraphicsStreamFilter graphicsFilter;
   bool isShellIntegrationInjected;
 
   TerminalSessionEntry({
@@ -25,13 +29,18 @@ class TerminalSessionEntry {
     required this.outputSubscription,
     required this.shellIntegration,
     TerminalStreamCoalescer? coalescer,
+    TerminalGraphicsRegistry? graphicsRegistry,
+    KittyGraphicsStreamFilter? graphicsFilter,
     this.isShellIntegrationInjected = false,
-  }) : coalescer = coalescer ?? TerminalStreamCoalescer(terminal: terminal);
+  })  : coalescer = coalescer ?? TerminalStreamCoalescer(terminal: terminal),
+        graphicsRegistry = graphicsRegistry ?? TerminalGraphicsRegistry(),
+        graphicsFilter = graphicsFilter ?? KittyGraphicsStreamFilter();
 
   void dispose() {
     outputSubscription.cancel();
     coalescer.flush();
     coalescer.dispose();
+    graphicsRegistry.dispose();
     controller.dispose();
     shellIntegration.dispose();
   }
@@ -64,13 +73,26 @@ class TerminalSessionRegistry {
       final terminal = Terminal(maxLines: 5000);
       final controller = TerminalController();
       final shellIntegration = ShellIntegrationController();
+      final graphicsRegistry = TerminalGraphicsRegistry();
+      final graphicsFilter = KittyGraphicsStreamFilter();
 
       // Hook OSC 133 semantic shell integration
       terminal.onPrivateOSC = (code, args) {
         shellIntegration.handleOSC(code, args, terminal);
       };
 
-      final coalescer = TerminalStreamCoalescer(terminal: terminal);
+      final coalescer = TerminalStreamCoalescer(
+        terminal: terminal,
+        preWriteFilter: (bytes) {
+          final result = graphicsFilter.processBytes(bytes);
+          if (result.commands.isNotEmpty) {
+            for (final cmd in result.commands) {
+              graphicsRegistry.handleCommand(cmd, terminal);
+            }
+          }
+          return result.cleanBytes;
+        },
+      );
 
       final sub = session.outputStream.listen(
         (bytes) {
@@ -91,6 +113,8 @@ class TerminalSessionRegistry {
         outputSubscription: sub,
         shellIntegration: shellIntegration,
         coalescer: coalescer,
+        graphicsRegistry: graphicsRegistry,
+        graphicsFilter: graphicsFilter,
       );
       _entries[session.id] = entry;
     }

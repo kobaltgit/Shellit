@@ -14,6 +14,7 @@ export 'src/providers/folders_provider.dart';
 export 'src/providers/session_manager_provider.dart';
 export 'src/providers/ping_monitor_provider.dart';
 export 'src/providers/theme_provider.dart';
+export 'src/providers/terminal_settings_provider.dart';
 
 // App Shell Widgets
 export 'src/widgets/app_shell/shellit_app_shell.dart';
@@ -48,6 +49,12 @@ export 'src/widgets/terminal/local_terminal_button.dart';
 export 'src/widgets/terminal/terminal_stream_coalescer.dart';
 export 'src/widgets/terminal/box_drawing_vector_renderer.dart';
 export 'src/widgets/terminal/terminal_cursor_overlay.dart';
+
+// Kitty Graphics Protocol (In-Terminal Images)
+export 'src/graphics/kitty_graphics_types.dart';
+export 'src/graphics/kitty_graphics_parser.dart';
+export 'src/graphics/terminal_graphics_registry.dart';
+export 'src/graphics/terminal_graphics_overlay.dart';
 
 // OSC 133 Shell Integration
 export 'src/shell_integration/shell_command_block.dart';

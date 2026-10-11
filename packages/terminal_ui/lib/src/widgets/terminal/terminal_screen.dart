@@ -12,6 +12,7 @@ import 'package:xterm/src/ui/render.dart';
 import 'package:flutter/gestures.dart';
 import '../../localization/localization_scope.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/terminal_settings_provider.dart';
 import '../../shell_integration/shell_command_markers_overlay.dart';
 import '../../shell_integration/shell_gutter_markers_overlay.dart';
 import '../../shell_integration/shell_integration_bootstrap.dart';
@@ -26,6 +27,8 @@ import 'terminal_cursor_overlay.dart';
 import 'terminal_link_detector.dart';
 import 'terminal_session_registry.dart';
 import 'terminal_shortcuts_dialog.dart';
+import '../../graphics/terminal_graphics_overlay.dart';
+import '../../graphics/terminal_graphics_registry.dart';
 
 class TerminalScreen extends ConsumerStatefulWidget {
   final ITerminalSession session;
@@ -77,6 +80,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   int _recordDurationSeconds = 0;
 
   late final ScrollController _scrollController;
+  late final TerminalGraphicsRegistry _graphicsRegistry;
   final GlobalKey<TerminalViewState> _terminalViewKey =
       GlobalKey<TerminalViewState>();
   TerminalLinkMatch? _hoveredLink;
@@ -102,6 +106,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _terminal = entry.terminal;
     _controller = entry.controller;
     _shellIntegration = entry.shellIntegration;
+    _graphicsRegistry = entry.graphicsRegistry;
     _scrollController = ScrollController();
     _focusNode = FocusNode();
     _focusNode.addListener(_handleFocusChange);
@@ -1205,6 +1210,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   @override
   Widget build(BuildContext context) {
     final terminalTheme = ref.watch(activeTerminalThemeProvider);
+    final terminalFontFamily = ref.watch(terminalFontFamilyProvider);
     final isProd = widget.host?.isProduction ?? false;
     final hasProtection = widget.host?.dangerousCommandProtection ?? false;
     final hasMarkers = _shellIntegration.blocks.isNotEmpty;
@@ -1280,9 +1286,26 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                             theme: themeWithHiddenCursor,
                             textStyle: TerminalStyle(
                               fontSize: _fontSize,
-                              fontFamily: 'JetBrains Mono',
+                              fontFamily: terminalFontFamily,
+                              fontFamilyFallback: kTerminalFontFallbacks,
                             ),
                             backgroundOpacity: 1.0,
+                          ),
+                          Positioned.fill(
+                            child: ClipRect(
+                              child: IgnorePointer(
+                                child: TerminalGraphicsOverlay(
+                                  registry: _graphicsRegistry,
+                                  scrollController: _scrollController,
+                                  getRenderTerminal: () => _terminalViewKey
+                                      .currentState?.renderTerminal,
+                                  defaultCellSize:
+                                      Size(_fontSize * 0.6, _fontSize * 1.4),
+                                  leftPadding: 22.0,
+                                  topPadding: 12.0,
+                                ),
+                              ),
+                            ),
                           ),
                           Positioned.fill(
                             child: ClipRect(

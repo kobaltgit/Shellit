@@ -78,6 +78,10 @@ class _ShellitAppState extends ConsumerState<ShellitApp> with WindowListener {
     final vaultRepo = ref.read(appVaultRepositoryProvider);
     try {
       final settings = await vaultRepo.getSettings();
+      if (mounted) {
+        ref.read(terminalFontFamilyProvider.notifier).state =
+            settings.terminalFontFamily;
+      }
       if (!settings.restoreWorkspaceSessions) {
         _hasRestoredWorkspace = true;
         return;

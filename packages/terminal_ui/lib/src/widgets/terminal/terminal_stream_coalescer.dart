@@ -26,6 +26,10 @@ class TerminalStreamCoalescer {
   /// Optional telemetry hook called after each flushed batch.
   final void Function(int byteCount, String decodedText)? onBatchFlushed;
 
+  /// Optional pre-write filter that can intercept or modify bytes
+  /// (e.g. Kitty Graphics APC sequences) before text decoding and terminal writing.
+  final Uint8List Function(Uint8List bytes)? preWriteFilter;
+
   final BytesBuilder _buffer = BytesBuilder(copy: false);
   StreamSubscription<List<int>>? _subscription;
   int? _frameCallbackId;
@@ -39,6 +43,7 @@ class TerminalStreamCoalescer {
     this.frameDuration = const Duration(milliseconds: 16),
     this.schedulerBinding,
     this.onBatchFlushed,
+    this.preWriteFilter,
   });
 
   /// Whether the coalescer has pending unwritten bytes in its buffer.
@@ -202,9 +207,12 @@ class TerminalStreamCoalescer {
 
   void _writeBytes(Uint8List bytes) {
     if (bytes.isEmpty) return;
-    final text = utf8.decode(bytes, allowMalformed: true);
+    final processedBytes =
+        preWriteFilter != null ? preWriteFilter!(bytes) : bytes;
+    if (processedBytes.isEmpty) return;
+    final text = utf8.decode(processedBytes, allowMalformed: true);
     terminal.write(text);
-    onBatchFlushed?.call(bytes.length, text);
+    onBatchFlushed?.call(processedBytes.length, text);
   }
 
   /// Calculates the count of trailing bytes in [bytes] that form an incomplete
